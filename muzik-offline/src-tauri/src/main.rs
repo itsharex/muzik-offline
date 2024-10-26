@@ -10,13 +10,15 @@ mod database;
 mod socials;
 
 use kira::manager::{AudioManager,AudioManagerSettings,backend::DefaultBackend};
+use souvlaki::MediaControlEvent;
 use components::audio_manager::SharedAudioManager;
 use utils::music_list_organizer::MLO;
 use socials::discord_rpc::DiscordRpc;
-use std::sync::Mutex;
 
 use tauri::Manager;
-use std::sync::mpsc;
+use std::sync::Mutex;
+use tokio::sync::mpsc;
+use tauri::async_runtime::{self, spawn};
 
 use crate::app::controller::{toggle_app_pin, toggle_miniplayer_view, drag_app_window};
 
@@ -26,6 +28,8 @@ use crate::commands::general_commands::{open_in_file_manager, resize_frontend_im
 
 use crate::music::player::{load_and_play_song_from_path, load_a_song_from_path, set_volume,
     pause_song, resume_playing, seek_to, seek_by, get_song_position, stop_song};
+
+use crate::music::media_control_api::{config_mca, update_metadata, event_handler};
 
 use crate::utils::music_list_organizer::{mlo_set_shuffle_list, mlo_set_repeat_list, 
     mlo_get_next_batch_as_size, mlo_reset_and_set_remaining_keys};
@@ -46,6 +50,29 @@ fn main() {
             volume: 0.0,
             controls: None,
         }))
+        .setup(|app| {
+            let (tx, mut rx): (mpsc::Sender<MediaControlEvent>, mpsc::Receiver<MediaControlEvent>) = mpsc::channel(32); // Buffer size can be adjusted
+            let shared_audio_manager = app.state::<Mutex<SharedAudioManager>>();
+            let window = app.app_handle().get_window("main").expect("failed to get window");
+
+            let mut controls = config_mca(&window).expect("Failed to initialize media controls");
+
+            // The closure must be Send and have a static lifetime.
+            controls
+            .attach(move |event: MediaControlEvent| {
+                let tx = tx.clone();
+                async_runtime::spawn(async move {
+                    if tx.send(event).await.is_err() { println!("Failed to send event"); }
+                });
+            }).expect("Failed to attach media controls");
+            
+            shared_audio_manager.lock().expect("failed to lock shared audio manager").controls = Some(controls);
+
+            spawn(async move {
+                while let Some(event) = rx.recv().await { event_handler(&window, &event);}
+            });
+            Ok(())
+        })
         .manage(Mutex::new(MLO::new()))
         .manage(Mutex::new(DiscordRpc::new().expect("failed to initialize discord rpc")))
         .invoke_handler(tauri::generate_handler![
@@ -53,6 +80,7 @@ fn main() {
                             toggle_app_pin,
                             toggle_miniplayer_view,
                             drag_app_window,
+                            update_metadata,
 
                             //GENERAL COMMANDS
                             get_all_songs, 
