@@ -1,6 +1,5 @@
 import { NullCoverOne, NullCoverTwo, NullCoverThree, NullCoverFour } from "@assets/index";
 import { local_albums_db, local_artists_db, local_genres_db, local_playlists_db, local_songs_db } from "@database/database";
-import { DropResult } from "@hello-pangea/dnd";
 import { Song, album, artist, genre, playlist } from "@muziktypes/index";
 import { useHistorySongs, useUpcomingSongs } from "@store/index";
 import { invoke } from "@tauri-apps/api";
@@ -213,15 +212,9 @@ export const reorderArray = (array: any[], from: number, to: number): any[] => {
     return newArray;
 }
 
-export function onDragEnd(result: DropResult, queueType: "SongHistory" | "SongQueue"){
-    if(!result.destination)return;
-    if(result.destination.index === result.source.index)return;
-    if(result.destination.index === 0 && queueType === "SongQueue")return;
+export function onDragEnd(newOrder: Song[], queueType: "SongHistory" | "SongQueue"){
 
-    const songs_queue = queueType === "SongQueue" ?
-    reorderArray(useUpcomingSongs.getState().queue, result.source.index, result.destination.index)
-    :
-    reorderArray(useHistorySongs.getState().queue, result.source.index, result.destination.index);
+    const songs_queue = newOrder.map((song) => song.id);
 
     if(queueType === "SongQueue")useUpcomingSongs.getState().setQueue(songs_queue);
     else useHistorySongs.getState().setQueue(songs_queue);

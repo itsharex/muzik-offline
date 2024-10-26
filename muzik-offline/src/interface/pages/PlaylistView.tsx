@@ -12,7 +12,6 @@ import { PlaylistViewState, playlistViewReducer } from "@store/reducerStore";
 import { reducerType } from "@store/index";
 import { addThisSongToPlayNext, addThisSongToPlayLater, playThisListNow, startPlayingNewSong } from "@utils/playerControl";
 import { closeContextMenu, setSongList, selectThisSong, closePlaylistModal, processArrowKeysInput, closePropertiesModal, closeDeletePlaylistModal } from "@utils/reducerUtils";
-import { DropResult } from "@hello-pangea/dnd";
 
 const PlaylistView = () => {
     const [state , dispatch] = useReducer(playlistViewReducer, PlaylistViewState);
