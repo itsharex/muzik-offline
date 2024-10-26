@@ -20,6 +20,7 @@ const AudioLabSettings = () => {
         else setselectedGeneralSetting(selectedGeneralSettingEnum.AudioLabPreset);
     }
 
+
     function setStoreValue(arg: string){
         let temp = local_store;
         temp.AudioLabPreset = arg;
@@ -39,6 +40,24 @@ const AudioLabSettings = () => {
             temp.AudioLabPreset = AudioLabPreset;
             temp.SavedPresets.push(AudioLabPreset);
             setStore(temp);
+        }
+    }
+
+    function deletePreset(){
+        if(map.has(AudioLabPreset)){
+            // don't allow flat to be deleted
+            if(AudioLabPreset === "flat"){
+                setToast({title: "Preset deletion", message: "The flat preset cannot be deleted", type: toastType.error, timeout: 3000});
+                return;
+            }
+            map.delete(AudioLabPreset);
+            let temp = local_store;
+            temp.SavedPresets = temp.SavedPresets.filter((preset) => preset !== AudioLabPreset);
+            setStore(temp);
+            resetPresetName();
+        }
+        else {
+            setToast({title: "Preset deletion", message: "No preset with that name exists", type: toastType.error, timeout: 3000});
         }
     }
 
@@ -68,13 +87,20 @@ const AudioLabSettings = () => {
                     </div>
                 </div>
                 <div className="setting">
-                    <h3>Select a preset</h3>
+                    <h3>Action</h3>
                     <div className="setting_dropdown">
                         <input type="text" placeholder="Type here to set preset name"
                             value={AudioLabPreset} onChange={(e) => setAudioLabPreset(e.target.value)}/>
-                        <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={createNewPreset}>
-                            <h4>create a new preset</h4>
-                        </motion.div>
+                        {
+                            map.has(AudioLabPreset) ?
+                            <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={deletePreset}>
+                                <h4>delete preset</h4>
+                            </motion.div>
+                            :
+                            <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={createNewPreset}>
+                                <h4>create a new preset</h4>
+                            </motion.div>
+                        }
                     </div>
                 </div>
                 <div className="equalizer_container">
