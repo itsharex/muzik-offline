@@ -1,7 +1,15 @@
+use dirs::home_dir;
 use image::imageops::FilterType;
 use std::{path::Path, io::Cursor};
+use std::path::PathBuf;
 use rayon::prelude::*;
 use base64::{Engine as _, engine::general_purpose};
+
+use crate::constants::null_cover_four::NULL_COVER_FOUR;
+use crate::constants::null_cover_null::NULL_COVER_NULL;
+use crate::constants::null_cover_one::NULL_COVER_ONE;
+use crate::constants::null_cover_three::NULL_COVER_THREE;
+use crate::constants::null_cover_two::NULL_COVER_TWO;
 
 pub fn duration_to_string(duration: &u64) -> String {
     let seconds = duration;
@@ -118,4 +126,114 @@ pub fn decode_image_in_parallel(image_as_string: &String) -> Result<Vec<u8>, Str
     If you’re seeing “=” characters in the middle of your Base64 string, 
     it suggests that something has gone wrong with the encoding process.
      */
+}
+
+pub fn get_cover_url(cover_data: &Option<String>, key: &i32) -> Option<String> {
+    match cover_data{
+        Some(cover_data_as_base64) => {
+            return save_or_overwrite_image_file(
+                String::from("cover.jpg"), 
+                &format!("data:image/jpeg;base64,{}", cover_data_as_base64)
+            );
+        },
+        None => {
+            match key{
+                key if key % 4 == 0 => {
+                    return save_if_not_exists_image_file(
+                        String::from("nullcoverone.jpg"), 
+                        &NULL_COVER_ONE.to_owned()
+                    );
+                },
+                key if key % 4 == 1 => {
+                    return save_if_not_exists_image_file(
+                        String::from("nullcovertwo.jpg"), 
+                        &NULL_COVER_TWO.to_owned()
+                    );
+                },
+                key if key % 4 == 2 => {
+                    return save_if_not_exists_image_file(
+                        String::from("nullcoverthree.jpg"), 
+                        &NULL_COVER_THREE.to_owned()
+                    );
+                },
+                key if key % 4 == 3 => {
+                    return save_if_not_exists_image_file(
+                        String::from("nullcoverfour.jpg"), 
+                        &NULL_COVER_FOUR.to_owned()
+                    );
+                },
+                &_ => {
+                    return save_if_not_exists_image_file(
+                        String::from("nullcovernull.jpg"), 
+                        &NULL_COVER_NULL.to_owned()
+                    );
+                }
+            }
+        },
+    }
+}
+
+pub fn save_or_overwrite_image_file(name: String, image_data: &String) -> Option<String> {
+    let mut image_path = PathBuf::new();
+    match home_dir() {
+        Some(path) => image_path.push(path),
+        None => return None,
+    }
+    image_path.push("muzik-offline-local-data");
+    image_path.push("images");
+    image_path.push(name);
+
+    match std::fs::write(&image_path, &image_data){
+        Ok(_) => {
+            match image_path.to_str(){
+                Some(path) => {
+                    Some(String::from(path))
+                },
+                None => {
+                    None
+                },
+            }
+        },
+        Err(_) => {
+            None
+        },
+    }
+}
+
+pub fn save_if_not_exists_image_file(name: String, image_data: &String) -> Option<String> {
+    let mut image_path = PathBuf::new();
+    match home_dir() {
+        Some(path) => image_path.push(path),
+        None => return None,
+    }
+    image_path.push("muzik-offline-local-data");
+    image_path.push("images");
+    image_path.push(name);
+
+    if !image_path.exists(){
+        match std::fs::write(&image_path, &image_data){
+            Ok(_) => {
+                match image_path.to_str(){
+                    Some(path) => {
+                        Some(String::from(path))
+                    },
+                    None => {
+                        None
+                    },
+                }
+            },
+            Err(_) => {
+                None
+            },
+        }
+    } else {
+        match image_path.to_str(){
+            Some(path) => {
+                Some(String::from(path))
+            },
+            None => {
+                None
+            },
+        }
+    }
 }

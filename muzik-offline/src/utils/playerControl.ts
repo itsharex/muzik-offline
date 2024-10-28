@@ -1,6 +1,6 @@
 import { useSavedObjectStore, useUpcomingSongs, usePlayerStore, usePlayingPosition, 
     usePlayingPositionSec, useHistorySongs } from "@store/index";
-import { Song } from "@muziktypes/index";
+import { playerState, Song } from "@muziktypes/index";
 import { invoke } from "@tauri-apps/api";
 import { SavedObject } from "@database/index";
 import { local_playlists_db, local_songs_db } from "@database/database";
@@ -91,6 +91,8 @@ export async function startPlayingNewSong(song: Song){
     temp.isPlaying = true;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
     await invoke("load_and_play_song_from_path", { soundPath: song.path, volume: volume });
+    await invoke("update_metadata", { title: song.name, artist: song.artist, album: song.album, duration: song.duration_seconds, coverUrl: ""});
+    await invoke("set_player_state", { state: playerState.Playing});
     usePlayerStore.getState().setPlayer(temp);
     setDiscordActivity(song.name);
 }
@@ -102,6 +104,7 @@ export async function loadNewSong(song: Song){
     temp.isPlaying = false;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
     await invoke("load_a_song_from_path", { soundPath: song.path, volume: volume });
+    await invoke("update_metadata", { title: song.name, artist: song.artist, album: song.album, duration: song.duration_seconds, coverUrl: ""});
     usePlayerStore.getState().setPlayer(temp);
     setDiscordActivity(song.name);
 }
@@ -109,6 +112,7 @@ export async function loadNewSong(song: Song){
 export async function playSong(){
     if(usePlayerStore.getState().Player.playingSongMetadata){
         await invoke("resume_playing");
+        await invoke("set_player_state", { state: playerState.Playing});
         let temp = usePlayerStore.getState().Player;
         temp.isPlaying = true;
         temp.wasPlayingBeforePause = true;
@@ -119,6 +123,7 @@ export async function playSong(){
 export async function pauseSong(){
     if(usePlayerStore.getState().Player.playingSongMetadata){
         await invoke("pause_song");
+        await invoke("set_player_state", { state: playerState.Paused});
         let temp = usePlayerStore.getState().Player;
         temp.isPlaying = false;
         temp.wasPlayingBeforePause = false;
@@ -129,6 +134,7 @@ export async function pauseSong(){
 export async function stopSong(){
     if(usePlayerStore.getState().Player.playingSongMetadata){
         await invoke("stop_song");
+        await invoke("set_player_state", { state: playerState.Stopped});
         setDiscordActivity(null);
         let temp = usePlayerStore.getState().Player;
         temp.playingSongMetadata = null;

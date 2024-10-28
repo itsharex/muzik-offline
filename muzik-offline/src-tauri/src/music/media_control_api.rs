@@ -1,16 +1,17 @@
-use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, PlatformConfig};
+use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, PlatformConfig, MediaPlayback}; //, MediaPosition};
 use tauri::{State, Window};
-use std::sync::Mutex;
-use crate::components::audio_manager::SharedAudioManager;
+use std::{sync::Mutex, time::Duration};
+use crate::{components::{audio_manager::SharedAudioManager, event_payload::Payload, song::Song}, constants::null_cover_null::NULL_COVER_NULL, database::db_manager::DbManager, utils::general_utils::{get_cover_url, save_if_not_exists_image_file}};
 
 pub fn config_mca(window: &Window) -> Option<MediaControls>{
     #[cfg(not(target_os = "windows"))]
     let hwnd: Option<*mut c_void> = None;
 
+    // map(|handle| handle as *mut std::os::raw::c_void)
     #[cfg(target_os = "windows")]
-    let hwnd: Option<*mut std::ffi::c_void> = {
-        let pointer = Box::new(window);
-        Some(Box::into_raw(pointer) as *mut std::ffi::c_void)
+    let hwnd: Option<*mut std::os::raw::c_void> = match window.hwnd() {
+        Ok(handle) => Some(handle.0 as *mut std::os::raw::c_void),
+        Err(_) => None,
     };
 
     let config = PlatformConfig {
@@ -23,77 +24,181 @@ pub fn config_mca(window: &Window) -> Option<MediaControls>{
         Ok(cntrl) =>{
             return Some(cntrl);
         }
-        Err(_) => {
+        Err(err) => {
+            println!("Failed to initialize media controls: {:?}", err);
             return None;
         }
     };
 }
 
+pub fn configure_media_controls(controls: &mut MediaControls){
+    let cover_url = match save_if_not_exists_image_file(
+        String::from("nullcovernull.jpg"), 
+        &NULL_COVER_NULL.to_owned()
+    ) {
+        Some(ref url) => Some(url.clone()),
+        None => None,
+    };
+
+    match controls.set_metadata(MediaMetadata {
+        title: Some("No song playing"),
+        artist: Some("No artist"),
+        album: Some("No album"),
+        cover_url: match cover_url {
+            Some(ref url) => Some(url),
+            None => None,
+        },
+        duration: None,
+    }){
+        Ok(_) => {},
+        Err(_) => {},
+    }
+}
+
 pub fn event_handler(window: &Window, event: &MediaControlEvent){
     match event {
         MediaControlEvent::Play => {
-            // emit play event to window
-            window.emit("os-media-controls", String::from("Play")).expect("failed to emit play event");
+            // emit play event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::Play, None, None, None, None)){
+                Ok(_) => {
+                    println!("Play event emitted");
+                },
+                Err(_) => {
+                    println!("Failed to emit play event");
+                },
+            }
         },
         MediaControlEvent::Pause => {
-            // emit pause event to window
-            window.emit("os-media-controls", String::from("Pause")).expect("failed to emit pause event");
+            // emit pause event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::Pause, None, None, None, None)){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         MediaControlEvent::Next => {
-            // emit next event to window
-            window.emit("os-media-controls", String::from("Next")).expect("failed to emit next event");
+            // emit next event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::Next, None, None, None, None)){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         MediaControlEvent::Previous => {
-            // emit previous event to window
-            window.emit("os-media-controls", String::from("Previous")).expect("failed to emit previous event");
+            // emit previous event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::Previous, None, None, None, None)){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         MediaControlEvent::Stop => {
-            // emit stop event to window
-            window.emit("os-media-controls", String::from("Stop")).expect("failed to emit stop event");
+            // emit stop event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::Stop, None, None, None, None)){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         MediaControlEvent::Seek(sd) => {
-            // emit seek event to window
-            window.emit("os-media-controls", String::from("Seek")).expect("failed to emit seek event");
+            // emit seek event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::Seek(*sd), Some(*sd), None, None, None)){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         MediaControlEvent::SeekBy(sd, duration) => {
-            // emit seek by event to window
-            window.emit("os-media-controls", String::from("SeekBy")).expect("failed to emit seek by event");
+            // emit seek by event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::SeekBy(*sd, *duration), Some(*sd), Some(duration.as_secs()), None, None)){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         MediaControlEvent::SetPosition(mp) => {
-            // emit set position event to window
-            window.emit("os-media-controls", String::from("SetPosition")).expect("failed to emit set position event");
+            // emit set position event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::SetPosition(*mp), None, Some(mp.0.as_secs()), None, None)){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         MediaControlEvent::SetVolume(volume) => {
-            // emit set volume event to window
-            window.emit("os-media-controls", String::from("SetVolume")).expect("failed to emit set volume event");
+            // emit set volume event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::SetVolume(*volume), None, None, Some(*volume), None)){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         MediaControlEvent::OpenUri(uri) => {
-            // emit open uri event to window
-            window.emit("os-media-controls", String::from("OpenUri")).expect("failed to emit open uri event");
+            // emit open uri event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::OpenUri(uri.clone()), None, None, None, Some(uri.clone()))){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         MediaControlEvent::Raise => {
-            // emit raise event to window
-            window.emit("os-media-controls", String::from("Raise")).expect("failed to emit raise event");
+            // emit raise event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::Raise, None, None, None, None)){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         MediaControlEvent::Quit => {
-            // emit quit event to window
-            window.emit("os-media-controls", String::from("Quit")).expect("failed to emit quit event");
+            // emit quit event to window but don't crash/expect error if it fails we will just ignore the event request
+            match window.emit("os-media-controls", Payload::new(MediaControlEvent::Quit, None, None, None, None)){
+                Ok(_) => {},
+                Err(_) => {},
+            }
         },
         _ => {}
     }
 }
 
 #[tauri::command]
-pub fn update_metadata(audio_manager: State<'_, Mutex<SharedAudioManager>>, title: &str, artist: &str, album: &str){
+pub fn update_metadata(audio_manager: State<'_, Mutex<SharedAudioManager>>, key: i32){
+    let song: Song;
+
+    match DbManager::new(){
+        Ok(dbm) => {
+            match dbm.song_tree.get(key.to_ne_bytes()){
+                Ok(Some(song_as_ivec)) => {
+                    let song_as_bytes = song_as_ivec.as_ref();
+                    let song_as_str = String::from_utf8_lossy(song_as_bytes);
+                    match serde_json::from_str::<Song>(&song_as_str.to_string()){
+                        Ok(value) => {
+                            song = value;
+                        },
+                        Err(_) => {
+                            return;
+                        },
+                    }
+                },
+                Ok(None) => {
+                    return;
+                },
+                Err(_) => {
+                    return;
+                },
+            }
+        }
+        Err(_) => {
+            return;
+        }
+    }
+
+    let cover_url = match get_cover_url(&song.cover, &key) {
+        Some(ref url) => Some(url.clone()),
+        None => None,
+    };
+    
     match audio_manager.lock(){
         Ok(mut manager) => {
             match &mut manager.controls{
                 Some(controller) => {
                     match controller.set_metadata(MediaMetadata {
-                        title: Some(title),
-                        artist: Some(artist),
-                        album: Some(album),
-                        ..Default::default()
+                        title: Some(&song.title),
+                        artist: Some(&song.artist),
+                        album: Some(&song.album),
+                        duration: Some(Duration::from_secs(song.duration_seconds)),
+                        cover_url: match cover_url {
+                            Some(ref url) => Some(url),
+                            None => None,
+                        },
                     }){
                         Ok(_) => {
         
@@ -111,5 +216,42 @@ pub fn update_metadata(audio_manager: State<'_, Mutex<SharedAudioManager>>, titl
         Err(_) => {
 
         },
+    }
+}
+
+#[tauri::command]
+pub fn set_player_state(audio_manager: State<'_, Mutex<SharedAudioManager>>, state: &str){//,position: f64
+    match audio_manager.lock(){
+        Ok(mut manager) => {
+            match &mut manager.controls{
+                Some(controller) => {
+                    match state{
+                        "playing" => {
+                            match controller.set_playback(MediaPlayback::Playing{progress: None }){//Some(MediaPosition(Duration::from_secs_f64(position)))}){
+                                Ok(_) => {},
+                                Err(_) => {},
+                            }
+                        },
+                        "paused" => {
+                            match controller.set_playback(MediaPlayback::Paused{progress: None }){//Some(MediaPosition(Duration::from_secs_f64(position)))}){
+                                Ok(_) => {},
+                                Err(_) => {},
+                            }
+                        },
+                        "stopped" => {
+                            match controller.set_playback(MediaPlayback::Stopped){
+                                Ok(_) => {
+                                    configure_media_controls(controller);
+                                },
+                                Err(_) => {},
+                            }
+                        },
+                        _ => {},
+                    }
+                },
+                None => {},
+            }
+        },
+        Err(_) => {},
     }
 }

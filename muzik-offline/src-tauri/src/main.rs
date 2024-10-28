@@ -8,8 +8,10 @@ mod components;
 mod utils;
 mod database;
 mod socials;
+mod constants;
 
 use kira::manager::{AudioManager,AudioManagerSettings,backend::DefaultBackend};
+use music::media_control_api::configure_media_controls;
 use souvlaki::MediaControlEvent;
 use components::audio_manager::SharedAudioManager;
 use utils::music_list_organizer::MLO;
@@ -29,7 +31,7 @@ use crate::commands::general_commands::{open_in_file_manager, resize_frontend_im
 use crate::music::player::{load_and_play_song_from_path, load_a_song_from_path, set_volume,
     pause_song, resume_playing, seek_to, seek_by, get_song_position, stop_song};
 
-use crate::music::media_control_api::{config_mca, update_metadata, event_handler};
+use crate::music::media_control_api::{config_mca, update_metadata, event_handler, set_player_state};
 
 use crate::utils::music_list_organizer::{mlo_set_shuffle_list, mlo_set_repeat_list, 
     mlo_get_next_batch_as_size, mlo_reset_and_set_remaining_keys};
@@ -65,11 +67,15 @@ fn main() {
                     if tx.send(event).await.is_err() { println!("Failed to send event"); }
                 });
             }).expect("Failed to attach media controls");
+
+            configure_media_controls(&mut controls);
             
             shared_audio_manager.lock().expect("failed to lock shared audio manager").controls = Some(controls);
 
             spawn(async move {
-                while let Some(event) = rx.recv().await { event_handler(&window, &event);}
+                while let Some(event) = rx.recv().await {
+                    event_handler(&window, &event);
+                }
             });
             Ok(())
         })
@@ -81,6 +87,7 @@ fn main() {
                             toggle_miniplayer_view,
                             drag_app_window,
                             update_metadata,
+                            set_player_state,
 
                             //GENERAL COMMANDS
                             get_all_songs, 
