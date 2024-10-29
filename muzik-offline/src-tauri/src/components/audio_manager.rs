@@ -6,4 +6,6 @@ pub struct SharedAudioManager {
     pub instance_handle: Option<StreamingSoundHandle<FromFileError>>,
     pub controls: Option<MediaControls>,
     pub volume: f64,
+    pub cover: Vec<u8>,
+    pub cover_url: String,
 }

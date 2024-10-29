@@ -79,10 +79,7 @@ const App = () => {
   }
 
   async function listenForOSevents(){
-    const unlisten = await listen<Payload>('os-media-controls', (event) => {
-      console.log(event);
-      processOSMediaControlsEvent(event.payload)
-    })
+    const unlisten = await listen<Payload>('os-media-controls', (event) => processOSMediaControlsEvent(event.payload))
     // later, when you want to stop listening
     return unlisten
   }

@@ -1,7 +1,7 @@
 use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, PlatformConfig, MediaPlayback}; //, MediaPosition};
 use tauri::{State, Window};
-use std::{sync::Mutex, time::Duration};
-use crate::{components::{audio_manager::SharedAudioManager, event_payload::Payload, song::Song}, constants::null_cover_null::NULL_COVER_NULL, database::db_manager::DbManager, utils::general_utils::{get_cover_url, save_if_not_exists_image_file}};
+use std::{sync::{Arc, Mutex}, time::Duration};
+use crate::{components::{audio_manager::SharedAudioManager, event_payload::Payload, song::Song}, database::db_manager::DbManager, utils::general_utils::get_song_cover_as_bytes};
 
 pub fn config_mca(window: &Window) -> Option<MediaControls>{
     #[cfg(not(target_os = "windows"))]
@@ -31,23 +31,12 @@ pub fn config_mca(window: &Window) -> Option<MediaControls>{
     };
 }
 
-pub fn configure_media_controls(controls: &mut MediaControls){
-    let cover_url = match save_if_not_exists_image_file(
-        String::from("nullcovernull.jpg"), 
-        &NULL_COVER_NULL.to_owned()
-    ) {
-        Some(ref url) => Some(url.clone()),
-        None => None,
-    };
-
+pub fn configure_media_controls(controls: &mut MediaControls, cover_url: &str){
     match controls.set_metadata(MediaMetadata {
-        title: Some("No song playing"),
+        title: Some("No song is playing"),
         artist: Some("No artist"),
         album: Some("No album"),
-        cover_url: match cover_url {
-            Some(ref url) => Some(url),
-            None => None,
-        },
+        cover_url: Some(cover_url),
         duration: None,
     }){
         Ok(_) => {},
@@ -150,7 +139,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent){
 }
 
 #[tauri::command]
-pub fn update_metadata(audio_manager: State<'_, Mutex<SharedAudioManager>>, key: i32){
+pub fn update_metadata(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, key: i32){
     let song: Song;
 
     match DbManager::new(){
@@ -181,24 +170,20 @@ pub fn update_metadata(audio_manager: State<'_, Mutex<SharedAudioManager>>, key:
         }
     }
 
-    let cover_url = match get_cover_url(&song.cover, &key) {
-        Some(ref url) => Some(url.clone()),
-        None => None,
-    };
-    
+    let image_data: Vec<u8> = get_song_cover_as_bytes(&song, key);
+
     match audio_manager.lock(){
         Ok(mut manager) => {
+            let cover_url = manager.cover_url.clone();
+            manager.cover = image_data;
             match &mut manager.controls{
                 Some(controller) => {
                     match controller.set_metadata(MediaMetadata {
-                        title: Some(&song.title),
+                        title: Some(&song.name),
                         artist: Some(&song.artist),
                         album: Some(&song.album),
                         duration: Some(Duration::from_secs(song.duration_seconds)),
-                        cover_url: match cover_url {
-                            Some(ref url) => Some(url),
-                            None => None,
-                        },
+                        cover_url: Some(&cover_url),
                     }){
                         Ok(_) => {
         
@@ -220,9 +205,10 @@ pub fn update_metadata(audio_manager: State<'_, Mutex<SharedAudioManager>>, key:
 }
 
 #[tauri::command]
-pub fn set_player_state(audio_manager: State<'_, Mutex<SharedAudioManager>>, state: &str){//,position: f64
+pub fn set_player_state(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, state: &str){//,position: f64
     match audio_manager.lock(){
         Ok(mut manager) => {
+            let cover_url = manager.cover_url.clone();
             match &mut manager.controls{
                 Some(controller) => {
                     match state{
@@ -241,7 +227,7 @@ pub fn set_player_state(audio_manager: State<'_, Mutex<SharedAudioManager>>, sta
                         "stopped" => {
                             match controller.set_playback(MediaPlayback::Stopped){
                                 Ok(_) => {
-                                    configure_media_controls(controller);
+                                    configure_media_controls(controller, &cover_url);
                                 },
                                 Err(_) => {},
                             }

@@ -91,7 +91,7 @@ export async function startPlayingNewSong(song: Song){
     temp.isPlaying = true;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
     await invoke("load_and_play_song_from_path", { soundPath: song.path, volume: volume });
-    await invoke("update_metadata", { title: song.name, artist: song.artist, album: song.album, duration: song.duration_seconds, coverUrl: ""});
+    await invoke("update_metadata", { key: song.id });
     await invoke("set_player_state", { state: playerState.Playing});
     usePlayerStore.getState().setPlayer(temp);
     setDiscordActivity(song.name);
@@ -104,7 +104,7 @@ export async function loadNewSong(song: Song){
     temp.isPlaying = false;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
     await invoke("load_a_song_from_path", { soundPath: song.path, volume: volume });
-    await invoke("update_metadata", { title: song.name, artist: song.artist, album: song.album, duration: song.duration_seconds, coverUrl: ""});
+    await invoke("update_metadata", { key: song.id });
     usePlayerStore.getState().setPlayer(temp);
     setDiscordActivity(song.name);
 }

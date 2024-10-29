@@ -1,10 +1,10 @@
-use dirs::home_dir;
 use image::imageops::FilterType;
 use std::{path::Path, io::Cursor};
-use std::path::PathBuf;
 use rayon::prelude::*;
 use base64::{Engine as _, engine::general_purpose};
+use std::net::TcpListener;
 
+use crate::components::song::Song;
 use crate::constants::null_cover_four::NULL_COVER_FOUR;
 use crate::constants::null_cover_null::NULL_COVER_NULL;
 use crate::constants::null_cover_one::NULL_COVER_ONE;
@@ -128,112 +128,90 @@ pub fn decode_image_in_parallel(image_as_string: &String) -> Result<Vec<u8>, Str
      */
 }
 
-pub fn get_cover_url(cover_data: &Option<String>, key: &i32) -> Option<String> {
-    match cover_data{
-        Some(cover_data_as_base64) => {
-            return save_or_overwrite_image_file(
-                String::from("cover.jpg"), 
-                &format!("data:image/jpeg;base64,{}", cover_data_as_base64)
-            );
+pub fn get_song_cover_as_bytes(song: &Song, key: i32) -> Vec<u8> {
+    match &song.cover{
+        Some(cover) => {
+            match decode_image_in_parallel(&cover){
+                Ok(cover) => {
+                    return cover;
+                },
+                Err(_) => {
+                    return Vec::new();
+                },
+            }
         },
         None => {
             match key{
                 key if key % 4 == 0 => {
-                    return save_if_not_exists_image_file(
-                        String::from("nullcoverone.jpg"), 
-                        &NULL_COVER_ONE.to_owned()
-                    );
+                    match decode_image_in_parallel(&NULL_COVER_ONE.to_owned()){
+                        Ok(cover) => {
+                            return cover;
+                        },
+                        Err(_) => {
+                            return Vec::new();
+                        },
+                    }
                 },
                 key if key % 4 == 1 => {
-                    return save_if_not_exists_image_file(
-                        String::from("nullcovertwo.jpg"), 
-                        &NULL_COVER_TWO.to_owned()
-                    );
+                    match decode_image_in_parallel(&NULL_COVER_TWO.to_owned()){
+                        Ok(cover) => {
+                            return cover;
+                        },
+                        Err(_) => {
+                            return Vec::new();
+                        },
+                    }
                 },
                 key if key % 4 == 2 => {
-                    return save_if_not_exists_image_file(
-                        String::from("nullcoverthree.jpg"), 
-                        &NULL_COVER_THREE.to_owned()
-                    );
+                    match decode_image_in_parallel(&NULL_COVER_THREE.to_owned()){
+                        Ok(cover) => {
+                            return cover;
+                        },
+                        Err(_) => {
+                            return Vec::new();
+                        },
+                    }
                 },
                 key if key % 4 == 3 => {
-                    return save_if_not_exists_image_file(
-                        String::from("nullcoverfour.jpg"), 
-                        &NULL_COVER_FOUR.to_owned()
-                    );
+                    match decode_image_in_parallel(&NULL_COVER_FOUR.to_owned()){
+                        Ok(cover) => {
+                            return cover;
+                        },
+                        Err(_) => {
+                            return Vec::new();
+                        },
+                    }
                 },
-                &_ => {
-                    return save_if_not_exists_image_file(
-                        String::from("nullcovernull.jpg"), 
-                        &NULL_COVER_NULL.to_owned()
-                    );
-                }
+                i32::MIN..=i32::MAX => {
+                    match decode_image_in_parallel(&NULL_COVER_NULL.to_owned()){
+                        Ok(cover) => {
+                            println!("Picked cover null");
+                            return cover;
+                        },
+                        Err(_) => {
+                            return Vec::new();
+                        },
+                    }
+                },
             }
         },
-    }
+    } 
 }
 
-pub fn save_or_overwrite_image_file(name: String, image_data: &String) -> Option<String> {
-    let mut image_path = PathBuf::new();
-    match home_dir() {
-        Some(path) => image_path.push(path),
-        None => return None,
-    }
-    image_path.push("muzik-offline-local-data");
-    image_path.push("images");
-    image_path.push(name);
-
-    match std::fs::write(&image_path, &image_data){
-        Ok(_) => {
-            match image_path.to_str(){
-                Some(path) => {
-                    Some(String::from(path))
+pub fn get_random_port() -> u16 {
+    match TcpListener::bind("127.0.0.1:0"){
+        Ok(listener) => {
+            match listener.local_addr(){
+                Ok(addr) => {
+                    addr.port()
                 },
-                None => {
-                    None
+                Err(_) => {
+                    30340
                 },
             }
         },
         Err(_) => {
-            None
+            30340
         },
-    }
-}
-
-pub fn save_if_not_exists_image_file(name: String, image_data: &String) -> Option<String> {
-    let mut image_path = PathBuf::new();
-    match home_dir() {
-        Some(path) => image_path.push(path),
-        None => return None,
-    }
-    image_path.push("muzik-offline-local-data");
-    image_path.push("images");
-    image_path.push(name);
-
-    if !image_path.exists(){
-        match std::fs::write(&image_path, &image_data){
-            Ok(_) => {
-                match image_path.to_str(){
-                    Some(path) => {
-                        Some(String::from(path))
-                    },
-                    None => {
-                        None
-                    },
-                }
-            },
-            Err(_) => {
-                None
-            },
-        }
-    } else {
-        match image_path.to_str(){
-            Some(path) => {
-                Some(String::from(path))
-            },
-            None => {
-                None
-            },
-        }
     }
 }
