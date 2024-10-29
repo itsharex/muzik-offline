@@ -18,7 +18,7 @@ const MiniPlayer: FunctionComponent<MiniPlayerProps> = (props: MiniPlayerProps) 
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
     const {playingPosInSec, setplayingPosInSec} = usePlayingPositionSec((state) => { return {playingPosInSec: state.position, setplayingPosInSec: state.setPosition}; });
     const {playingPosition, setplayingPosition} = usePlayingPosition((state) => { return {playingPosition: state.position, setplayingPosition: state.setPosition}; });
-    const intervalIdRef = useRef<number>();
+    const intervalIdRef = useRef<number | NodeJS.Timeout>();
 
     function changeVolume(event : any){changeVolumeLevel(event.target.value);}
 
@@ -49,7 +49,7 @@ const MiniPlayer: FunctionComponent<MiniPlayerProps> = (props: MiniPlayerProps) 
     }
 
     function detectKeyPress(this: Window, ev: any){
-        if(ev.target.id !== "gsearch"){
+        if(ev.target.id !== "gsearch" && ev.target.id !== "input-field"){
             if(ev.key === " "){//pause/play song
                 if(Player.isPlaying)pauseSong();
                 else playSong();

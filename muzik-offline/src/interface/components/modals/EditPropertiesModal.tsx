@@ -67,6 +67,16 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
         const song_v = song;
         props.closeModal();
 
+        if(props.song === null) return;
+        
+        // check if any field has changed
+        if(song_v.title === props.song.title && song_v.artist === props.song.artist 
+            && song_v.album === props.song.album && song_v.genre === props.song.genre 
+            && song_v.year === props.song.year && song_v.date_recorded === props.song.date_recorded
+            && song_v.date_released === props.song.date_released && song_v.cover === props.song.cover){
+                return;
+        }
+
         invoke("edit_song_metadata", {songPath: song_v.path, songMetadata: JSON.stringify(song_v), hasChangedCover: hasChangedCover}).
         then(async() => { 
             await local_songs_db.songs.update(song_v.id, song_v);
@@ -132,34 +142,34 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
                     }
                     <div className="properties_grid_item">
                         <h3>Edit Title</h3>
-                        <input type="text" value={song.title} onChange={(e) => setSong({...song, title: e.target.value})}/>
+                        <input type="text" id="input-field" value={song.title} onChange={(e) => setSong({...song, title: e.target.value})}/>
                     </div>
                     <div className="properties_grid_item">
                         <h3>Edit Artist</h3>
-                        <input type="text" value={song.artist} onChange={(e) => setSong({...song, artist: e.target.value})}/>
+                        <input type="text" id="input-field" value={song.artist} onChange={(e) => setSong({...song, artist: e.target.value})}/>
                     </div>
                     <div className="properties_grid_item">
                         <h3>Edit Album</h3>
-                        <input type="text" value={song.album} onChange={(e) => setSong({...song, album: e.target.value})}/>
+                        <input type="text" id="input-field" value={song.album} onChange={(e) => setSong({...song, album: e.target.value})}/>
                     </div>
                     <div className="properties_grid_item">
                         <h3>Edit Genre</h3>
-                        <input type="text" value={song.genre} onChange={(e) => setSong({...song, genre: e.target.value})}/>
+                        <input type="text" id="input-field" value={song.genre} onChange={(e) => setSong({...song, genre: e.target.value})}/>
                     </div>
                     <div className="properties_grid_item">
                         <h3>Edit Year</h3>
-                        <input type="text" value={song.year} onChange={(e) => setSong({...song, year: Number.parseInt(e.target.value)})}/>
+                        <input type="text" id="input-field" value={song.year} onChange={(e) => setSong({...song, year: Number.parseInt(e.target.value)})}/>
                     </div>
                     { isid3Supported && 
                         <div className="properties_grid_item">
                             <h3>Edit Date recorded "YYYY-MM-DD-HH-MM-SS"</h3>
-                            <input type="text" value={song.date_recorded} onChange={(e) => setSong({...song, date_recorded: e.target.value})}/>
+                            <input type="text" id="input-field" value={song.date_recorded} onChange={(e) => setSong({...song, date_recorded: e.target.value})}/>
                         </div>
                     }
                     { isid3Supported &&
                         <div className="properties_grid_item">
                             <h3>Edit Date released "YYYY-MM-DD-HH-MM-SS"</h3>
-                            <input type="text" value={song.date_released} onChange={(e) => setSong({...song, date_released: e.target.value})}/>
+                            <input type="text" id="input-field" value={song.date_released} onChange={(e) => setSong({...song, date_released: e.target.value})}/>
                         </div>
                     }
                 </div>

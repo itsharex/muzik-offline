@@ -56,7 +56,14 @@ fn edit_metadata_lofty(song_path: &String, song: &Song) -> Result<(), Box<dyn st
         }
     }
 
-    Ok(())
+    match lofty::AudioFile::save_to_path(&tagged_file, song_path){
+        Ok(_) => {
+            Ok(())
+        }
+        Err(_) => {
+            Err("Error writing to file".into())
+        }
+    }
 }
 
 fn edit_metadata_id3(song_path: &String, song: &Song, has_changed_cover: &bool) -> Result<(), Box<dyn std::error::Error>>{
@@ -71,7 +78,15 @@ fn edit_metadata_id3(song_path: &String, song: &Song, has_changed_cover: &bool) 
     set_year_id3(&mut tag, song);
     tag.set_date_recorded(create_timestamp(&song.date_recorded));
     tag.set_date_released(create_timestamp(&song.date_released));
-    Ok(())
+
+    match tag.write_to_path(song_path, id3::Version::Id3v24){
+        Ok(_) => {
+            Ok(())
+        }
+        Err(_) => {
+            Err("Error writing to file".into())
+        }
+    }
 }
 
 fn create_timestamp(date_a: &String) -> Timestamp{
