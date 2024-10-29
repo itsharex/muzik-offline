@@ -49,12 +49,8 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent){
         MediaControlEvent::Play => {
             // emit play event to window but don't crash/expect error if it fails we will just ignore the event request
             match window.emit("os-media-controls", Payload::new(MediaControlEvent::Play, None, None, None, None)){
-                Ok(_) => {
-                    println!("Play event emitted");
-                },
-                Err(_) => {
-                    println!("Failed to emit play event");
-                },
+                Ok(_) => {},
+                Err(_) => {},
             }
         },
         MediaControlEvent::Pause => {

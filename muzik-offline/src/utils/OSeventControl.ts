@@ -1,5 +1,6 @@
 import { Payload } from "@muziktypes/index";
 import { pauseSong, playNextSong, playPreviousSong, playSong, stopSong } from "./playerControl";
+import { appWindow } from '@tauri-apps/api/window';
 
 export async function processOSMediaControlsEvent(event: Payload) {
     switch(event.event){
@@ -20,6 +21,9 @@ export async function processOSMediaControlsEvent(event: Payload) {
             break;
         case "Stop": 
             stopSong();
+            break;
+        case "Quit":
+            appWindow.close();
             break;
         default:
             break;
