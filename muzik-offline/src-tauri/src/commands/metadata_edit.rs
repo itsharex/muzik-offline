@@ -226,6 +226,8 @@ fn set_title_id3(tag: &mut id3::Tag, song_meta_data: &Song){
         if song_meta_data.title != title {
             tag.set_title(song_meta_data.title.clone())
         }
+    } else {
+        tag.set_title(song_meta_data.title.clone())
     }
 }
 
@@ -235,6 +237,8 @@ fn set_title_lofty(tag: &mut lofty::Tag , song_meta_data: &Song){
         if song_meta_data.title != title {
             tag.set_title(song_meta_data.title.clone())
         }
+    } else {
+        tag.set_title(song_meta_data.title.clone())
     }
 }
 
@@ -244,6 +248,8 @@ fn set_artist_id3(tag: &mut id3::Tag, song_meta_data: &Song){
         if song_meta_data.artist != artist{
             tag.set_artist(song_meta_data.artist.clone());
         }
+    } else {
+        tag.set_artist(song_meta_data.artist.clone());
     }
 }
 
@@ -253,6 +259,8 @@ fn set_artist_lofty(tag: &mut lofty::Tag, song_meta_data: &Song){
         if song_meta_data.artist != artist{
             tag.set_artist(song_meta_data.artist.clone());
         }
+    } else {
+        tag.set_artist(song_meta_data.artist.clone());
     }
 }
 
@@ -262,6 +270,8 @@ fn set_album_id3(tag: &mut id3::Tag, song_meta_data: &Song){
         if song_meta_data.album != album{
             tag.set_album(song_meta_data.album.clone());
         }
+    } else {
+        tag.set_album(song_meta_data.album.clone());
     }
 }
 
@@ -271,6 +281,8 @@ fn set_album_lofty(tag: &mut lofty::Tag, song_meta_data: &Song){
         if song_meta_data.album != album{
             tag.set_album(song_meta_data.album.clone());
         }
+    } else {
+        tag.set_album(song_meta_data.album.clone());
     }
 }
 
@@ -280,6 +292,8 @@ fn set_genre_id3(tag: &mut id3::Tag, song_meta_data: &Song){
         if song_meta_data.genre != genre{
             tag.set_genre(song_meta_data.genre.clone());
         }
+    } else {
+        tag.set_genre(song_meta_data.genre.clone());
     }
 }
 
@@ -289,6 +303,8 @@ fn set_genre_lofty(tag: &mut lofty::Tag, song_meta_data: &Song){
         if song_meta_data.genre != genre{
             tag.set_genre(song_meta_data.genre.clone());
         }
+    } else {
+        tag.set_genre(song_meta_data.genre.clone());
     }
 }
 
@@ -298,6 +314,8 @@ fn set_year_id3(tag: &mut id3::Tag, song_meta_data: &Song){
         if song_meta_data.year as i32 != year{
             tag.set_year(song_meta_data.year as i32);
         }
+    } else {
+        tag.set_year(song_meta_data.year as i32);
     }
 }
 
@@ -307,6 +325,8 @@ fn set_year_lofty(tag: &mut lofty::Tag, song_meta_data: &Song){
         if song_meta_data.year != year{
             tag.set_year(song_meta_data.year);
         }
+    } else {
+        tag.set_year(song_meta_data.year);
     }
 }
 

@@ -110,7 +110,34 @@
                     margin-top: 2px;
                 }
             }
+            
+            .save_button, .cancel_button{
+                display: flex;
+                width: 220px;
+                height: 34px;
+                margin-top: 10px;
+                border-radius: 14px;
+                align-items: center;
+                background: $app-theme-col;
+        
+                h3{
+                    color: $root-app-navigator-hover-col;
+                    font-size: 13px;
+                    text-align: center;
+                    width: 100%;
+                }
+            }
+
+            .save_button:hover, .cancel_button:hover{
+                opacity: 0.8;
+            }
+
+            .cancel_button{
+                background: $on-hover-song;
+                color: $white-900;
+            }
         }
+
     }
 }
 

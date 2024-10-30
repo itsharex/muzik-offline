@@ -186,7 +186,7 @@ const AllTracks = () => {
             }
             <div className="bottom_margin"/>
             <PropertiesModal isOpen={state.isPropertiesModalOpen} song={state.songMenuToOpen!} closeModal={() => closePropertiesModal(dispatch)} />
-            <EditPropertiesModal isOpen={state.isEditingSongModalOpen} song={state.songMenuToOpen!} closeModal={() => closeEditPropertiesModal(dispatch)} />
+            <EditPropertiesModal isOpen={state.isEditingSongModalOpen} songID={state.songMenuToOpen ? state.songMenuToOpen.id : -1} closeModal={() => closeEditPropertiesModal(dispatch)} />
             <AddSongToPlaylistModal isOpen={state.isPlaylistModalOpen} songPath={state.songMenuToOpen ? state.songMenuToOpen.path : ""} closeModal={() => closePlaylistModal(dispatch)} />
         </motion.div>
     )

@@ -1,7 +1,7 @@
 use std::{path::Path, collections::HashMap};
 use id3::TagLike;
 use serde_json::Value;
-use crate::utils::general_utils::encode_image_in_parallel;
+use crate::utils::general_utils::{encode_image_in_parallel, is_media_file};
 use crate::database::db_api::{
     compare_and_set_hash_map, 
     start_insertion,
@@ -88,6 +88,12 @@ pub async fn get_songs_in_path(
             while let Ok(Some(entry)) = paths.next_entry().await {
                 match entry.path().to_str(){
                     Some(full_path) => {
+                        match is_media_file(full_path){
+                            Ok(true) => {},
+                            Ok(false) => {continue;},
+                            Err(_) => {continue;},
+                        }
+                        
                         if let Ok(song_data) = read_from_path(full_path, song_id, compress_image_option) {
                             let hmt: HMapType = HMapType{key: song_data.id.clone(), cover: song_data.cover.clone()};
                             compare_and_set_hash_map(albums_hash_map, &song_data.album, &hmt);
@@ -103,7 +109,6 @@ pub async fn get_songs_in_path(
                             songs.push(song_data);
                         }
                         else{
-                            
                         }
                     }
                     None => {
@@ -168,8 +173,19 @@ fn lofty_read_from_path(
             set_file_extension(&path, &mut song_meta_data);
         }
         None => {
-            *song_id -= 1;
-            return Err("Error opening file".into());
+            song_meta_data.title = String::from("Unknown Title");
+            set_name(&path, &mut song_meta_data);
+            song_meta_data.artist = String::from("Unknown Artist");
+            song_meta_data.album = String::from("Unknown Album");
+            song_meta_data.genre = String::from("Unknown Genre");
+            song_meta_data.year = 0;
+            set_duration_bit_rate_sample_rate_bit_depth_channels(&path, &mut song_meta_data);
+            set_path(&path, &mut song_meta_data);
+            song_meta_data.cover = None;
+            song_meta_data.date_recorded = String::from("Unknown date recorded");
+            song_meta_data.date_released = String::from("Unknown date recorded");
+            set_file_size(&path, &mut song_meta_data);
+            set_file_extension(&path, &mut song_meta_data);
         }
     }
 
@@ -180,7 +196,12 @@ fn read_from_path(
     path: &str, song_id: &mut i32, 
     compress_image_option: &bool
 ) -> Result<Song, Box<dyn std::error::Error>> {
-    let tag = id3::Tag::read_from_path(path)?;
+    let tag = match id3::Tag::read_from_path(path){
+        Ok(tag) => tag,
+        Err(id3::Error{kind: id3::ErrorKind::NoTag, ..}) => id3::Tag::new(),
+        Err(err) => return Err(Box::new(err)),
+    };
+
     *song_id += 1;
 
     let mut song_meta_data = Song {

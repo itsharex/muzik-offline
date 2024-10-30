@@ -9,35 +9,38 @@ import { useToastStore } from "@store/index";
 import { local_songs_db } from "@database/database";
 
 type EditPropertiesModalProps = {
-    song: Song | null;
+    songID: number;
     isOpen: boolean;
     closeModal: () => void;
 }
 
+const emptySong: Song = {
+    id: 0,
+    title: "",
+    name: "",
+    artist: "",
+    album: "",
+    genre: "",
+    year: 0,
+    duration: "",
+    duration_seconds: 0,
+    path: "",
+    cover: null,
+    date_recorded: "",
+    date_released: "",
+    file_size: 0,
+    file_type: "",
+    overall_bit_rate: 0,
+    audio_bit_rate: 0,
+    sample_rate: 0,
+    bit_depth: 0,
+    channels: 0
+};
+
 const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props: EditPropertiesModalProps) => {
 
-    const [song, setSong] = useState<Song>({
-            id: 0,
-            title: "",
-            name: "",
-            artist: "",
-            album: "",
-            genre: "",
-            year: 0,
-            duration: "",
-            duration_seconds: 0,
-            path: "",
-            cover: null,
-            date_recorded: "",
-            date_released: "",
-            file_size: 0,
-            file_type: "",
-            overall_bit_rate: 0,
-            audio_bit_rate: 0,
-            sample_rate: 0,
-            bit_depth: 0,
-            channels: 0
-        });
+    const [song, setSong] = useState<Song>(emptySong);
+    const [oldsong, setOldSong] = useState<Song>(emptySong);
     const [isid3Supported, setISid3Supported] = useState<boolean>(false);
     const [hasChangedCover, setHasChangedCover] = useState<boolean>(false);
     const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
@@ -67,13 +70,13 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
         const song_v = song;
         props.closeModal();
 
-        if(props.song === null) return;
+        if(props.songID === -1) return;
         
         // check if any field has changed
-        if(song_v.title === props.song.title && song_v.artist === props.song.artist 
-            && song_v.album === props.song.album && song_v.genre === props.song.genre 
-            && song_v.year === props.song.year && song_v.date_recorded === props.song.date_recorded
-            && song_v.date_released === props.song.date_released && song_v.cover === props.song.cover){
+        if(song_v.title === oldsong.title && song_v.artist === oldsong.artist 
+            && song_v.album === oldsong.album && song_v.genre === oldsong.genre 
+            && song_v.year === oldsong.year && song_v.date_recorded === oldsong.date_recorded
+            && song_v.date_released === oldsong.date_released && song_v.cover === oldsong.cover){
                 return;
         }
 
@@ -86,36 +89,21 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
     }
 
     useEffect(() => {
-        setISid3Supported(props.song !== null && (props.song.file_type === "mp3" || props.song.file_type === "wav" || props.song.file_type === "aiff") ? true : false);
-        setSong(props.song === null ? 
-            {
-                id: 0,
-                title: "",
-                name: "",
-                artist: "",
-                album: "",
-                genre: "",
-                year: 0,
-                duration: "",
-                duration_seconds: 0,
-                path: "",
-                cover: null,
-                date_recorded: "",
-                date_released: "",
-                file_size: 0,
-                file_type: "",
-                overall_bit_rate: 0,
-                audio_bit_rate: 0,
-                sample_rate: 0,
-                bit_depth: 0,
-                channels: 0
+        local_songs_db.songs.get(props.songID).then((oldSong) => {
+            if(oldSong === undefined){
+                setSong(emptySong);
+                setOldSong(emptySong);
+                return;
             }
-            : props.song)
-    }, [props.song])
+            setISid3Supported(oldSong !== null && (oldSong.file_type === "mp3" || oldSong.file_type === "wav" || oldSong.file_type === "aiff") ? true : false);
+            setSong(oldSong);
+            setOldSong(oldSong);
+        })
+    }, [props.songID])
 
     return (
         <div className={"EditPropertiesModal" + (props.isOpen ? " EditPropertiesModal-visible" : "")} onClick={
-            (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {if(e.target === e.currentTarget)saveChanges()}}>
+            (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {if(e.target === e.currentTarget)props.closeModal();}}>
             <motion.div 
             animate={props.isOpen ? "open" : "closed"}
             variants={modal_variants}
@@ -172,6 +160,12 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
                             <input type="text" id="input-field" value={song.date_released} onChange={(e) => setSong({...song, date_released: e.target.value})}/>
                         </div>
                     }
+                    <motion.div className="save_button" whileTap={{scale: 0.98}} onClick={saveChanges}>
+                        <h3>Save changes</h3>
+                    </motion.div>
+                    <motion.div className="cancel_button" whileTap={{scale: 0.98}} onClick={props.closeModal}>
+                        <h3>Cancel</h3>
+                    </motion.div>
                 </div>
             </motion.div>
         </div>
