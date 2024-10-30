@@ -7,6 +7,7 @@ import { modal_variants } from "@content/index";
 import { getRandomCover } from "@utils/index";
 import { useToastStore } from "@store/index";
 import { local_songs_db } from "@database/database";
+import {DateInput} from "@components/index";
 
 type EditPropertiesModalProps = {
     songID: number;
@@ -155,13 +156,31 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
                     { isid3Supported && 
                         <div className="properties_grid_item">
                             <h3>Edit Date recorded "YYYY-MM-DD-HH-MM-SS"</h3>
-                            <input type="text" id="input-field" value={song.date_recorded} onChange={(e) => setSong({...song, date_recorded: e.target.value})}/>
+                            <DateInput onChange={(date) => 
+                                setSong({
+                                    ...song, 
+                                    date_recorded: date.getFullYear.toString() + "-" + 
+                                    date.getMonth().toString() + "-" +
+                                    date.getDate().toString() + "-" +
+                                    date.getHours().toString() + "-" +
+                                    date.getMinutes().toString() + "-" +
+                                    date.getSeconds().toString()
+                                })}/>
                         </div>
                     }
                     { isid3Supported &&
                         <div className="properties_grid_item">
                             <h3>Edit Date released "YYYY-MM-DD-HH-MM-SS"</h3>
-                            <input type="text" id="input-field" value={song.date_released} onChange={(e) => setSong({...song, date_released: e.target.value})}/>
+                            <DateInput onChange={(date) => 
+                                setSong({
+                                    ...song, 
+                                    date_released: date.getFullYear.toString() + "-" + 
+                                    date.getMonth().toString() + "-" +
+                                    date.getDate().toString() + "-" +
+                                    date.getHours().toString() + "-" +
+                                    date.getMinutes().toString() + "-" +
+                                    date.getSeconds().toString()
+                                })}/>
                         </div>
                     }
                     <motion.div className="save_button" whileTap={{scale: 0.98}} onClick={saveChanges}>
