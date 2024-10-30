@@ -146,7 +146,11 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
                     </div>
                     <div className="properties_grid_item">
                         <h3>Edit Year</h3>
-                        <input type="text" id="input-field" value={song.year} onChange={(e) => setSong({...song, year: Number.parseInt(e.target.value)})}/>
+                        <input type="text" id="input-field" value={song.year} onChange={(e) => {
+                            const reg = new RegExp('^\d+$');
+                            if(reg.test(e.target.value))return;
+                            setSong({...song, year: Number.parseInt(e.target.value)});
+                        }}/>
                     </div>
                     { isid3Supported && 
                         <div className="properties_grid_item">

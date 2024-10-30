@@ -464,7 +464,15 @@ fn set_date_recorded_id3(tag: &id3::Tag, song_meta_data: &mut Song){
     //DATE RECORDED
     //"YYYY-MM-DD-HH-MM-SS"
     if let Some(date_recorded) = tag.date_recorded() {
-        song_meta_data.date_recorded = date_recorded.year.to_string() + "-";
+        song_meta_data.date_recorded = format!(
+            "{:04}-{:02}-{:02}-{:02}-{:02}-{:02}", 
+            date_recorded.year, 
+            date_recorded.month.unwrap_or(0),
+            date_recorded.day.unwrap_or(0),
+            date_recorded.hour.unwrap_or(0),
+            date_recorded.minute.unwrap_or(0),
+            date_recorded.second.unwrap_or(0)
+        );
     }
     else{
         song_meta_data.date_recorded = String::from("Unknown date recorded");
@@ -481,7 +489,15 @@ fn set_date_released_id3(tag: &id3::Tag, song_meta_data: &mut Song){
     //DATE RELEASED
     //"YYYY-MM-DD-HH-MM-SS"
     if let Some(date_released) = tag.date_released() {
-        song_meta_data.date_released = date_released.year.to_string() + "-";
+        song_meta_data.date_released = format!(
+            "{:04}-{:02}-{:02}-{:02}-{:02}-{:02}",
+            date_released.year, 
+            date_released.month.unwrap_or(0),
+            date_released.day.unwrap_or(0),
+            date_released.hour.unwrap_or(0),
+            date_released.minute.unwrap_or(0),
+            date_released.second.unwrap_or(0)
+        );
     }
     else{
         song_meta_data.date_released = String::from("Unknown date recorded");
