@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef } from "react";
-import { AddSongToPlaylistModal, GeneralContextMenu, LargeResizableCover, LoaderAnimated, PropertiesModal, RectangleSongBox } from "@components/index";
+import { AddSongToPlaylistModal, EditPropertiesModal, GeneralContextMenu, LargeResizableCover, LoaderAnimated, PropertiesModal, RectangleSongBox } from "@components/index";
 import "@styles/pages/AlbumDetails.scss";
 import { motion } from "framer-motion";
 import { Play, Shuffle } from "@assets/icons";
@@ -10,7 +10,7 @@ import { getAlbumSongs, getRandomCover, secondsToTimeFormat } from "utils";
 import { ViewportList } from "react-viewport-list";
 import { albumDetailsReducer, AlbumDetailsState } from "@store/reducerStore";
 import { startPlayingNewSong, playThisListNow, addThisSongToPlayLater, addThisSongToPlayNext } from "@utils/playerControl";
-import { closeContextMenu, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectThisSong, setSongList } from "@utils/reducerUtils";
+import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectThisSong, setSongList } from "@utils/reducerUtils";
 import { variants_list } from "@content/index";
 import { reducerType } from "@store/index";
 
@@ -196,6 +196,7 @@ const AlbumDetails = () => {
                 )
             }
             <PropertiesModal isOpen={state.isPropertiesModalOpen} song={state.songMenuToOpen!} closeModal={() => closePropertiesModal(dispatch)} />
+            <EditPropertiesModal isOpen={state.isEditingSongModalOpen} songID={state.songMenuToOpen ? state.songMenuToOpen.id : -1} closeModal={() => closeEditPropertiesModal(dispatch)} />
             <AddSongToPlaylistModal isOpen={state.isPlaylistModalOpen} songPath={state.songMenuToOpen ? state.songMenuToOpen.path : ""} closeModal={() => closePlaylistModal(dispatch)} />
         </motion.div>
     )

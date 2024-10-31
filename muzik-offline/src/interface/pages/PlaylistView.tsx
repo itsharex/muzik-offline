@@ -1,5 +1,5 @@
 import { Edit, Play, Shuffle } from "@assets/icons";
-import { LargeResizableCover, GeneralContextMenu, EditPlaylistModal, PropertiesModal, AddSongToPlaylistModal, RectangleSongBoxDraggable, DeleteSongFromPlaylistModal } from "@components/index";
+import { LargeResizableCover, GeneralContextMenu, EditPlaylistModal, PropertiesModal, AddSongToPlaylistModal, RectangleSongBoxDraggable, DeleteSongFromPlaylistModal, EditPropertiesModal } from "@components/index";
 import { local_albums_db, local_playlists_db } from "@database/database";
 import { contextMenuButtons, contextMenuEnum } from "@muziktypes/index";
 import { motion } from "framer-motion";
@@ -11,7 +11,7 @@ import { variants_list } from "@content/index";
 import { PlaylistViewState, playlistViewReducer } from "@store/reducerStore";
 import { reducerType } from "@store/index";
 import { addThisSongToPlayNext, addThisSongToPlayLater, playThisListNow, startPlayingNewSong } from "@utils/playerControl";
-import { closeContextMenu, setSongList, selectThisSong, closePlaylistModal, processArrowKeysInput, closePropertiesModal, closeDeletePlaylistModal } from "@utils/reducerUtils";
+import { closeContextMenu, setSongList, selectThisSong, closePlaylistModal, processArrowKeysInput, closePropertiesModal, closeDeletePlaylistModal, closeEditPropertiesModal } from "@utils/reducerUtils";
 import { DropResult } from "@hello-pangea/dnd";
 
 const PlaylistView = () => {
@@ -233,6 +233,7 @@ const PlaylistView = () => {
                 isOpen={state.isEditingPlayListModalOpen} closeModal={closeModalAndResetData}/>
             <AddSongToPlaylistModal isOpen={state.isPlaylistModalOpen} songPath={state.songMenuToOpen ? state.songMenuToOpen.path : ""} closeModal={() => closePlaylistModal(dispatch)} />
             <PropertiesModal isOpen={state.isPropertiesModalOpen} song={state.songMenuToOpen ? state.songMenuToOpen : undefined} closeModal={() => closePropertiesModal(dispatch)} />
+            <EditPropertiesModal isOpen={state.isEditingSongModalOpen} songID={state.songMenuToOpen ? state.songMenuToOpen.id : -1} closeModal={() => closeEditPropertiesModal(dispatch)} />
             <DeleteSongFromPlaylistModal 
                 title={state.songMenuToOpen ? state.songMenuToOpen.name : ""} 
                 isOpen={state.isDeleteSongModalOpen} 

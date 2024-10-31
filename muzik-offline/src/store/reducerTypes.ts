@@ -95,6 +95,7 @@ export interface SearchSongInterface{
     songMenuToOpen: Song | null,
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
 }
 
 export interface AlbumDetailsInterface{
@@ -106,6 +107,7 @@ export interface AlbumDetailsInterface{
     songMenuToOpen: Song | null,
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
     resizeHeader: boolean;
 }
 
@@ -161,6 +163,7 @@ export interface GenreViewInterface{
     songMenuToOpen: Song | null,
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
     resizeHeader: boolean;
 }
 
@@ -189,6 +192,7 @@ export interface PlaylistViewInterface{
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
     isDeleteSongModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
     resizeHeader: boolean;
 }
 

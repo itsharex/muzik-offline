@@ -3,7 +3,7 @@ import { useEffect, useReducer, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getGenreSongs, secondsToTimeFormat } from "utils";
 import { motion } from "framer-motion";
-import { AddSongToPlaylistModal, GeneralContextMenu, LargeResizableCover, PropertiesModal, RectangleSongBox } from "@components/index";
+import { AddSongToPlaylistModal, EditPropertiesModal, GeneralContextMenu, LargeResizableCover, PropertiesModal, RectangleSongBox } from "@components/index";
 import { Play, Shuffle } from "@assets/icons";
 import { local_albums_db, local_genres_db } from "@database/database";
 import "@styles/pages/GenreView.scss";
@@ -11,7 +11,7 @@ import { ViewportList } from "react-viewport-list";
 import { GenreViewState, genreViewReducer } from "store/reducerStore";
 import { variants_list } from "@content/index";
 import { reducerType } from "store";
-import { closeContextMenu, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectThisSong, setSongList } from "utils/reducerUtils";
+import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectThisSong, setSongList } from "utils/reducerUtils";
 import { addThisSongToPlayLater, addThisSongToPlayNext, playThisListNow, startPlayingNewSong } from "utils/playerControl";
 
 const GenreView = () => {
@@ -187,6 +187,7 @@ const GenreView = () => {
                 )
             }
             <PropertiesModal isOpen={state.isPropertiesModalOpen} song={state.songMenuToOpen!} closeModal={() => closePropertiesModal(dispatch)} />
+            <EditPropertiesModal isOpen={state.isEditingSongModalOpen} songID={state.songMenuToOpen ? state.songMenuToOpen.id : -1} closeModal={() => closeEditPropertiesModal(dispatch)} />
             <AddSongToPlaylistModal isOpen={state.isPlaylistModalOpen} songPath={state.songMenuToOpen ? state.songMenuToOpen.path : ""} closeModal={() => closePlaylistModal(dispatch)} />
         </motion.div>
     )
