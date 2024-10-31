@@ -1,8 +1,12 @@
 import { Payload } from "@muziktypes/index";
-import { pauseSong, playNextSong, playPreviousSong, playSong, stopSong } from "./playerControl";
+import { changeSeekerPositionBtnPress, changeVolumeLevel, pauseSong, playNextSong, playPreviousSong, playSong, setVolumeLevel, stopSong } from "./playerControl";
 import { appWindow } from '@tauri-apps/api/window';
+import { invoke } from "@tauri-apps/api";
+import { usePlayerStore } from "@store/index";
 
 export async function processOSMediaControlsEvent(event: Payload) {
+    const song = usePlayerStore.getState().Player.playingSongMetadata;
+    if (!song) return;
     switch(event.event){
         case "Play": 
             playSong();
@@ -11,7 +15,7 @@ export async function processOSMediaControlsEvent(event: Payload) {
             pauseSong();
             break;
         case "Toggle": 
-            // idk what this is
+            // what is this
             break;
         case "Next": 
             playNextSong();
@@ -22,8 +26,40 @@ export async function processOSMediaControlsEvent(event: Payload) {
         case "Stop": 
             stopSong();
             break;
+        case "Seek":
+            if(event.seek_direction === "forward"){
+                changeSeekerPositionBtnPress(false);
+            }else{
+                changeSeekerPositionBtnPress(true);
+            }
+            break;
+        case "SeekBy":
+            if(event.seek_direction === "forward"){
+                changeSeekerPositionBtnPress(false);
+            }else{
+                changeSeekerPositionBtnPress(true);
+            }
+            break;
+        case "SetPosition":
+            break;
+        case "SetVolume":
+            // set volume
+            if(event.volume){
+                changeVolumeLevel(event.volume * 100);
+                setVolumeLevel(event.volume * 100);
+            }
+            break;
+        case "OpenUri":
+            // open the uri
+            await invoke("open_in_file_manager", { filePath: song.path });
+            break;
+        case "Raise":
+            // bring the app to the front
+            await appWindow.setFocus();
+            break;
         case "Quit":
-            appWindow.close();
+            // close the app
+            await appWindow.close();
             break;
         default:
             break;

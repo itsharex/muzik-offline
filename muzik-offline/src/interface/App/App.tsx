@@ -7,9 +7,9 @@ import { type } from '@tauri-apps/api/os';
 import { invoke } from "@tauri-apps/api";
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { HistoryNextFloating } from "@layouts/index";
-import { OSTYPEenum, Payload, toastType } from "@muziktypes/index";
+import { OSTYPEenum, Payload } from "@muziktypes/index";
 import { AnimatePresence } from "framer-motion";
-import { useWallpaperStore, useSavedObjectStore, useToastStore } from "@store/index";
+import { useWallpaperStore, useSavedObjectStore } from "@store/index";
 import { SavedObject } from "@database/saved_object";
 import { isPermissionGranted, requestPermission } from '@tauri-apps/api/notification';
 import { MiniPlayer } from "@App/index";
@@ -23,7 +23,6 @@ const App = () => {
   const [FloatingHNState, setFloatingHNState] = useState<boolean>(false);
   const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
   const { wallpaper } = useWallpaperStore((state) => { return { wallpaper: state.wallpaper,}; });
-  const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
 
   function closeSetting(){if(openSettings === true)setOpenSettings(false);}
 
@@ -50,11 +49,7 @@ const App = () => {
 
   function connect_to_discord(){ 
     if(local_store.AppActivityDiscord === "Yes"){
-      invoke("allow_connection_and_connect_to_discord_rpc").then().catch((_) => {
-        setToast({
-          title: "Discord connection...", message: "Failed to establish connection with discord", type: toastType.error, timeout: 5000
-        });
-      }); 
+      invoke("allow_connection_and_connect_to_discord_rpc").then().catch(); 
     }
   }
 

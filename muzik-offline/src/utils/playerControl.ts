@@ -94,7 +94,7 @@ export async function startPlayingNewSong(song: Song){
     await invoke("update_metadata", { key: song.id });
     await invoke("set_player_state", { state: playerState.Playing});
     usePlayerStore.getState().setPlayer(temp);
-    setDiscordActivity(song.name);
+    setDiscordActivityWithTimestamps(song, 0);
 }
 
 export async function loadNewSong(song: Song){
@@ -106,7 +106,7 @@ export async function loadNewSong(song: Song){
     await invoke("load_a_song_from_path", { soundPath: song.path, volume: volume });
     await invoke("update_metadata", { key: song.id });
     usePlayerStore.getState().setPlayer(temp);
-    setDiscordActivity(song.name);
+    setDiscordActivity(song);
 }
 
 export async function playSong(){
@@ -117,6 +117,7 @@ export async function playSong(){
         temp.isPlaying = true;
         temp.wasPlayingBeforePause = true;
         usePlayerStore.getState().setPlayer(temp);
+        setDiscordActivityWithTimestamps(usePlayerStore.getState().Player.playingSongMetadata);
     }
 }
 
@@ -128,6 +129,7 @@ export async function pauseSong(){
         temp.isPlaying = false;
         temp.wasPlayingBeforePause = false;
         usePlayerStore.getState().setPlayer(temp);
+        setDiscordActivity(usePlayerStore.getState().Player.playingSongMetadata);
     }
 }
 
@@ -135,13 +137,13 @@ export async function stopSong(){
     if(usePlayerStore.getState().Player.playingSongMetadata){
         await invoke("stop_song");
         await invoke("set_player_state", { state: playerState.Stopped});
-        setDiscordActivity(null);
         let temp = usePlayerStore.getState().Player;
         temp.playingSongMetadata = null;
         temp.lengthOfSongInSeconds = 0;
         temp.isPlaying = false;
         temp.wasPlayingBeforePause = false;
         usePlayerStore.getState().setPlayer(temp);
+        setDiscordActivityWithTimestamps(null);
     }
 }
 
@@ -326,12 +328,24 @@ export async function playSongsFromThisArtist(shuffle: boolean, artist_name: str
     if(songkeys.length >= 2)playThisListNow(songkeys.slice(1), shuffle);
 }
 
-function setDiscordActivity(song_name: string | null){
+function setDiscordActivityWithTimestamps(song: Song | null, curr_poss_sec: number = -1){
     const discordConnectStatus = useSavedObjectStore.getState().local_store.AppActivityDiscord;
     if(discordConnectStatus === "No")return;
 
-    if(song_name !== null){
-        invoke("set_discord_rpc_activity", {songName: song_name, userState: "Listening to music", largeImageKey: "app_icon1024x1024"}).then().catch();
+    if(curr_poss_sec === -1)curr_poss_sec = usePlayingPositionSec.getState().position;
+
+    if(song !== null){
+        invoke("set_discord_rpc_activity_with_timestamps", {name: song.name, artist: song.artist, durationAsNum: song.duration_seconds - curr_poss_sec}).then().catch();
+    }
+    else invoke("clear_discord_rpc_activity").then().catch();
+}
+
+function setDiscordActivity(song: Song | null){
+    const discordConnectStatus = useSavedObjectStore.getState().local_store.AppActivityDiscord;
+    if(discordConnectStatus === "No")return;
+
+    if(song !== null){
+        invoke("set_discord_rpc_activity", {name: song.name, artist: song.artist}).then().catch();
     }
     else invoke("clear_discord_rpc_activity").then().catch();
 }

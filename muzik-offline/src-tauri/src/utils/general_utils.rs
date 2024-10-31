@@ -185,7 +185,6 @@ pub fn get_song_cover_as_bytes(song: &Song, key: i32) -> Vec<u8> {
                 i32::MIN..=i32::MAX => {
                     match decode_image_in_parallel(&NULL_COVER_NULL.to_owned()){
                         Ok(cover) => {
-                            println!("Picked cover null");
                             return cover;
                         },
                         Err(_) => {

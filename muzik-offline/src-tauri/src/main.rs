@@ -17,7 +17,7 @@ use souvlaki::{MediaControlEvent, MediaControls};
 use components::audio_manager::SharedAudioManager;
 use utils::general_utils::decode_image_in_parallel;
 use utils::music_list_organizer::MLO;
-use socials::discord_rpc::DiscordRpc;
+use socials::discord_rpc::{set_discord_rpc_activity_with_timestamps, DiscordRpc};
 use warp::{Filter, http::Uri, reply::Response, Reply};
 
 use tauri::Manager;
@@ -85,6 +85,7 @@ fn main() {
             attempt_to_connect_if_possible,
             disallow_connection_and_close_discord_rpc,
             set_discord_rpc_activity,
+            set_discord_rpc_activity_with_timestamps,
             clear_discord_rpc_activity
         ])
         .run(tauri::generate_context!())
@@ -103,6 +104,7 @@ fn initialize_audio_manager() -> Arc<Mutex<SharedAudioManager>> {
         controls: None,
         cover: decode_image_in_parallel(&NULL_COVER_NULL.to_owned()).expect("failed to decode image"),
         cover_url: String::new(),
+        has_cover: false,
     }))
 }
 

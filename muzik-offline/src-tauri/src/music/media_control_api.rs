@@ -166,12 +166,15 @@ pub fn update_metadata(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>,
         }
     }
 
+    let has_cover = song.cover.is_some();
+
     let image_data: Vec<u8> = get_song_cover_as_bytes(&song, key);
 
     match audio_manager.lock(){
         Ok(mut manager) => {
             let cover_url = manager.cover_url.clone();
             manager.cover = image_data;
+            manager.has_cover = has_cover;
             match &mut manager.controls{
                 Some(controller) => {
                     match controller.set_metadata(MediaMetadata {
