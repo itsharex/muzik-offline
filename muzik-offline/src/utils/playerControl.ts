@@ -335,7 +335,13 @@ function setDiscordActivityWithTimestamps(song: Song | null, curr_poss_sec: numb
     if(curr_poss_sec === -1)curr_poss_sec = usePlayingPositionSec.getState().position;
 
     if(song !== null){
-        invoke("set_discord_rpc_activity_with_timestamps", {name: song.name, artist: song.artist, durationAsNum: song.duration_seconds - curr_poss_sec}).then().catch();
+        invoke("set_discord_rpc_activity_with_timestamps", {
+            name: song.name, 
+            artist: song.artist, 
+            durationAsNum: song.duration_seconds - curr_poss_sec,
+            hasCover: song.cover !== null,
+            id: song.id
+        }).then().catch();
     }
     else invoke("clear_discord_rpc_activity").then().catch();
 }
@@ -345,7 +351,12 @@ function setDiscordActivity(song: Song | null){
     if(discordConnectStatus === "No")return;
 
     if(song !== null){
-        invoke("set_discord_rpc_activity", {name: song.name, artist: song.artist}).then().catch();
+        invoke("set_discord_rpc_activity", {
+            name: song.name, 
+            artist: song.artist,
+            hasCover: song.cover !== null,
+            id: song.id
+        }).then().catch();
     }
     else invoke("clear_discord_rpc_activity").then().catch();
 }

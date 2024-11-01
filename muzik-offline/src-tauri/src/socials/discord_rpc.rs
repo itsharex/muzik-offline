@@ -2,11 +2,10 @@ use tauri::State;
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use dotenv::dotenv;
 use std::env;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use crate::components::audio_manager::SharedAudioManager;
-
+use crate::utils::general_utils::get_cover_url_for_discord;
 pub struct DiscordRpc {
     client: DiscordIpcClient,
     allowed_to_connect: bool,
@@ -210,21 +209,14 @@ pub fn disallow_connection_and_close_discord_rpc(discord_rpc: State<Mutex<Discor
 
 #[tauri::command]//this will run when the user changes the song they are listening to
 pub fn set_discord_rpc_activity_with_timestamps(
-    discord_rpc: State<Mutex<DiscordRpc>>, 
-    audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>,
+    discord_rpc: State<Mutex<DiscordRpc>>,
     name: String, 
     artist: String, 
-    duration_as_num: i64) -> Result<String, String> {
+    duration_as_num: i64,
+    has_cover: bool,
+    id: i32) -> Result<String, String> {
 
-    let cover_url = match audio_manager.lock(){
-        Ok(manager) => {
-            manager.cover_url.clone()
-        },
-        Err(_) => {
-            //failed to lock audio manager
-            String::from("app_icon1024x1024")
-        },
-    };
+    let cover_url = get_cover_url_for_discord(name.clone(), artist.clone(), has_cover, id);
 
     let duration = Duration::from_secs(duration_as_num as u64);
 
@@ -256,20 +248,13 @@ pub fn set_discord_rpc_activity_with_timestamps(
 
 #[tauri::command]//this will run when the user changes the song they are listening to
 pub fn set_discord_rpc_activity(
-    discord_rpc: State<Mutex<DiscordRpc>>, 
-    audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>,
+    discord_rpc: State<Mutex<DiscordRpc>>,
     name: String, 
-    artist: String) -> Result<String, String> {
+    artist: String,
+    has_cover: bool,
+    id: i32) -> Result<String, String> {
 
-    let cover_url = match audio_manager.lock(){
-        Ok(manager) => {
-            manager.cover_url.clone()
-        },
-        Err(_) => {
-            //failed to lock audio manager
-            String::from("app_icon1024x1024")
-        },
-    };
+    let cover_url = get_cover_url_for_discord(name.clone(), artist.clone(), has_cover, id);
 
     match discord_rpc.lock(){
         Ok(mut discord_rpc) => {

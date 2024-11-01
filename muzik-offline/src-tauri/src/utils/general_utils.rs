@@ -214,3 +214,29 @@ pub fn get_random_port() -> u16 {
         },
     }
 }
+
+pub fn get_cover_url_for_discord(_name: String, _artist: String, has_cover: bool,id: i32) -> String{
+    if !has_cover{
+        match id{
+            id if id % 4 == 0 => {
+                return format!("nullcoverone");
+            },
+            id if id % 4 == 1 => {
+                return format!("nullcovertwo");
+            },
+            id if id % 4 == 2 => {
+                return format!("nullcoverthree");
+            },
+            id if id % 4 == 3 => {
+                return format!("nullcoverfour");
+            },
+            i32::MIN..=i32::MAX => {
+                return format!("nullcovernull");
+            },
+        }
+    } else{
+        return format!("nullcovernull");
+        // use musicbrainz api to get a close enough matching url for the cover using the name and artist
+        // future impl
+    }
+}

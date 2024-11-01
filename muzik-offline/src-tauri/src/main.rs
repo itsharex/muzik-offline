@@ -104,7 +104,6 @@ fn initialize_audio_manager() -> Arc<Mutex<SharedAudioManager>> {
         controls: None,
         cover: decode_image_in_parallel(&NULL_COVER_NULL.to_owned()).expect("failed to decode image"),
         cover_url: String::new(),
-        has_cover: false,
     }))
 }
 

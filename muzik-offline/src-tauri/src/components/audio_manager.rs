@@ -8,5 +8,4 @@ pub struct SharedAudioManager {
     pub volume: f64,
     pub cover: Vec<u8>,
     pub cover_url: String,
-    pub has_cover: bool,
 }
