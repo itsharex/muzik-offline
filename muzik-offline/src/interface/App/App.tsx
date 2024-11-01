@@ -7,12 +7,14 @@ import { type } from '@tauri-apps/api/os';
 import { invoke } from "@tauri-apps/api";
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { HistoryNextFloating } from "@layouts/index";
-import { OSTYPEenum, toastType } from "@muziktypes/index";
+import { OSTYPEenum, Payload } from "@muziktypes/index";
 import { AnimatePresence } from "framer-motion";
-import { useWallpaperStore, useSavedObjectStore, useToastStore, useIsMaximisedStore, useIsFSStore } from "@store/index";
+import { useWallpaperStore, useSavedObjectStore, useIsMaximisedStore, useIsFSStore } from "@store/index";
 import { SavedObject } from "@database/saved_object";
 import { isPermissionGranted, requestPermission } from '@tauri-apps/api/notification';
 import { MiniPlayer } from "@App/index";
+import { listen } from "@tauri-apps/api/event";
+import { processOSMediaControlsEvent } from "@utils/OSeventControl";
 
 const App = () => {
   const [openMiniPlayer, setOpenMiniPlayer] = useState<boolean>(false);
@@ -50,11 +52,7 @@ const App = () => {
 
   function connect_to_discord(){ 
     if(local_store.AppActivityDiscord === "Yes"){
-      invoke("allow_connection_and_connect_to_discord_rpc").then().catch((_) => {
-        setToast({
-          title: "Discord connection...", message: "Failed to establish connection with discord", type: toastType.error, timeout: 5000
-        });
-      }); 
+      invoke("allow_connection_and_connect_to_discord_rpc").then().catch(); 
     }
   }
 
@@ -78,10 +76,21 @@ const App = () => {
     await invoke("toggle_miniplayer_view", {openMiniPlayer: !MPV});
   }
 
+  async function listenForOSevents(){
+    const unlisten = await listen<Payload>('os-media-controls', (event) => processOSMediaControlsEvent(event.payload))
+    // later, when you want to stop listening
+    return unlisten
+  }
+
   useEffect(() => {
     checkOSType();
     checkAndRequestNotificationPermission();
     connect_to_discord();
+    const listenForOSeventsfunc = listenForOSevents();
+
+    return () => {
+      listenForOSeventsfunc.then((unlisten) => unlisten());
+    }
   }, [])
 
   return (
