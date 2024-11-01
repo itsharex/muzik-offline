@@ -1,6 +1,6 @@
 import { useSavedObjectStore, useUpcomingSongs, usePlayerStore, usePlayingPosition, 
     usePlayingPositionSec, useHistorySongs } from "@store/index";
-import { Song } from "@muziktypes/index";
+import { playerState, Song } from "@muziktypes/index";
 import { invoke } from "@tauri-apps/api";
 import { SavedObject } from "@database/index";
 import { local_playlists_db, local_songs_db } from "@database/database";
@@ -91,8 +91,10 @@ export async function startPlayingNewSong(song: Song){
     temp.isPlaying = true;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
     await invoke("load_and_play_song_from_path", { soundPath: song.path, volume: volume });
+    await invoke("update_metadata", { key: song.id });
+    await invoke("set_player_state", { state: playerState.Playing});
     usePlayerStore.getState().setPlayer(temp);
-    setDiscordActivity(song.name);
+    setDiscordActivityWithTimestamps(song, 0);
 }
 
 export async function loadNewSong(song: Song){
@@ -102,40 +104,46 @@ export async function loadNewSong(song: Song){
     temp.isPlaying = false;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
     await invoke("load_a_song_from_path", { soundPath: song.path, volume: volume });
+    await invoke("update_metadata", { key: song.id });
     usePlayerStore.getState().setPlayer(temp);
-    setDiscordActivity(song.name);
+    setDiscordActivity(song);
 }
 
 export async function playSong(){
     if(usePlayerStore.getState().Player.playingSongMetadata){
         await invoke("resume_playing");
+        await invoke("set_player_state", { state: playerState.Playing});
         let temp = usePlayerStore.getState().Player;
         temp.isPlaying = true;
         temp.wasPlayingBeforePause = true;
         usePlayerStore.getState().setPlayer(temp);
+        setDiscordActivityWithTimestamps(usePlayerStore.getState().Player.playingSongMetadata);
     }
 }
 
 export async function pauseSong(){
     if(usePlayerStore.getState().Player.playingSongMetadata){
         await invoke("pause_song");
+        await invoke("set_player_state", { state: playerState.Paused});
         let temp = usePlayerStore.getState().Player;
         temp.isPlaying = false;
         temp.wasPlayingBeforePause = false;
         usePlayerStore.getState().setPlayer(temp);
+        setDiscordActivity(usePlayerStore.getState().Player.playingSongMetadata);
     }
 }
 
 export async function stopSong(){
     if(usePlayerStore.getState().Player.playingSongMetadata){
         await invoke("stop_song");
-        setDiscordActivity(null);
+        await invoke("set_player_state", { state: playerState.Stopped});
         let temp = usePlayerStore.getState().Player;
         temp.playingSongMetadata = null;
         temp.lengthOfSongInSeconds = 0;
         temp.isPlaying = false;
         temp.wasPlayingBeforePause = false;
         usePlayerStore.getState().setPlayer(temp);
+        setDiscordActivityWithTimestamps(null);
     }
 }
 
@@ -320,12 +328,35 @@ export async function playSongsFromThisArtist(shuffle: boolean, artist_name: str
     if(songkeys.length >= 2)playThisListNow(songkeys.slice(1), shuffle);
 }
 
-function setDiscordActivity(song_name: string | null){
+function setDiscordActivityWithTimestamps(song: Song | null, curr_poss_sec: number = -1){
     const discordConnectStatus = useSavedObjectStore.getState().local_store.AppActivityDiscord;
     if(discordConnectStatus === "No")return;
 
-    if(song_name !== null){
-        invoke("set_discord_rpc_activity", {songName: song_name, userState: "Listening to music", largeImageKey: "app_icon1024x1024"}).then().catch();
+    if(curr_poss_sec === -1)curr_poss_sec = usePlayingPositionSec.getState().position;
+
+    if(song !== null){
+        invoke("set_discord_rpc_activity_with_timestamps", {
+            name: song.name, 
+            artist: song.artist, 
+            durationAsNum: song.duration_seconds - curr_poss_sec,
+            hasCover: song.cover !== null,
+            id: song.id
+        }).then().catch();
+    }
+    else invoke("clear_discord_rpc_activity").then().catch();
+}
+
+function setDiscordActivity(song: Song | null){
+    const discordConnectStatus = useSavedObjectStore.getState().local_store.AppActivityDiscord;
+    if(discordConnectStatus === "No")return;
+
+    if(song !== null){
+        invoke("set_discord_rpc_activity", {
+            name: song.name, 
+            artist: song.artist,
+            hasCover: song.cover !== null,
+            id: song.id
+        }).then().catch();
     }
     else invoke("clear_discord_rpc_activity").then().catch();
 }
