@@ -9,7 +9,7 @@ import { Prev_page, Next_page, Search, Cross, Empty_user } from "@icons/index";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { App_logo } from "@logos/index";
-import { useSearchStore } from "store";
+import { useIsMaximisedStore, useSearchStore } from "store";
 
 type HeaderWindowsProps = {
     toggleSettings: () => void;
@@ -21,6 +21,7 @@ const HeaderWindows: FunctionComponent<HeaderWindowsProps> = (props: HeaderWindo
     const [searchText, setSearchText] = useState<string>("");
     const [isFS, setIsFS] = useState<boolean>(false);
     const { setSearch } = useSearchStore((state) => { return { setSearch: state.setSearch}; });
+    const { setMaximised } = useIsMaximisedStore((state) => { return { setMaximised: state.setMaximised}; });
 
     function captureSearch(e: any){setSearchText(e.target.value);}
 
@@ -58,6 +59,7 @@ const HeaderWindows: FunctionComponent<HeaderWindowsProps> = (props: HeaderWindo
         
                 if(maximizebtn)maximizebtn.style.visibility = "hidden";
                 if(restorebtn)restorebtn.style.visibility = "visible";
+                setMaximised(true);
             }
             else{
                 const maximizebtn: HTMLElement | null = document.getElementById("maximize");
@@ -65,6 +67,7 @@ const HeaderWindows: FunctionComponent<HeaderWindowsProps> = (props: HeaderWindo
         
                 if(maximizebtn)maximizebtn.style.visibility = "visible";
                 if(restorebtn)restorebtn.style.visibility = "hidden";
+                setMaximised(false);
             }
             const fs_conf: boolean = await appWindow.isFullscreen();
             setIsFS(fs_conf);

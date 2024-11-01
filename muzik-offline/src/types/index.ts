@@ -14,7 +14,8 @@ export enum selectedGeneralSettingEnum{
     CompressImage = "CompressImage",
     UpcomingHistoryLimit = "UpcomingHistoryLimit",
     SeekStepAmount = "SeekStepAmount",
-    SongLengthORremaining = "SongLengthORremaining"
+    SongLengthORremaining = "SongLengthORremaining",
+    AlwaysRoundedCornersWindows = "AlwaysRoundedCornersWindows"
 }
 
 export enum OSTYPEenum{
