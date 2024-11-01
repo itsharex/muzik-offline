@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { PlayerInterface, PlayingPositionInterface, QueueInterface, SavedDirectoriesInterface, SavedObjectInterface, searchInterface, toastInterface, viewableSideElInterface, wallpaperInterface } from './storeTypes';
+import { FSState, MaximisedState, PlayerInterface, PlayingPositionInterface, QueueInterface, SavedDirectoriesInterface, SavedObjectInterface, searchInterface, toastInterface, viewableSideElInterface, wallpaperInterface } from './storeTypes';
 import { emptyDirectories } from '@database/directories';
 import { emptyPlayer } from '@database/player';
 import { emptySavedObject } from '@database/saved_object';
@@ -17,6 +17,20 @@ export {
     reducerType,
     alltracksReducer, AllTracksState, 
 }
+
+export const useIsMaximisedStore = create<MaximisedState>()(
+    (set) => ({
+        isMaximised: false,
+        setMaximised: (nM: boolean) => set((_state) => ({ isMaximised: nM })),
+    }),
+)
+
+export const useIsFSStore = create<FSState>()(
+    (set) => ({
+        isFS: false,
+        setFS: (nFS: boolean) => set((_state) => ({ isFS: nFS })),
+    }),
+)
 
 export const useToastStore = create<toastInterface>()(
     (set) => ({
