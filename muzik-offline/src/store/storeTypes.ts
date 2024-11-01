@@ -5,6 +5,16 @@ import { viewableSideEl } from "@database/side_elements";
 import { SavedWallpaper } from "@database/wallpaper";
 import { toast } from "@muziktypes/index";
 
+export interface MaximisedState {
+    isMaximised: boolean;
+    setMaximised: (nM: boolean) => void;
+}
+
+export interface FSState{
+    isFS: boolean;
+    setFS: (nFS: boolean) => void;
+}
+
 export interface toastInterface{
     toastObject: toast | null;
     setToast: (toast: toast) => void;

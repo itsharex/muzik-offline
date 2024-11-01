@@ -17,7 +17,7 @@ export interface SavedObject{
     UpcomingHistoryLimit: string,
     SeekStepAmount: string,
     SongLengthORremaining: string,
-
+    AlwaysRoundedCornersWindows: string,
 }
 
 export const emptySavedObject: SavedObject = {
@@ -37,4 +37,5 @@ export const emptySavedObject: SavedObject = {
     UpcomingHistoryLimit: "10",
     SeekStepAmount: "10",
     SongLengthORremaining: "song length",
+    AlwaysRoundedCornersWindows: "No",
 }
