@@ -9,7 +9,7 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { HistoryNextFloating } from "@layouts/index";
 import { OSTYPEenum, Payload } from "@muziktypes/index";
 import { AnimatePresence } from "framer-motion";
-import { useWallpaperStore, useSavedObjectStore } from "@store/index";
+import { useWallpaperStore, useSavedObjectStore, useIsMaximisedStore, useIsFSStore } from "@store/index";
 import { SavedObject } from "@database/saved_object";
 import { isPermissionGranted, requestPermission } from '@tauri-apps/api/notification';
 import { MiniPlayer } from "@App/index";
@@ -21,8 +21,11 @@ const App = () => {
   const [openSettings, setOpenSettings] = useState<boolean>(false);
   const [FSplayerState, setFSplayerState] = useState<boolean>(false);
   const [FloatingHNState, setFloatingHNState] = useState<boolean>(false);
+  const { isMaximised } = useIsMaximisedStore((state) => { return { isMaximised: state.isMaximised}; });
   const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
   const { wallpaper } = useWallpaperStore((state) => { return { wallpaper: state.wallpaper,}; });
+  const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
+  const { appFS } = useIsFSStore((state) => { return { appFS: state.isFS}; });
 
   function closeSetting(){if(openSettings === true)setOpenSettings(false);}
 
@@ -95,7 +98,12 @@ const App = () => {
     { !openMiniPlayer ?
       <Router>
         <div 
-          className={"app_container " + (local_store.OStype ===  OSTYPEenum.Linux || !local_store.AppThemeBlur ? " linux-config " : "")} 
+          className={
+            "app_container " + 
+            (local_store.OStype === OSTYPEenum.Windows && ((!appFS && !isMaximised) || local_store.AlwaysRoundedCornersWindows === "Yes") ? " windows-app-config " : "") +
+            (local_store.OStype === OSTYPEenum.Linux || !local_store.AppThemeBlur ? " linux-config " : "")
+            
+          } 
           data-theme={local_store.ThemeColour} 
           wallpaper-opacity={local_store.WallpaperOpacityAmount}
           onContextMenu={(e) => e.preventDefault()}>

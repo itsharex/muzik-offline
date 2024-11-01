@@ -75,7 +75,7 @@
 .SongContextMenu-container{
     width: 100vw;
     height: calc(100vh - 32px);
-    position: fixed;
+    position: absolute;
     z-index: $z-index-9000;
     top: 32px;
     left: 0px;

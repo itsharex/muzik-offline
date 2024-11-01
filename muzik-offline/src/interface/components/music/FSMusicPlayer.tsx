@@ -5,7 +5,7 @@ import { appWindow } from '@tauri-apps/api/window';
 import { HistoryUpcoming, MainMusicPlayer } from "@components/index";
 import { OSTYPEenum } from "@muziktypes/index";
 import { Minimize, NullCoverNull, Overlap } from "@icons/index";
-import { useSavedObjectStore, usePlayerStore } from "store";
+import { useSavedObjectStore, usePlayerStore, useIsFSStore } from "store";
 import { getRandomCover } from "utils";
 
 type FSMusicPlayerProps = {
@@ -25,16 +25,16 @@ const variants_list_appearance = {
 
 const FSMusicPlayer: FunctionComponent<FSMusicPlayerProps> = (props: FSMusicPlayerProps) => {
 
-    const [wasMaximized, setMaximized] = useState<boolean>(false);
-    const [appFS, setappFS] = useState<boolean>(false);
+    const [wasMaximized, setWasMaximized] = useState<boolean>(false);
     const [isDoneOpening, setIsDoneOpening] = useState<boolean>(false);
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store}; });
     const {Player} = usePlayerStore((state) => { return { Player: state.Player}; });
+    const { setappFS, appFS } = useIsFSStore((state) => { return { setappFS: state.setFS, appFS: state.isFS}; });
 
     async function switchtoFS(){
         const isMaximized: boolean = await appWindow.isMaximized();
         if(isMaximized === true && local_store.OStype === OSTYPEenum.Windows){
-            setMaximized(true);
+            setWasMaximized(true);
             appWindow.unmaximize();
         }
         appWindow.setFullscreen(true);
@@ -46,9 +46,9 @@ const FSMusicPlayer: FunctionComponent<FSMusicPlayerProps> = (props: FSMusicPlay
         appWindow.setFullscreen(false);
         appWindow.setResizable(true);
         setappFS(false);
-
+        
         if(wasMaximized === true && local_store.OStype === OSTYPEenum.Windows){
-            setMaximized(false);
+            setWasMaximized(false);
             appWindow.maximize();
         }
     }

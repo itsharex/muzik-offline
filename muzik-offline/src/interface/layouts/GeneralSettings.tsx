@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import "@styles/layouts/GeneralSettings.scss";
 import { SavedObject, viewableSideEl } from "@database/index";
 import { ChevronDown, Disk, LayersThree, Menu, Microphone, MusicalNote } from "@icons/index";
-import { selectedGeneralSettingEnum, toastType } from "@muziktypes/index";
+import { OSTYPEenum, selectedGeneralSettingEnum, toastType } from "@muziktypes/index";
 import { FunctionComponent, useState } from "react";
 import { DropDownMenuLarge, RadioComponent } from "@components/index";
 import { useSavedObjectStore, useViewableSideElStore, useToastStore } from "@store/index";
@@ -31,6 +31,12 @@ const settings_data: {
         title: "Volume step amount",
         dropDownName: selectedGeneralSettingEnum.VolumeStepAmount,
         options: ["1", "3", "5", "10", "15", "20"]
+    },
+    {
+        key: 4,
+        title: "Always rounded corners",
+        dropDownName: selectedGeneralSettingEnum.AlwaysRoundedCornersWindows,
+        options: ["Yes", "No"]
     }
 ]
 
@@ -101,25 +107,30 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = (props: General
             <div className="Settings_container">
                 {
                     settings_data.map((value) => 
-                    <div className="setting" key={value.key}>
-                        <h3>{value.title}</h3>
-                        <div className="setting_dropdown">
-                            <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={() => toggleDropDown(value.dropDownName)}>
-                                <h4>{local_store[(value.dropDownName.toString() as keyof SavedObject)]}</h4>
-                                <motion.div className="chevron_icon" animate={{rotate: selectedGeneralSetting === value.dropDownName ? 180 : 0}}>
-                                    <ChevronDown />
+                        value.dropDownName !== selectedGeneralSettingEnum.AlwaysRoundedCornersWindows ||
+                        (value.dropDownName === selectedGeneralSettingEnum.AlwaysRoundedCornersWindows && local_store.OStype === OSTYPEenum.Windows) ?
+                        <div className="setting" key={value.key}>
+                            <h3>{value.title}</h3>
+                            <div className="setting_dropdown">
+                                <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={() => toggleDropDown(value.dropDownName)}>
+                                    <h4>{local_store[(value.dropDownName.toString() as keyof SavedObject)]}</h4>
+                                    <motion.div className="chevron_icon" animate={{rotate: selectedGeneralSetting === value.dropDownName ? 180 : 0}}>
+                                        <ChevronDown />
+                                    </motion.div>
                                 </motion.div>
-                            </motion.div>
-                            <div className="DropDownMenu_container">
-                                <DropDownMenuLarge
-                                    options={value.options} 
-                                    isOpen={selectedGeneralSetting === value.dropDownName} 
-                                    type={value.dropDownName}
-                                    selectOption={setStoreValue}
-                                />
+                                <div className="DropDownMenu_container">
+                                    <DropDownMenuLarge
+                                        options={value.options} 
+                                        isOpen={selectedGeneralSetting === value.dropDownName} 
+                                        type={value.dropDownName}
+                                        selectOption={setStoreValue}
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>)
+                        : 
+                        <></>
+                    )
                 }
                 <div className="setting">
                     <h3>Directories</h3>

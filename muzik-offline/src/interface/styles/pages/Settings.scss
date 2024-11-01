@@ -1,7 +1,7 @@
 @import "../constants/constants";
 
 .settings_section{
-    position: fixed;
+    position: absolute;
     min-width: 980px;
     width: 100%;
     height: calc(110vh - 40px);
