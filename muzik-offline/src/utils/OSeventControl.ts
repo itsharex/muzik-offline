@@ -1,11 +1,12 @@
 import { Payload } from "@muziktypes/index";
-import { changeSeekerPositionBtnPress, changeVolumeLevel, pauseSong, playNextSong, playPreviousSong, playSong, setVolumeLevel, stopSong } from "./playerControl";
+import { changeSeekerPosition, changeSeekerPositionBtnPress, changeVolumeLevel, pauseSong, playNextSong, playPreviousSong, playSong, setVolumeLevel, stopSong } from "./playerControl";
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from "@tauri-apps/api";
-import { usePlayerStore } from "@store/index";
+import { usePlayerStore, usePlayingPositionSec } from "@store/index";
 
 export async function processOSMediaControlsEvent(event: Payload) {
     const song = usePlayerStore.getState().Player.playingSongMetadata;
+    const position_sec = usePlayingPositionSec.getState().position;
     if (!song) return;
     switch(event.event){
         case "Play": 
@@ -35,9 +36,9 @@ export async function processOSMediaControlsEvent(event: Payload) {
             break;
         case "SeekBy":
             if(event.seek_direction === "forward"){
-                changeSeekerPositionBtnPress(false);
+                changeSeekerPosition((position_sec + (event.duration ?? 0)) * song.duration_seconds);
             }else{
-                changeSeekerPositionBtnPress(true);
+                changeSeekerPosition((position_sec + (event.duration ?? 0)) * song.duration_seconds);
             }
             break;
         case "SetPosition":
