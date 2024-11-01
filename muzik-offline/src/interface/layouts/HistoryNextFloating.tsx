@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FunctionComponent, useEffect, useReducer } from "react";
+import { FunctionComponent, useEffect, useReducer, useRef, useState } from "react";
 import "@styles/layouts/HistoryNextFloating.scss";
 import { AddSongToPlaylistModal, GeneralContextMenu, PropertiesModal, SongCardResizableDraggable } from "@components/index";
 import { Song, contextMenuButtons, contextMenuEnum } from "@muziktypes/index";
@@ -26,7 +26,11 @@ const HistoryNextFloating : FunctionComponent<HistoryNextFloatingProps> = (props
     const {SongQueueKeys} = useUpcomingSongs((state) => { return { SongQueueKeys: state.queue}; });
     const {SongHistoryKeys} = useHistorySongs((state) => { return { SongHistoryKeys: state.queue}; });
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store}; });
-    
+    const scrollRefUpcoming = useRef<HTMLDivElement | null>(null);
+    const scrollRefHistory = useRef<HTMLDivElement | null>(null);
+    const [upcomingPosition, setUpcomingPosition] = useState<"Top" | "Middle" | "Bottom">("Top");
+    const [historyPosition, setHistoryPosition] = useState<"Top" | "Middle" | "Bottom">("Top");
+
     const navigate = useNavigate();
 
     function setMenuOpenData__SongQueue(key: number, n_co_ords: {xPos: number; yPos: number;}){
@@ -94,7 +98,38 @@ const HistoryNextFloating : FunctionComponent<HistoryNextFloatingProps> = (props
         dispatch({ type: reducerType.SET_SONG_HISTORY, payload: HSsongsOrdered as Song[] });
     }
 
-    useEffect(() => {setLists()}, [SongQueueKeys, SongHistoryKeys])
+    const handleScrollUpcoming = () => {
+        if (scrollRefUpcoming.current) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollRefUpcoming.current;
+
+        if (scrollTop === 0) {setUpcomingPosition("Top");}
+        else if (scrollTop + clientHeight >= scrollHeight) {setUpcomingPosition("Bottom");}
+        else {setUpcomingPosition("Middle");}
+        }
+    };
+
+    const handleScrollHistory = () => {
+        if (scrollRefHistory.current) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollRefHistory.current;
+
+        if (scrollTop === 0) {setHistoryPosition("Top");}
+        else if (scrollTop + clientHeight >= scrollHeight) {setHistoryPosition("Bottom");}
+        else {setHistoryPosition("Middle");}
+        }
+    };
+
+    useEffect(() => {
+        const currentUpcomingRef = scrollRefUpcoming.current;
+        const currentHistoryRef = scrollRefHistory.current;
+        if (currentUpcomingRef)currentUpcomingRef.addEventListener("scroll", handleScrollUpcoming);
+        if (currentHistoryRef)currentHistoryRef.addEventListener("scroll", handleScrollHistory);
+
+        setLists()
+        return () => {
+            if (currentUpcomingRef)currentUpcomingRef.removeEventListener("scroll", handleScrollUpcoming);
+            if (currentHistoryRef)currentHistoryRef.removeEventListener("scroll", handleScrollHistory);
+        };
+    }, [SongQueueKeys, SongHistoryKeys])
 
     return (
         <>
@@ -107,7 +142,14 @@ const HistoryNextFloating : FunctionComponent<HistoryNextFloatingProps> = (props
                     <>
                         {
                             state.selectedView === "Upcoming_tab" ?
-                            <div className="Upcoming_view">
+                            <div 
+                                ref={scrollRefUpcoming}
+                                onScroll={handleScrollUpcoming}
+                                className={
+                                    upcomingPosition === "Top" ? "top_view" : 
+                                    upcomingPosition === "Bottom" ? "bottom_view" :
+                                    "Upcoming_view"
+                                }>
                                 <SongCardResizableDraggable 
                                     SongQueue={state.SongQueue} 
                                     queueType={"SongQueue"} 
@@ -117,7 +159,14 @@ const HistoryNextFloating : FunctionComponent<HistoryNextFloatingProps> = (props
                                     navigateTo={navigateTo} />                        
                             </div>
                             :
-                            <div className="History_view">
+                            <div 
+                                ref={scrollRefHistory}
+                                onScroll={handleScrollHistory}
+                                className={
+                                    historyPosition === "Top" ? "top_view" : 
+                                    historyPosition === "Bottom" ? "bottom_view" :
+                                    "History_view"
+                                }>
                                 <SongCardResizableDraggable 
                                     SongQueue={state.SongHistory} 
                                     queueType={"SongHistory"} 
