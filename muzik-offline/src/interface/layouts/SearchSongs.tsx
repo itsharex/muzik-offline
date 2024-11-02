@@ -1,4 +1,4 @@
-import { RectangleSongBox, GeneralContextMenu, AddSongToPlaylistModal, PropertiesModal, LoaderAnimated } from "@components/index";
+import { RectangleSongBox, GeneralContextMenu, AddSongToPlaylistModal, PropertiesModal, LoaderAnimated, EditPropertiesModal } from "@components/index";
 import { contextMenuEnum, contextMenuButtons } from "@muziktypes/index";
 import { useRef, useEffect, useReducer } from "react";
 import "@styles/layouts/SearchSongs.scss";
@@ -8,7 +8,7 @@ import { reducerType, useSearchStore } from "@store/index";
 import { useNavigate } from "react-router-dom";
 import { SearchSongsState, searchSongsReducer } from "@store/reducerStore";
 import { addThisSongToPlayLater, addThisSongToPlayNext, playThisListNow, startPlayingNewSong } from "@utils/playerControl";
-import { closeContextMenu, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectThisSong, setSongList } from "@utils/reducerUtils";
+import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectThisSong, setSongList } from "@utils/reducerUtils";
 
 const SearchSongs = () => {
     const [state , dispatch] = useReducer(searchSongsReducer, SearchSongsState);
@@ -140,6 +140,7 @@ const SearchSongs = () => {
                 )
             }
             <PropertiesModal isOpen={state.isPropertiesModalOpen} song={state.songMenuToOpen!} closeModal={() => closePropertiesModal(dispatch)} />
+            <EditPropertiesModal isOpen={state.isEditingSongModalOpen} songID={state.songMenuToOpen ? state.songMenuToOpen.id : -1} closeModal={() => closeEditPropertiesModal(dispatch)} />
             <AddSongToPlaylistModal isOpen={state.isPlaylistModalOpen} songPath={state.songMenuToOpen ? state.songMenuToOpen.path : ""} closeModal={() => closePlaylistModal(dispatch)} />
         </div>
     )

@@ -114,7 +114,7 @@ const CreatePlaylistModal : FunctionComponent<CreatePlaylistModalProps> = (props
                     </motion.label>
                 </div>
                 <h3>Playlist name</h3>
-                <input type="text" placeholder="enter playlist name here" value={playlistObj.title} onChange={(e) => setPlaylistObj({ ... playlistObj, title : e.target.value})}/>
+                <input type="text" id="input-field" placeholder="enter playlist name here" value={playlistObj.title} onChange={(e) => setPlaylistObj({ ... playlistObj, title : e.target.value})}/>
                 <motion.div className="create_playlist" whileTap={{scale: 0.98}} onClick={createPlaylistAndCloseModal}>create playlist</motion.div>
                 <motion.div className="cancel_creation" whileTap={{scale: 0.98}} onClick={props.closeModal}>cancel</motion.div>
             </motion.div>

@@ -41,6 +41,13 @@
       },
       "path": {
         "all": true
+      },
+      "http": {
+        "all": true,
+        "request": true,
+        "scope": [
+          "http://localhost/**"
+        ]
       }
     },
     "bundle": {
@@ -77,6 +84,7 @@
         "minHeight": 623,
         "titleBarStyle": "Transparent",
         "decorations": false,
+        "transparent": true,
         "center": true
       }
     ]

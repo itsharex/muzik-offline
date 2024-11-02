@@ -1,7 +1,7 @@
 use std::{path::Path, collections::HashMap};
 use id3::TagLike;
 use serde_json::Value;
-use crate::utils::general_utils::encode_image_in_parallel;
+use crate::utils::general_utils::{encode_image_in_parallel, is_media_file};
 use crate::database::db_api::{
     compare_and_set_hash_map, 
     start_insertion,
@@ -10,6 +10,7 @@ use lofty::{ AudioFile, Probe};
 use crate::utils::general_utils::{duration_to_string, extract_file_name, resize_and_compress_image};
 use crate::components::{song::Song, hmaptype::HMapType};
 use lofty::TaggedFileExt;
+use lofty::Accessor;
 
 #[tauri::command]
 pub async fn get_all_songs(paths_as_json_array: String, compress_image_option: bool) -> Result<String, String> {
@@ -87,6 +88,12 @@ pub async fn get_songs_in_path(
             while let Ok(Some(entry)) = paths.next_entry().await {
                 match entry.path().to_str(){
                     Some(full_path) => {
+                        match is_media_file(full_path){
+                            Ok(true) => {},
+                            Ok(false) => {continue;},
+                            Err(_) => {continue;},
+                        }
+                        
                         if let Ok(song_data) = read_from_path(full_path, song_id, compress_image_option) {
                             let hmt: HMapType = HMapType{key: song_data.id.clone(), cover: song_data.cover.clone()};
                             compare_and_set_hash_map(albums_hash_map, &song_data.album, &hmt);
@@ -102,7 +109,6 @@ pub async fn get_songs_in_path(
                             songs.push(song_data);
                         }
                         else{
-                            
                         }
                     }
                     None => {
@@ -124,6 +130,7 @@ fn lofty_read_from_path(
     song_id: &mut i32, 
     compress_image_option: &bool
 ) -> Result<Song, Box<dyn std::error::Error>> {
+    let tagged_file = lofty::read_from_path(path)?;
     *song_id += 1;
 
     let mut song_meta_data = Song {
@@ -149,34 +156,37 @@ fn lofty_read_from_path(
         channels: 0,
     };
 
-    match lofty::read_from_path(path){
-        Ok(tagged_file) => {
-            match tagged_file.first_tag(){
-                Some(tag) => {
-                    set_title_lofty(tag, &mut song_meta_data);
-                    set_name(&path, &mut song_meta_data);
-                    set_artist_lofty(tag, &mut song_meta_data);
-                    set_album_lofty(tag, &mut song_meta_data);
-                    set_genre_lofty(tag, &mut song_meta_data);
-                    set_year_lofty(tag, &mut song_meta_data);
-                    set_duration_bit_rate_sample_rate_bit_depth_channels(&path, &mut song_meta_data);
-                    set_path(&path, &mut song_meta_data);
-                    set_cover_lofty(tag, &mut song_meta_data, compress_image_option);
-                    set_date_recorded_lofty(tag, &mut song_meta_data);
-                    set_date_released_lofty(tag, &mut song_meta_data);
-                    set_file_size(&path, &mut song_meta_data);
-                    set_file_extension(&path, &mut song_meta_data);
-                }
-                None => {
-                    *song_id -= 1;
-                    return Err("Error opening file".into());
-                }
-            }
-        },
-        Err(_) => {
-            *song_id -= 1;
-            return Err("Error opening file".into());
-        },
+    match tagged_file.first_tag(){
+        Some(tag) => {
+            set_title_lofty(tag, &mut song_meta_data);
+            set_name(&path, &mut song_meta_data);
+            set_artist_lofty(tag, &mut song_meta_data);
+            set_album_lofty(tag, &mut song_meta_data);
+            set_genre_lofty(tag, &mut song_meta_data);
+            set_year_lofty(tag, &mut song_meta_data);
+            set_duration_bit_rate_sample_rate_bit_depth_channels(&path, &mut song_meta_data);
+            set_path(&path, &mut song_meta_data);
+            set_cover_lofty(tag, &mut song_meta_data, compress_image_option);
+            set_date_recorded_lofty(tag, &mut song_meta_data);
+            set_date_released_lofty(tag, &mut song_meta_data);
+            set_file_size(&path, &mut song_meta_data);
+            set_file_extension(&path, &mut song_meta_data);
+        }
+        None => {
+            song_meta_data.title = String::from("Unknown Title");
+            set_name(&path, &mut song_meta_data);
+            song_meta_data.artist = String::from("Unknown Artist");
+            song_meta_data.album = String::from("Unknown Album");
+            song_meta_data.genre = String::from("Unknown Genre");
+            song_meta_data.year = 0;
+            set_duration_bit_rate_sample_rate_bit_depth_channels(&path, &mut song_meta_data);
+            set_path(&path, &mut song_meta_data);
+            song_meta_data.cover = None;
+            song_meta_data.date_recorded = String::from("Unknown date recorded");
+            song_meta_data.date_released = String::from("Unknown date recorded");
+            set_file_size(&path, &mut song_meta_data);
+            set_file_extension(&path, &mut song_meta_data);
+        }
     }
 
     Ok(song_meta_data)
@@ -186,7 +196,12 @@ fn read_from_path(
     path: &str, song_id: &mut i32, 
     compress_image_option: &bool
 ) -> Result<Song, Box<dyn std::error::Error>> {
-    let tag = id3::Tag::read_from_path(path)?;
+    let tag = match id3::Tag::read_from_path(path){
+        Ok(tag) => tag,
+        Err(id3::Error{kind: id3::ErrorKind::NoTag, ..}) => id3::Tag::new(),
+        Err(err) => return Err(Box::new(err)),
+    };
+
     *song_id += 1;
 
     let mut song_meta_data = Song {
@@ -212,24 +227,24 @@ fn read_from_path(
         channels: 0,
     };
 
-    set_title(&tag, &mut song_meta_data);
+    set_title_id3(&tag, &mut song_meta_data);
     set_name(&path, &mut song_meta_data);
-    set_artist(&tag, &mut song_meta_data);
-    set_album(&tag, &mut song_meta_data);
-    set_genre(&tag, &mut song_meta_data);
-    set_year(&tag, &mut song_meta_data);
+    set_artist_id3(&tag, &mut song_meta_data);
+    set_album_id3(&tag, &mut song_meta_data);
+    set_genre_id3(&tag, &mut song_meta_data);
+    set_year_id3(&tag, &mut song_meta_data);
     set_duration_bit_rate_sample_rate_bit_depth_channels(&path, &mut song_meta_data);
     set_path(&path, &mut song_meta_data);
-    set_cover(&tag, &mut song_meta_data, compress_image_option);
-    set_date_recorded(&tag, &mut song_meta_data);
-    set_date_released(&tag, &mut song_meta_data);
+    set_cover_id3(&tag, &mut song_meta_data, compress_image_option);
+    set_date_recorded_id3(&tag, &mut song_meta_data);
+    set_date_released_id3(&tag, &mut song_meta_data);
     set_file_size(&path, &mut song_meta_data);
     set_file_extension(&path, &mut song_meta_data);
 
     Ok(song_meta_data)
 }
 
-fn set_title(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_title_id3(tag: &id3::Tag, song_meta_data: &mut Song){
     //TITLE
     if let Some(title) = tag.title() {
         song_meta_data.title = title.to_owned();
@@ -239,9 +254,9 @@ fn set_title(tag: &id3::Tag, song_meta_data: &mut Song){
     }
 }
 
-fn set_title_lofty(audio_file: &lofty::Tag , song_meta_data: &mut Song){
+fn set_title_lofty(tag: &lofty::Tag , song_meta_data: &mut Song){
     //TITLE
-    if let Some(title) = lofty::Accessor::title(audio_file) {
+    if let Some(title) = tag.title() {
         song_meta_data.title = title.to_string();
     }
     else{
@@ -254,7 +269,7 @@ fn set_name(path: &str, song_meta_data: &mut Song){
     song_meta_data.name = extract_file_name(&path);
 }
 
-fn set_artist(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_artist_id3(tag: &id3::Tag, song_meta_data: &mut Song){
     //ARTIST
     if let Some(artist) = tag.artist() {
         song_meta_data.artist = artist.to_owned();
@@ -264,9 +279,9 @@ fn set_artist(tag: &id3::Tag, song_meta_data: &mut Song){
     }
 }
 
-fn set_artist_lofty(audio_file: &lofty::Tag, song_meta_data: &mut Song){
+fn set_artist_lofty(tag: &lofty::Tag, song_meta_data: &mut Song){
     //ARTIST
-    if let Some(artist) = lofty::Accessor::artist(audio_file) {
+    if let Some(artist) = tag.artist() {
         song_meta_data.artist = artist.to_string();
     }
     else{
@@ -274,7 +289,7 @@ fn set_artist_lofty(audio_file: &lofty::Tag, song_meta_data: &mut Song){
     }
 }
 
-fn set_album(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_album_id3(tag: &id3::Tag, song_meta_data: &mut Song){
     //ALBUM
     if let Some(album) = tag.album() {
         song_meta_data.album = album.to_owned();
@@ -284,9 +299,9 @@ fn set_album(tag: &id3::Tag, song_meta_data: &mut Song){
     }
 }
 
-fn set_album_lofty(audio_file: &lofty::Tag, song_meta_data: &mut Song){
+fn set_album_lofty(tag: &lofty::Tag, song_meta_data: &mut Song){
     //ALBUM
-    if let Some(album) = lofty::Accessor::album(audio_file) {
+    if let Some(album) = tag.album() {
         song_meta_data.album = album.to_string();
     }
     else{
@@ -294,7 +309,7 @@ fn set_album_lofty(audio_file: &lofty::Tag, song_meta_data: &mut Song){
     }
 }
 
-fn set_genre(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_genre_id3(tag: &id3::Tag, song_meta_data: &mut Song){
     //GENRE
     if let Some(genre) = tag.genre() {
         song_meta_data.genre = genre.to_owned();
@@ -304,9 +319,9 @@ fn set_genre(tag: &id3::Tag, song_meta_data: &mut Song){
     }
 }
 
-fn set_genre_lofty(audio_file: &lofty::Tag, song_meta_data: &mut Song){
+fn set_genre_lofty(tag: &lofty::Tag, song_meta_data: &mut Song){
     //GENRE
-    if let Some(genre) = lofty::Accessor::genre(audio_file) {
+    if let Some(genre) = tag.genre() {
         song_meta_data.genre = genre.to_string();
     }
     else{
@@ -314,20 +329,20 @@ fn set_genre_lofty(audio_file: &lofty::Tag, song_meta_data: &mut Song){
     }
 }
 
-fn set_year(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_year_id3(tag: &id3::Tag, song_meta_data: &mut Song){
     //YEAR
     if let Some(year) = tag.year() {
-        song_meta_data.year = year.to_owned();
+        song_meta_data.year = year as u32;
     }
     else{
         song_meta_data.year = 0;
     }
 }
 
-fn set_year_lofty(audio_file: &lofty::Tag, song_meta_data: &mut Song){
+fn set_year_lofty(tag: &lofty::Tag, song_meta_data: &mut Song){
     //YEAR
-    if let Some(year) = lofty::Accessor::year(audio_file) {
-        song_meta_data.year = year as i32;
+    if let Some(year) = tag.year() {
+        song_meta_data.year = year;
     }
     else{
         song_meta_data.year = 0;
@@ -376,7 +391,7 @@ fn set_path(path: &str, song_meta_data: &mut Song){
     song_meta_data.path = path.to_owned();
 }
 
-fn set_cover(tag: &id3::Tag, song_meta_data: &mut Song, compress_image_option: &bool){
+fn set_cover_id3(tag: &id3::Tag, song_meta_data: &mut Song, compress_image_option: &bool){
     //COVER
     if let Some(cover) = tag.pictures().next() {
         let picture_as_num = cover.data.to_owned();
@@ -445,11 +460,19 @@ fn set_cover_lofty(tag: &lofty::Tag, song_meta_data: &mut Song, compress_image_o
 
 }
 
-fn set_date_recorded(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_date_recorded_id3(tag: &id3::Tag, song_meta_data: &mut Song){
     //DATE RECORDED
     //"YYYY-MM-DD-HH-MM-SS"
     if let Some(date_recorded) = tag.date_recorded() {
-        song_meta_data.date_recorded = date_recorded.year.to_string() + "-";
+        song_meta_data.date_recorded = format!(
+            "{:04}-{:02}-{:02}-{:02}-{:02}-{:02}", 
+            date_recorded.year, 
+            date_recorded.month.unwrap_or(0),
+            date_recorded.day.unwrap_or(0),
+            date_recorded.hour.unwrap_or(0),
+            date_recorded.minute.unwrap_or(0),
+            date_recorded.second.unwrap_or(0)
+        );
     }
     else{
         song_meta_data.date_recorded = String::from("Unknown date recorded");
@@ -462,11 +485,19 @@ fn set_date_recorded_lofty(_audio_file: &lofty::Tag, song_meta_data: &mut Song){
     song_meta_data.date_recorded = String::from("Unknown date recorded");
 }
 
-fn set_date_released(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_date_released_id3(tag: &id3::Tag, song_meta_data: &mut Song){
     //DATE RELEASED
     //"YYYY-MM-DD-HH-MM-SS"
     if let Some(date_released) = tag.date_released() {
-        song_meta_data.date_released = date_released.year.to_string() + "-";
+        song_meta_data.date_released = format!(
+            "{:04}-{:02}-{:02}-{:02}-{:02}-{:02}",
+            date_released.year, 
+            date_released.month.unwrap_or(0),
+            date_released.day.unwrap_or(0),
+            date_released.hour.unwrap_or(0),
+            date_released.minute.unwrap_or(0),
+            date_released.second.unwrap_or(0)
+        );
     }
     else{
         song_meta_data.date_released = String::from("Unknown date recorded");

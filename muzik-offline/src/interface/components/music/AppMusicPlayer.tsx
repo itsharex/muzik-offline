@@ -2,11 +2,12 @@ import {FunctionComponent, useEffect, useRef, useState} from "react";
 import "@styles/components/music/AppMusicPlayer.scss";
 import {ChromeCast, ListIcon, NullCoverNull, Pause, Play, Repeat, RepeatOne, Shuffle, SkipBack, SkipFwd, VolumeMax, VolumeMin} from "@icons/index"
 import { motion } from "framer-motion";
-import { usePlayerStore, usePlayingPosition, usePlayingPositionSec, useSavedObjectStore } from "store";
+import { useIsFSStore, useIsMaximisedStore, usePlayerStore, usePlayingPosition, usePlayingPositionSec, useSavedObjectStore } from "store";
 import { getRandomCover, secondsToTimeFormat } from "@utils/index";
 import { invoke } from "@tauri-apps/api";
 import { changeVolumeLevel, changeSeekerPosition, changeVolumeLevelBtnPress, dragSeeker, pauseSong, playSong, repeatToggle, shuffleToggle, setVolumeLevel, reconfigurePlayer_AtEndOfSong, playPreviousSong, playNextSong, changeSeekerPositionBtnPress } from "@utils/playerControl";
 import { AirplayCastModal, MusicPopOver } from "@components/index";
+import { OSTYPEenum } from "@muziktypes/index";
 
 type AppMusicPlayerProps = {
     openPlayer: () => void;
@@ -21,7 +22,9 @@ const AppMusicPlayer : FunctionComponent<AppMusicPlayerProps> = (props: AppMusic
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
     const {playingPosInSec, setplayingPosInSec} = usePlayingPositionSec((state) => { return {playingPosInSec: state.position, setplayingPosInSec: state.setPosition}; });
     const {playingPosition, setplayingPosition} = usePlayingPosition((state) => { return {playingPosition: state.position, setplayingPosition: state.setPosition}; });
-    const intervalIdRef = useRef<number>();
+    const { isMaximised } = useIsMaximisedStore((state) => { return { isMaximised: state.isMaximised}; });
+    const { appFS } = useIsFSStore((state) => { return { appFS: state.isFS}; });
+    const intervalIdRef = useRef<number | NodeJS.Timeout>();
     
     function changeVolume(event : any){changeVolumeLevel(event.target.value);}
 
@@ -52,7 +55,7 @@ const AppMusicPlayer : FunctionComponent<AppMusicPlayerProps> = (props: AppMusic
     }
 
     function detectKeyPress(this: Window, ev: any){
-        if(ev.target.id !== "gsearch"){
+        if(ev.target.id !== "gsearch" && ev.target.id !== "input-field"){
             if(ev.key === " "){//pause/play song
                 ev.preventDefault();
                 if(Player.isPlaying)pauseSong();
@@ -76,7 +79,10 @@ const AppMusicPlayer : FunctionComponent<AppMusicPlayerProps> = (props: AppMusic
 
     return (
         <>
-            <div className={"app_music_player " + (local_store.PlayerBar ? "app_music_player_border" : "")}>
+            <div className={
+                "app_music_player " + 
+                (local_store.PlayerBar ? "app_music_player_border" : "") +
+                (local_store.OStype === OSTYPEenum.Windows && ((!appFS && !isMaximised) || local_store.AlwaysRoundedCornersWindows === "Yes") ? " app-music-player-windows-config" : "")}>
                 <div className="music_cover_art">
                     {!local_store.PlayerBar && !Player.playingSongMetadata
                         && <NullCoverNull />}{/**no song is loaded onto the player */}
