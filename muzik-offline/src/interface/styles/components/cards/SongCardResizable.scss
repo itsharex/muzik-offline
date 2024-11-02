@@ -6,6 +6,7 @@
     display: flex;
     align-items: center;
     border-radius: 13px;
+    margin-bottom: 5px;
 
     .song_cover{
         width: 40px;
@@ -30,8 +31,9 @@
         width: calc(100% - 104px);
         height: 50px;
         margin-left: 5px;
+        
         h3, p{
-            width: 120px;
+            width: 100%;
             font-size: 12px;
             height: 15px;
             white-space: nowrap;
@@ -65,7 +67,6 @@
         cursor: default;
     }
 
-    margin-bottom: 5px;
 }
 
 .SongCardResizable:hover{

@@ -1,12 +1,12 @@
 import { FunctionComponent } from "react";
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Song } from "@muziktypes/index";
 import { SongCardResizable } from "@components/index";
+import { Reorder } from "framer-motion";
 
 type SongCardResizableDraggableProps = {
     SongQueue: Song[];
     queueType: "SongQueue" | "SongHistory";
-    onDragEnd: (result: DropResult, queueType: "SongQueue" | "SongHistory") => void;
+    onDragEnd: (reordered: Song[], queueType: "SongQueue" | "SongHistory") => void;
     setMenuOpenData: (key: number, co_ords: {xPos: number; yPos: number;}) => void;
     playThisSong: (key: number, index: number, queueType: "SongQueue" | "SongHistory") => void;
     navigateTo: (key: number, type: "artist" | "song", queueType: "SongQueue" | "SongHistory") => void;
@@ -14,35 +14,28 @@ type SongCardResizableDraggableProps = {
 
 const SongCardResizableDraggable: FunctionComponent<SongCardResizableDraggableProps> = (props: SongCardResizableDraggableProps) => {
     return (
-        <DragDropContext onDragEnd={(result) => props.onDragEnd(result, props.queueType)} >
-            <Droppable droppableId="droppable">
-                {(provided) => (
-                        <div ref={provided.innerRef} {...provided.droppableProps}>
-                            {
-                                props.SongQueue.map((song, index) => 
-                                    <Draggable key={song.id.toString()} draggableId={song.id.toString()} index={index}>
-                                        {(provided) => (
-                                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                                                <SongCardResizable 
-                                                    key={index}
-                                                    cover={song.cover} 
-                                                    songName={song.name}
-                                                    artist={song.artist}
-                                                    keyV={song.id}
-                                                    setMenuOpenData={props.setMenuOpenData}
-                                                    playThisSong={(key: number) => props.playThisSong(key, index, props.queueType)}
-                                                    navigateTo={(key: number, type: "artist" | "song") => props.navigateTo(key, type, "SongQueue")}/>
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                )
-                            }
-                            {provided.placeholder}
-                        </div>
+        <Reorder.Group 
+        values={props.SongQueue} 
+        onReorder={(newOrder: Song[]) => props.onDragEnd(newOrder, props.queueType)}
+        axis="y"
+        as="div"
+        layoutScroll
+        style={{ overflowY: "scroll"}}>
+                {props.SongQueue.map((song, index) =>
+                        <Reorder.Item value={song} key={song.id} as="div">
+                            <SongCardResizable 
+                                key={index}
+                                cover={song.cover} 
+                                songName={song.name}
+                                artist={song.artist}
+                                keyV={song.id}
+                                setMenuOpenData={props.setMenuOpenData}
+                                playThisSong={(key: number) => props.playThisSong(key, index, props.queueType)}
+                                navigateTo={(key: number, type: "artist" | "song") => props.navigateTo(key, type, "SongQueue")}/>
+                        </Reorder.Item>
                     )
                 }
-            </Droppable>
-        </DragDropContext>
+    </Reorder.Group>
     )
 }
 
