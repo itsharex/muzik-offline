@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
 import "@styles/components/music/FSMusicPlayer.scss";
 import { FunctionComponent, Suspense, useState, useEffect } from "react";
-import { appWindow } from '@tauri-apps/api/window';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { HistoryUpcoming, MainMusicPlayer } from "@components/index";
 import { OSTYPEenum } from "@muziktypes/index";
 import { Minimize, NullCoverNull, Overlap } from "@icons/index";
 import { useSavedObjectStore, usePlayerStore, useIsFSStore } from "store";
 import { getRandomCover } from "utils";
+const appWindow = getCurrentWebviewWindow()
 
 type FSMusicPlayerProps = {
     openPlayer: boolean;

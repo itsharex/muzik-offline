@@ -1,5 +1,5 @@
 import { FunctionComponent, useEffect, useState } from "react";
-import { appWindow } from '@tauri-apps/api/window';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import {min_w_10,min_w_12,min_w_15,min_w_20,min_w_24,min_w_30,max_w_10,max_w_12,max_w_15,max_w_20,max_w_24,max_w_30,
     restore_w_10,restore_w_12,restore_w_15,restore_w_20,restore_w_24,restore_w_30,
     close_w_10,close_w_12,close_w_15,close_w_20,close_w_24,close_w_30
@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { App_logo } from "@logos/index";
 import { useIsMaximisedStore, useSearchStore } from "store";
+const appWindow = getCurrentWebviewWindow()
 
 type HeaderWindowsProps = {
     toggleSettings: () => void;

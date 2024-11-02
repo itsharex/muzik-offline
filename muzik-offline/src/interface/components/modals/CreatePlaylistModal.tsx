@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { FunctionComponent, useEffect, useState } from "react";
 import { local_playlists_db } from "@database/database";
 import "@styles/components/modals/CreatePlaylistModal.scss";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { useToastStore } from "store";
 import { modal_variants } from "@content/index";
 import { AppLogo } from "@logos/index";

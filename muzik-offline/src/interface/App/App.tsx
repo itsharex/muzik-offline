@@ -3,15 +3,15 @@ import { AppMusicPlayer, LeftSidebar, FSMusicPlayer, HeaderLinuxOS, HeaderMacOS,
 import { AllGenres, AllPlaylists, AllTracks, Settings, AlbumDetails, 
   AllAlbums, AllArtists, SearchPage, ArtistCatalogue, GenreView, PlaylistView } from "@pages/index";
 import { useEffect, useState } from "react";
-import { type } from '@tauri-apps/api/os';
-import { invoke } from "@tauri-apps/api";
+import { type } from '@tauri-apps/plugin-os';
+import { invoke } from "@tauri-apps/api/core";
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { HistoryNextFloating } from "@layouts/index";
 import { OSTYPEenum, Payload } from "@muziktypes/index";
 import { AnimatePresence } from "framer-motion";
 import { useWallpaperStore, useSavedObjectStore, useIsMaximisedStore, useIsFSStore } from "@store/index";
 import { SavedObject } from "@database/saved_object";
-import { isPermissionGranted, requestPermission } from '@tauri-apps/api/notification';
+import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
 import { MiniPlayer } from "@App/index";
 import { listen } from "@tauri-apps/api/event";
 import { processOSMediaControlsEvent } from "@utils/OSeventControl";

@@ -1,4 +1,7 @@
-use kira::{manager::{AudioManager, backend::DefaultBackend}, sound::{streaming::StreamingSoundHandle, FromFileError}};
+use kira::{
+    manager::{backend::DefaultBackend, AudioManager},
+    sound::{streaming::StreamingSoundHandle, FromFileError},
+};
 use souvlaki::MediaControls;
 
 pub struct SharedAudioManager {

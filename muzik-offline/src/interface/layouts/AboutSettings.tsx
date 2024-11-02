@@ -1,6 +1,6 @@
 import { App_logo } from "@logos/index";
 import "@styles/layouts/AboutSettings.scss";
-import { open } from '@tauri-apps/api/shell';
+import { open } from '@tauri-apps/plugin-shell';
 import { motion } from "framer-motion";
 
 const AboutSettings = () => {

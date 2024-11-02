@@ -2,7 +2,7 @@ import { NullCoverOne, NullCoverTwo, NullCoverThree, NullCoverFour } from "@asse
 import { local_albums_db, local_artists_db, local_genres_db, local_playlists_db, local_songs_db } from "@database/database";
 import { Song, album, artist, genre, playlist } from "@muziktypes/index";
 import { useHistorySongs, useUpcomingSongs } from "@store/index";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 const batch_size: number = 50;
 
 export const fetch_library_in_chunks = async(): Promise<{status: string, message: string}> => {

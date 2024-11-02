@@ -1,18 +1,24 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use souvlaki::{MediaControlEvent, SeekDirection};
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct Payload{
-    pub event: String, 
+pub struct Payload {
+    pub event: String,
     pub seek_direction: String,
     pub duration: Option<u64>,
     pub volume: Option<f64>,
     pub uri: Option<String>,
 }
 
-impl Payload{
-    pub fn new(event: MediaControlEvent, sd: Option<SeekDirection>, duration: Option<u64>, volume: Option<f64>, uri: Option<String>) -> Self{
-        let event = match event{
+impl Payload {
+    pub fn new(
+        event: MediaControlEvent,
+        sd: Option<SeekDirection>,
+        duration: Option<u64>,
+        volume: Option<f64>,
+        uri: Option<String>,
+    ) -> Self {
+        let event = match event {
             MediaControlEvent::Play => "Play",
             MediaControlEvent::Pause => "Pause",
             MediaControlEvent::Toggle => "Toggle",
@@ -28,13 +34,13 @@ impl Payload{
             MediaControlEvent::Quit => "Quit",
         };
 
-        let seek_direction = match sd{
+        let seek_direction = match sd {
             Some(SeekDirection::Forward) => "Forward",
             Some(SeekDirection::Backward) => "Backward",
             None => "",
         };
 
-        Self{
+        Self {
             event: String::from(event),
             seek_direction: String::from(seek_direction),
             duration,

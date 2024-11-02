@@ -1,8 +1,8 @@
 use rand::seq::SliceRandom;
-use tauri::State;
 use std::sync::Mutex;
+use tauri::State;
 
-pub struct MLO{
+pub struct MLO {
     remaining_keys: Vec<usize>,
     drained_keys: Vec<usize>,
     untouched_keys: Vec<usize>,
@@ -23,7 +23,7 @@ impl MLO {
             drained_keys,
             untouched_keys,
             shuffle_list,
-            repeat_list
+            repeat_list,
         }
     }
 
@@ -42,12 +42,11 @@ impl MLO {
     }
 
     pub fn get_next_batch_as_size(&mut self, size: usize) -> Vec<usize> {
-        if self.remaining_keys.is_empty(){
+        if self.remaining_keys.is_empty() {
             // If all keys have been fetched, reshuffle
-            if self.repeat_list == false{
+            if self.repeat_list == false {
                 return Vec::new();
-            }
-            else{
+            } else {
                 self.remaining_keys = self.untouched_keys.clone();
                 self.drained_keys.clear();
                 if self.shuffle_list {
@@ -57,8 +56,7 @@ impl MLO {
                 self.drained_keys.extend(&batch);
                 return batch;
             }
-        }
-        else if self.remaining_keys.len() < size {
+        } else if self.remaining_keys.len() < size {
             // If there are not enough keys left, fetch all remaining keys
             if self.shuffle_list {
                 self.remaining_keys.shuffle(&mut rand::thread_rng());
@@ -66,8 +64,7 @@ impl MLO {
             let batch: Vec<usize> = self.remaining_keys.drain(..).collect();
             self.drained_keys.extend(&batch);
             return batch;
-        }
-        else if self.remaining_keys.len() == self.untouched_keys.len(){
+        } else if self.remaining_keys.len() == self.untouched_keys.len() {
             //we have just began here so return a shuffled or unshuffled list
             if self.shuffle_list {
                 self.remaining_keys.shuffle(&mut rand::thread_rng());
@@ -77,7 +74,7 @@ impl MLO {
             return batch;
         }
         //research more into unshuffling after a shuffling has already been done
-        else{
+        else {
             let batch: Vec<usize> = self.remaining_keys.drain(..size).collect();
             self.drained_keys.extend(&batch);
             return batch;
@@ -86,53 +83,54 @@ impl MLO {
 }
 
 #[tauri::command]
-pub fn mlo_set_shuffle_list(mlo: State<'_, Mutex<MLO>>, shuffle_list: bool) -> Result<String, String>{
-    match mlo.lock(){
+pub fn mlo_set_shuffle_list(
+    mlo: State<'_, Mutex<MLO>>,
+    shuffle_list: bool,
+) -> Result<String, String> {
+    match mlo.lock() {
         Ok(mut mlo) => {
             mlo.set_shuffle_list(shuffle_list);
             Ok(String::from("SUCCESS"))
-        },
-        Err(_) => {
-            Err(String::from("FAILED"))
-        },
+        }
+        Err(_) => Err(String::from("FAILED")),
     }
 }
 
 #[tauri::command]
-pub fn mlo_set_repeat_list(mlo: State<'_, Mutex<MLO>>, repeat_list: bool) -> Result<String, String> {
-    match mlo.lock(){
+pub fn mlo_set_repeat_list(
+    mlo: State<'_, Mutex<MLO>>,
+    repeat_list: bool,
+) -> Result<String, String> {
+    match mlo.lock() {
         Ok(mut mlo) => {
             mlo.set_repeat_list(repeat_list);
             Ok(String::from("SUCCESS"))
-        },
-        Err(_) => {
-            Err(String::from("FAILED"))
-        },
+        }
+        Err(_) => Err(String::from("FAILED")),
     }
 }
 
 #[tauri::command]
-pub fn mlo_reset_and_set_remaining_keys(mlo: State<'_, Mutex<MLO>>, remaining_keys: Vec<usize>) -> Result<String, String> {
-    match mlo.lock(){
+pub fn mlo_reset_and_set_remaining_keys(
+    mlo: State<'_, Mutex<MLO>>,
+    remaining_keys: Vec<usize>,
+) -> Result<String, String> {
+    match mlo.lock() {
         Ok(mut mlo) => {
             mlo.reset_and_set_remaining_keys(remaining_keys);
             Ok(String::from("SUCCESS"))
-        },
-        Err(_) => {
-            Err(String::from("FAILED"))
-        },
+        }
+        Err(_) => Err(String::from("FAILED")),
     }
 }
 
 #[tauri::command]
-pub fn mlo_get_next_batch_as_size(mlo: State<'_, Mutex<MLO>>, size: usize) -> Vec<usize>{
-    match mlo.lock(){
-        Ok(mut mlo) => {
-            mlo.get_next_batch_as_size(size)
-        },
+pub fn mlo_get_next_batch_as_size(mlo: State<'_, Mutex<MLO>>, size: usize) -> Vec<usize> {
+    match mlo.lock() {
+        Ok(mut mlo) => mlo.get_next_batch_as_size(size),
         Err(_) => {
             //failed to lock MLO
             Vec::new()
-        },
+        }
     }
 }

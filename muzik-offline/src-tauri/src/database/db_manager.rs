@@ -1,8 +1,8 @@
+use dirs::home_dir;
 use sled::{Db, Tree};
 use std::path::PathBuf;
-use dirs::home_dir;
 
-pub struct DbManager{
+pub struct DbManager {
     pub db: Db,
     pub song_tree: Tree,
     pub album_tree: Tree,
@@ -10,7 +10,7 @@ pub struct DbManager{
     pub genre_tree: Tree,
 }
 
-impl DbManager{
+impl DbManager {
     pub fn new() -> Result<Self, String> {
         let mut db_path = PathBuf::new();
         match home_dir() {
@@ -25,14 +25,12 @@ impl DbManager{
         let artist_tree: Tree = db.open_tree(b"artists").map_err(|e| e.to_string())?;
         let genre_tree: Tree = db.open_tree(b"genres").map_err(|e| e.to_string())?;
 
-        Ok(
-            DbManager{
-                db,
-                song_tree,
-                album_tree,
-                artist_tree,
-                genre_tree,
-            }
-        )
+        Ok(DbManager {
+            db,
+            song_tree,
+            album_tree,
+            artist_tree,
+            genre_tree,
+        })
     }
 }

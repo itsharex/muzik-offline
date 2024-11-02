@@ -19,9 +19,11 @@ export enum selectedGeneralSettingEnum{
 }
 
 export enum OSTYPEenum{
-    Linux = 'Linux', 
-    macOS = 'Darwin', 
-    Windows = 'Windows_NT'
+    Linux = 'linux', 
+    macOS = 'macos', 
+    Windows = 'windows',
+    iOS = 'ios',
+    Android = 'android'
 }
 
 export enum contextMenuEnum{

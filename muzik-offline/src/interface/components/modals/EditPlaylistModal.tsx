@@ -4,7 +4,7 @@ import { EditImage } from '@assets/icons';
 import { motion } from 'framer-motion';
 import "@styles/components/modals/EditPlaylistModal.scss";
 import { local_playlists_db } from '@database/database';
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { useToastStore } from 'store';
 import { getRandomCover } from 'utils';
 import { AppLogo } from '@assets/logos';

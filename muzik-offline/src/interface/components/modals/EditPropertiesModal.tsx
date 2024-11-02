@@ -2,7 +2,7 @@ import { FunctionComponent, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Song, toastType } from "@muziktypes/index";
 import "@styles/components/modals/EditPropertiesModal.scss";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { modal_variants } from "@content/index";
 import { getRandomCover } from "@utils/index";
 import { useToastStore } from "@store/index";

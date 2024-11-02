@@ -1,11 +1,11 @@
 import { FunctionComponent, useState } from "react";
 import "@styles/components/modals/DirectoriesModal.scss";
-import { invoke } from "@tauri-apps/api";
-import { open } from '@tauri-apps/api/dialog';
+import { invoke } from "@tauri-apps/api/core";
+import { open } from '@tauri-apps/plugin-dialog';
 import { appConfigDir } from '@tauri-apps/api/path';
 import { toastType } from "@muziktypes/index";
 import { useDirStore, useSavedObjectStore, useToastStore } from "store";
-import { isPermissionGranted, sendNotification } from '@tauri-apps/api/notification';
+import { isPermissionGranted, sendNotification } from '@tauri-apps/plugin-notification';
 import { motion } from "framer-motion";
 import { fetch_library_in_chunks } from "utils";
 import { local_albums_db, local_artists_db, local_genres_db, local_songs_db } from "@database/database";

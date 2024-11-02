@@ -10,10 +10,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "1.5", features = [ "http-all", "window-start-dragging", "window-minimize", "window-close", "window-show", "window-unmaximize", "window-unminimize", "window-hide", "window-maximize", "path-all", "dialog-open", "notification-all", "os-all", "window-set-resizable", "window-set-fullscreen", "shell-open"] }
+tauri = { version = "2", features = ["unstable"]  }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 id3 = "1.10.0"
@@ -30,6 +30,11 @@ discord-rich-presence = "0.2.5"
 dotenv = "0.15.0"
 souvlaki = "0.7.3"
 warp = "0.3.7"
+tauri-plugin-shell = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-http = "2"
+tauri-plugin-os = "2"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

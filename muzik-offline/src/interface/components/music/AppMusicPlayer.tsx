@@ -4,7 +4,7 @@ import {ChromeCast, ListIcon, NullCoverNull, Pause, Play, Repeat, RepeatOne, Shu
 import { motion } from "framer-motion";
 import { useIsFSStore, useIsMaximisedStore, usePlayerStore, usePlayingPosition, usePlayingPositionSec, useSavedObjectStore } from "store";
 import { getRandomCover, secondsToTimeFormat } from "@utils/index";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { changeVolumeLevel, changeSeekerPosition, changeVolumeLevelBtnPress, dragSeeker, pauseSong, playSong, repeatToggle, shuffleToggle, setVolumeLevel, reconfigurePlayer_AtEndOfSong, playPreviousSong, playNextSong, changeSeekerPositionBtnPress } from "@utils/playerControl";
 import { AirplayCastModal, MusicPopOver } from "@components/index";
 import { OSTYPEenum } from "@muziktypes/index";

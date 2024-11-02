@@ -1,20 +1,21 @@
-use std::{path::Path, collections::HashMap};
-use id3::TagLike;
-use serde_json::Value;
-use crate::utils::general_utils::{encode_image_in_parallel, is_media_file};
-use crate::database::db_api::{
-    compare_and_set_hash_map, 
-    start_insertion,
+use crate::components::{hmaptype::HMapType, song::Song};
+use crate::database::db_api::{compare_and_set_hash_map, start_insertion};
+use crate::utils::general_utils::{
+    duration_to_string, extract_file_name, resize_and_compress_image,
 };
-use lofty::{ AudioFile, Probe};
-use crate::utils::general_utils::{duration_to_string, extract_file_name, resize_and_compress_image};
-use crate::components::{song::Song, hmaptype::HMapType};
-use lofty::TaggedFileExt;
+use crate::utils::general_utils::{encode_image_in_parallel, is_media_file};
+use id3::TagLike;
 use lofty::Accessor;
+use lofty::TaggedFileExt;
+use lofty::{AudioFile, Probe};
+use serde_json::Value;
+use std::{collections::HashMap, path::Path};
 
 #[tauri::command]
-pub async fn get_all_songs(paths_as_json_array: String, compress_image_option: bool) -> Result<String, String> {
-    
+pub async fn get_all_songs(
+    paths_as_json_array: String,
+    compress_image_option: bool,
+) -> Result<String, String> {
     let paths_as_vec = decode_directories(&paths_as_json_array);
 
     let mut songs: Vec<Song> = Vec::new();
@@ -23,31 +24,36 @@ pub async fn get_all_songs(paths_as_json_array: String, compress_image_option: b
     let mut genres_hash_map: HashMap<String, HMapType> = HashMap::new();
 
     let mut song_id: i32 = 0;
-    for path in &paths_as_vec{
-        songs.extend(get_songs_in_path(
-            &path, 
-            &mut song_id, 
-            &compress_image_option,
-            &mut albums_hash_map,
-            &mut artists_hash_map,
-            &mut genres_hash_map
-        ).await);
+    for path in &paths_as_vec {
+        songs.extend(
+            get_songs_in_path(
+                &path,
+                &mut song_id,
+                &compress_image_option,
+                &mut albums_hash_map,
+                &mut artists_hash_map,
+                &mut genres_hash_map,
+            )
+            .await,
+        );
     }
 
     let songs_vec_len = songs.len();
 
-    match start_insertion(songs, albums_hash_map, artists_hash_map, genres_hash_map).await{
+    match start_insertion(songs, albums_hash_map, artists_hash_map, genres_hash_map).await {
         Ok(_) => {
-            if songs_vec_len.to_string() == song_id.to_string(){
+            if songs_vec_len.to_string() == song_id.to_string() {
                 return Ok("{\"status\":\"success\"}".into());
+            } else {
+                return Err(
+                    "{\"status\":\"error\",\"message\":\"the song id does not match song length\"}"
+                        .into(),
+                );
             }
-            else {
-                return Err("{\"status\":\"error\",\"message\":\"the song id does not match song length\"}".into());
-            }
-        },
+        }
         Err(e) => {
             return Err(e);
-        },
+        }
     }
 }
 
@@ -68,67 +74,75 @@ pub fn decode_directories(paths_as_json: &str) -> Vec<String> {
             } else {
                 return Vec::new();
             }
-        },
-        Err(_) => {return Vec::new()},
+        }
+        Err(_) => return Vec::new(),
     }
 }
 
 pub async fn get_songs_in_path(
-    dir_path: &str, 
-    song_id: &mut i32, 
+    dir_path: &str,
+    song_id: &mut i32,
     compress_image_option: &bool,
     albums_hash_map: &mut HashMap<String, HMapType>,
     artists_hash_map: &mut HashMap<String, HMapType>,
-    genres_hash_map: &mut HashMap<String, HMapType> 
-) -> Vec<Song>{
+    genres_hash_map: &mut HashMap<String, HMapType>,
+) -> Vec<Song> {
     let mut songs: Vec<Song> = Vec::new();
 
     match tokio::fs::read_dir(dir_path).await {
         Ok(mut paths) => {
             while let Ok(Some(entry)) = paths.next_entry().await {
-                match entry.path().to_str(){
+                match entry.path().to_str() {
                     Some(full_path) => {
-                        match is_media_file(full_path){
-                            Ok(true) => {},
-                            Ok(false) => {continue;},
-                            Err(_) => {continue;},
+                        match is_media_file(full_path) {
+                            Ok(true) => {}
+                            Ok(false) => {
+                                continue;
+                            }
+                            Err(_) => {
+                                continue;
+                            }
                         }
-                        
-                        if let Ok(song_data) = read_from_path(full_path, song_id, compress_image_option) {
-                            let hmt: HMapType = HMapType{key: song_data.id.clone(), cover: song_data.cover.clone()};
+
+                        if let Ok(song_data) =
+                            read_from_path(full_path, song_id, compress_image_option)
+                        {
+                            let hmt: HMapType = HMapType {
+                                key: song_data.id.clone(),
+                                cover: song_data.cover.clone(),
+                            };
                             compare_and_set_hash_map(albums_hash_map, &song_data.album, &hmt);
                             compare_and_set_hash_map(artists_hash_map, &song_data.artist, &hmt);
                             compare_and_set_hash_map(genres_hash_map, &song_data.genre, &hmt);
                             songs.push(song_data);
-                        }
-                        else if let Ok(song_data) = lofty_read_from_path(full_path, song_id, compress_image_option){
-                            let hmt: HMapType = HMapType{key: song_data.id.clone(), cover: song_data.cover.clone()};
+                        } else if let Ok(song_data) =
+                            lofty_read_from_path(full_path, song_id, compress_image_option)
+                        {
+                            let hmt: HMapType = HMapType {
+                                key: song_data.id.clone(),
+                                cover: song_data.cover.clone(),
+                            };
                             compare_and_set_hash_map(albums_hash_map, &song_data.album, &hmt);
                             compare_and_set_hash_map(artists_hash_map, &song_data.artist, &hmt);
                             compare_and_set_hash_map(genres_hash_map, &song_data.genre, &hmt);
                             songs.push(song_data);
-                        }
-                        else{
+                        } else {
                         }
                     }
-                    None => {
-
-                    },
+                    None => {}
                 }
             }
-        },
-        Err(_) => {
-
-        },
+        }
+        Err(_) => {}
     }
 
-    songs 
+    songs
 }
 
 fn lofty_read_from_path(
-    path: &str, 
-    song_id: &mut i32, 
-    compress_image_option: &bool
+    path: &str,
+    song_id: &mut i32,
+    compress_image_option: &bool,
 ) -> Result<Song, Box<dyn std::error::Error>> {
     let tagged_file = lofty::read_from_path(path)?;
     *song_id += 1;
@@ -156,7 +170,7 @@ fn lofty_read_from_path(
         channels: 0,
     };
 
-    match tagged_file.first_tag(){
+    match tagged_file.first_tag() {
         Some(tag) => {
             set_title_lofty(tag, &mut song_meta_data);
             set_name(&path, &mut song_meta_data);
@@ -193,12 +207,16 @@ fn lofty_read_from_path(
 }
 
 fn read_from_path(
-    path: &str, song_id: &mut i32, 
-    compress_image_option: &bool
+    path: &str,
+    song_id: &mut i32,
+    compress_image_option: &bool,
 ) -> Result<Song, Box<dyn std::error::Error>> {
-    let tag = match id3::Tag::read_from_path(path){
+    let tag = match id3::Tag::read_from_path(path) {
         Ok(tag) => tag,
-        Err(id3::Error{kind: id3::ErrorKind::NoTag, ..}) => id3::Tag::new(),
+        Err(id3::Error {
+            kind: id3::ErrorKind::NoTag,
+            ..
+        }) => id3::Tag::new(),
         Err(err) => return Err(Box::new(err)),
     };
 
@@ -244,134 +262,125 @@ fn read_from_path(
     Ok(song_meta_data)
 }
 
-fn set_title_id3(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_title_id3(tag: &id3::Tag, song_meta_data: &mut Song) {
     //TITLE
     if let Some(title) = tag.title() {
         song_meta_data.title = title.to_owned();
-    }
-    else{
+    } else {
         song_meta_data.title = String::from("Unknown Title");
     }
 }
 
-fn set_title_lofty(tag: &lofty::Tag , song_meta_data: &mut Song){
+fn set_title_lofty(tag: &lofty::Tag, song_meta_data: &mut Song) {
     //TITLE
     if let Some(title) = tag.title() {
         song_meta_data.title = title.to_string();
-    }
-    else{
+    } else {
         song_meta_data.title = String::from("Unknown Title");
     }
 }
 
-fn set_name(path: &str, song_meta_data: &mut Song){
+fn set_name(path: &str, song_meta_data: &mut Song) {
     //NAME
     song_meta_data.name = extract_file_name(&path);
 }
 
-fn set_artist_id3(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_artist_id3(tag: &id3::Tag, song_meta_data: &mut Song) {
     //ARTIST
     if let Some(artist) = tag.artist() {
         song_meta_data.artist = artist.to_owned();
-    }
-    else{
+    } else {
         song_meta_data.artist = String::from("Unknown Artist");
     }
 }
 
-fn set_artist_lofty(tag: &lofty::Tag, song_meta_data: &mut Song){
+fn set_artist_lofty(tag: &lofty::Tag, song_meta_data: &mut Song) {
     //ARTIST
     if let Some(artist) = tag.artist() {
         song_meta_data.artist = artist.to_string();
-    }
-    else{
+    } else {
         song_meta_data.artist = String::from("Unknown Artist");
     }
 }
 
-fn set_album_id3(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_album_id3(tag: &id3::Tag, song_meta_data: &mut Song) {
     //ALBUM
     if let Some(album) = tag.album() {
         song_meta_data.album = album.to_owned();
-    }
-    else{
+    } else {
         song_meta_data.album = String::from("Unknown Album");
     }
 }
 
-fn set_album_lofty(tag: &lofty::Tag, song_meta_data: &mut Song){
+fn set_album_lofty(tag: &lofty::Tag, song_meta_data: &mut Song) {
     //ALBUM
     if let Some(album) = tag.album() {
         song_meta_data.album = album.to_string();
-    }
-    else{
+    } else {
         song_meta_data.album = String::from("Unknown Album");
     }
 }
 
-fn set_genre_id3(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_genre_id3(tag: &id3::Tag, song_meta_data: &mut Song) {
     //GENRE
     if let Some(genre) = tag.genre() {
         song_meta_data.genre = genre.to_owned();
-    }
-    else{
+    } else {
         song_meta_data.genre = String::from("Unknown Genre");
     }
 }
 
-fn set_genre_lofty(tag: &lofty::Tag, song_meta_data: &mut Song){
+fn set_genre_lofty(tag: &lofty::Tag, song_meta_data: &mut Song) {
     //GENRE
     if let Some(genre) = tag.genre() {
         song_meta_data.genre = genre.to_string();
-    }
-    else{
+    } else {
         song_meta_data.genre = String::from("Unknown Genre");
     }
 }
 
-fn set_year_id3(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_year_id3(tag: &id3::Tag, song_meta_data: &mut Song) {
     //YEAR
     if let Some(year) = tag.year() {
         song_meta_data.year = year as u32;
-    }
-    else{
+    } else {
         song_meta_data.year = 0;
     }
 }
 
-fn set_year_lofty(tag: &lofty::Tag, song_meta_data: &mut Song){
+fn set_year_lofty(tag: &lofty::Tag, song_meta_data: &mut Song) {
     //YEAR
     if let Some(year) = tag.year() {
         song_meta_data.year = year;
-    }
-    else{
+    } else {
         song_meta_data.year = 0;
     }
 }
 
-fn set_duration_bit_rate_sample_rate_bit_depth_channels(path: &str, song_meta_data: &mut Song){
+fn set_duration_bit_rate_sample_rate_bit_depth_channels(path: &str, song_meta_data: &mut Song) {
     //DURATION, OVERALL BIT RATE, AUDIO BIT RATE, SAMPLE RATE, BIT DEPTH, CHANNELS
-    match Probe::open(path){
-        Ok(probed) => {
-            match probed.read(){
-                Ok(tagged_file) => {
-                    song_meta_data.duration_seconds = tagged_file.properties().duration().as_secs();
-                    song_meta_data.duration = duration_to_string(&tagged_file.properties().duration().as_secs());
-                    song_meta_data.overall_bit_rate = tagged_file.properties().overall_bitrate().unwrap_or(0);
-                    song_meta_data.audio_bit_rate = tagged_file.properties().audio_bitrate().unwrap_or(0);
-                    song_meta_data.sample_rate = tagged_file.properties().sample_rate().unwrap_or(0);
-                    song_meta_data.bit_depth = tagged_file.properties().bit_depth().unwrap_or(0);
-                    song_meta_data.channels = tagged_file.properties().channels().unwrap_or(0);
-                },
-                Err(_) => {
-                    song_meta_data.duration_seconds = 0;
-                    song_meta_data.duration = String::from("00:00");
-                    song_meta_data.overall_bit_rate = 0;
-                    song_meta_data.audio_bit_rate = 0;
-                    song_meta_data.sample_rate = 0;
-                    song_meta_data.bit_depth = 0;
-                    song_meta_data.channels = 0;
-                },
+    match Probe::open(path) {
+        Ok(probed) => match probed.read() {
+            Ok(tagged_file) => {
+                song_meta_data.duration_seconds = tagged_file.properties().duration().as_secs();
+                song_meta_data.duration =
+                    duration_to_string(&tagged_file.properties().duration().as_secs());
+                song_meta_data.overall_bit_rate =
+                    tagged_file.properties().overall_bitrate().unwrap_or(0);
+                song_meta_data.audio_bit_rate =
+                    tagged_file.properties().audio_bitrate().unwrap_or(0);
+                song_meta_data.sample_rate = tagged_file.properties().sample_rate().unwrap_or(0);
+                song_meta_data.bit_depth = tagged_file.properties().bit_depth().unwrap_or(0);
+                song_meta_data.channels = tagged_file.properties().channels().unwrap_or(0);
+            }
+            Err(_) => {
+                song_meta_data.duration_seconds = 0;
+                song_meta_data.duration = String::from("00:00");
+                song_meta_data.overall_bit_rate = 0;
+                song_meta_data.audio_bit_rate = 0;
+                song_meta_data.sample_rate = 0;
+                song_meta_data.bit_depth = 0;
+                song_meta_data.channels = 0;
             }
         },
         Err(_) => {
@@ -382,16 +391,16 @@ fn set_duration_bit_rate_sample_rate_bit_depth_channels(path: &str, song_meta_da
             song_meta_data.sample_rate = 0;
             song_meta_data.bit_depth = 0;
             song_meta_data.channels = 0;
-        },
+        }
     }
 }
 
-fn set_path(path: &str, song_meta_data: &mut Song){
+fn set_path(path: &str, song_meta_data: &mut Song) {
     //PATH
     song_meta_data.path = path.to_owned();
 }
 
-fn set_cover_id3(tag: &id3::Tag, song_meta_data: &mut Song, compress_image_option: &bool){
+fn set_cover_id3(tag: &id3::Tag, song_meta_data: &mut Song, compress_image_option: &bool) {
     //COVER
     if let Some(cover) = tag.pictures().next() {
         let picture_as_num = cover.data.to_owned();
@@ -400,37 +409,34 @@ fn set_cover_id3(tag: &id3::Tag, song_meta_data: &mut Song, compress_image_optio
                 //we want the image to be compressed to have speed improvements
                 //the image resides in picture_as_num as a Vec<u8>
                 //compression code goes here
-                match resize_and_compress_image(&picture_as_num, &250){
+                match resize_and_compress_image(&picture_as_num, &250) {
                     Some(compressed_image) => {
                         //we need to convert it to a base64 string
                         song_meta_data.cover = Some(encode_image_in_parallel(&compressed_image));
-                    },
+                    }
                     None => {
                         song_meta_data.cover = Some(encode_image_in_parallel(&picture_as_num));
-                    },
+                    }
                 }
-            },
+            }
             false => {
                 //let base64str = general_purpose::STANDARD.encode(&picture_as_num);
                 //song_meta_data.cover = Some(base64str);
                 song_meta_data.cover = Some(encode_image_in_parallel(&picture_as_num));
-            },
+            }
         }
-        
-    }
-    else{
+    } else {
         song_meta_data.cover = None;
     }
 }
 
-fn set_cover_lofty(tag: &lofty::Tag, song_meta_data: &mut Song, compress_image_option: &bool){
+fn set_cover_lofty(tag: &lofty::Tag, song_meta_data: &mut Song, compress_image_option: &bool) {
     //COVER
     let pictures = tag.pictures();
 
     if pictures.len() == 0 {
         song_meta_data.cover = None;
-    }
-    else{
+    } else {
         for picture in pictures {
             let picture_as_num = picture.data().to_owned();
             match compress_image_option {
@@ -438,107 +444,103 @@ fn set_cover_lofty(tag: &lofty::Tag, song_meta_data: &mut Song, compress_image_o
                     //we want the image to be compressed to have speed improvements
                     //the image resides in picture_as_num as a Vec<u8>
                     //compression code goes here
-                    match resize_and_compress_image(&picture_as_num, &250){
+                    match resize_and_compress_image(&picture_as_num, &250) {
                         Some(compressed_image) => {
                             //we need to convert it to a base64 string
-                            song_meta_data.cover = Some(encode_image_in_parallel(&compressed_image));
-                        },
+                            song_meta_data.cover =
+                                Some(encode_image_in_parallel(&compressed_image));
+                        }
                         None => {
                             song_meta_data.cover = Some(encode_image_in_parallel(&picture_as_num));
-                        },
+                        }
                     }
-                },
+                }
                 false => {
                     //let base64str = general_purpose::STANDARD.encode(&picture_as_num);
                     //song_meta_data.cover = Some(base64str);
                     song_meta_data.cover = Some(encode_image_in_parallel(&picture_as_num));
-                },
+                }
             }
             break;
         }
     }
-
 }
 
-fn set_date_recorded_id3(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_date_recorded_id3(tag: &id3::Tag, song_meta_data: &mut Song) {
     //DATE RECORDED
     //"YYYY-MM-DD-HH-MM-SS"
     if let Some(date_recorded) = tag.date_recorded() {
         song_meta_data.date_recorded = format!(
-            "{:04}-{:02}-{:02}-{:02}-{:02}-{:02}", 
-            date_recorded.year, 
+            "{:04}-{:02}-{:02}-{:02}-{:02}-{:02}",
+            date_recorded.year,
             date_recorded.month.unwrap_or(0),
             date_recorded.day.unwrap_or(0),
             date_recorded.hour.unwrap_or(0),
             date_recorded.minute.unwrap_or(0),
             date_recorded.second.unwrap_or(0)
         );
-    }
-    else{
+    } else {
         song_meta_data.date_recorded = String::from("Unknown date recorded");
     }
 }
 
-fn set_date_recorded_lofty(_audio_file: &lofty::Tag, song_meta_data: &mut Song){
+fn set_date_recorded_lofty(_audio_file: &lofty::Tag, song_meta_data: &mut Song) {
     //needs re-implementation
     //lofty provides no way to access this
     song_meta_data.date_recorded = String::from("Unknown date recorded");
 }
 
-fn set_date_released_id3(tag: &id3::Tag, song_meta_data: &mut Song){
+fn set_date_released_id3(tag: &id3::Tag, song_meta_data: &mut Song) {
     //DATE RELEASED
     //"YYYY-MM-DD-HH-MM-SS"
     if let Some(date_released) = tag.date_released() {
         song_meta_data.date_released = format!(
             "{:04}-{:02}-{:02}-{:02}-{:02}-{:02}",
-            date_released.year, 
+            date_released.year,
             date_released.month.unwrap_or(0),
             date_released.day.unwrap_or(0),
             date_released.hour.unwrap_or(0),
             date_released.minute.unwrap_or(0),
             date_released.second.unwrap_or(0)
         );
-    }
-    else{
+    } else {
         song_meta_data.date_released = String::from("Unknown date recorded");
     }
 }
 
-fn set_date_released_lofty(_audio_file: &lofty::Tag, song_meta_data: &mut Song){
+fn set_date_released_lofty(_audio_file: &lofty::Tag, song_meta_data: &mut Song) {
     //needs re-implementation
     //lofty provides no way to access this
     song_meta_data.date_released = String::from("Unknown date recorded");
 }
 
-fn set_file_size(path: &str, song_meta_data: &mut Song){
+fn set_file_size(path: &str, song_meta_data: &mut Song) {
     //SIZE
     let real_path = Path::new(&path);
     match std::fs::metadata(&real_path) {
         Ok(metadata) => {
             song_meta_data.file_size = metadata.len();
-        },
+        }
         Err(_) => {
             song_meta_data.file_size = 0;
-        },
+        }
     }
 }
 
-fn set_file_extension(path: &str, song_meta_data: &mut Song){
+fn set_file_extension(path: &str, song_meta_data: &mut Song) {
     //FILE TYPE
     let real_path = Path::new(&path);
-    match real_path.extension(){
-        Some(wrapped_extension) => {
-            match wrapped_extension.to_str(){
-                Some(unwrapped_extension) => {
-                    song_meta_data.file_type = unwrapped_extension.to_string();
-                },
-                None => {
-                    song_meta_data.file_type = String::from("Unknown file type");
-                },
+    match real_path.extension() {
+        Some(wrapped_extension) => match wrapped_extension.to_str() {
+            Some(unwrapped_extension) => {
+                song_meta_data.file_type = unwrapped_extension.to_string();
+            }
+            None => {
+                song_meta_data.file_type = String::from("Unknown file type");
             }
         },
         None => {
             song_meta_data.file_type = String::from("Unknown file type");
-        },
+        }
     }
 }

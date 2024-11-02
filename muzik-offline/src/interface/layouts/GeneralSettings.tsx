@@ -6,7 +6,7 @@ import { OSTYPEenum, selectedGeneralSettingEnum, toastType } from "@muziktypes/i
 import { FunctionComponent, useState } from "react";
 import { DropDownMenuLarge, RadioComponent } from "@components/index";
 import { useSavedObjectStore, useViewableSideElStore, useToastStore } from "@store/index";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 
 const settings_data: {
     key: number;
@@ -129,7 +129,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = (props: General
                             </div>
                         </div>
                         : 
-                        <></>
+                        null
                     )
                 }
                 <div className="setting">
