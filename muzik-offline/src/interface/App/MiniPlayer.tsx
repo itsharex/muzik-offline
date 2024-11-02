@@ -50,7 +50,7 @@ const MiniPlayer: FunctionComponent<MiniPlayerProps> = (props: MiniPlayerProps) 
     }
 
     function detectKeyPress(this: Window, ev: any){
-        if(ev.target.id !== "gsearch"){
+        if(ev.target.id !== "gsearch" && ev.target.id !== "input-field"){
             if(ev.key === " "){//pause/play song
                 if(Player.isPlaying)pauseSong();
                 else playSong();

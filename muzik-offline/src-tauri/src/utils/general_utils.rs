@@ -128,6 +128,42 @@ pub fn decode_image_in_parallel(image_as_string: &String) -> Result<Vec<u8>, Str
      */
 }
 
+pub fn is_media_file(path_as_str: &str) -> Result<bool, Box<dyn std::error::Error>> {
+    let path = Path::new(path_as_str);
+    if let Some(ext) = path.extension() {
+        let ext = ext.to_str().unwrap_or("").to_lowercase();
+
+        let media_extensions = [
+            // Audio formats
+            "mp3", "wav", "flac", "ogg", 
+            // for future use
+            //"wma", "alac", "aiff", "pcm", "aac", "m4a",
+        ];
+
+        if media_extensions.contains(&ext.as_str()) {
+            match id3::Tag::read_from_path(path) {
+                Ok(_) => return Ok(true),
+                Err(id3::Error { kind: id3::ErrorKind::NoTag, .. }) => {
+                    return check_with_lofty(path);
+                }
+                Err(_) => return Ok(false),
+            }
+        }
+    }
+
+    Ok(false)
+}
+
+pub fn check_with_lofty(path: &Path) -> Result<bool, Box<dyn std::error::Error>> {
+    if let Ok(probe) = lofty::Probe::open(path) {
+        if let Ok(_) = probe.read() {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
+}
+
 pub fn get_song_cover_as_bytes(song: &Song, key: i32) -> Vec<u8> {
     match &song.cover{
         Some(cover) => {
