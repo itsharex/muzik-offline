@@ -21,12 +21,13 @@ const RectangleSongBoxDraggable = (props: RectangleSongBoxDraggableProps) => {
             values={props.SongList} 
             onReorder={props.onDragEnd}
             axis="y"
+            as="div"
             layoutScroll
             style={{ overflowY: "scroll" }}>
                 <ViewportList viewportRef={props.itemsHeightRef} items={props.SongList} ref={props.listRef}>
                     {
                         (song, index) => (
-                            <Reorder.Item value={song} key={song.id}>
+                            <Reorder.Item value={song} key={song.id} as="div">
                                 <RectangleSongBox 
                                     key={song.id}
                                     keyV={song.id}

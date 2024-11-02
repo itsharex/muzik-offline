@@ -19,6 +19,7 @@ pub fn toggle_miniplayer_view<R: Runtime>(window: tauri::Window<R>, open_mini_pl
         let _ = window.set_size(LogicalSize::new(980.0, 623.0));
         let _ = window.set_min_size(Some(LogicalSize::new(980.0, 623.0)));
         let _ = window.set_always_on_top(false);
+        let _ = window.center();
     }
 }
 

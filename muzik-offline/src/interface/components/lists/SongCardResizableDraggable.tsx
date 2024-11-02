@@ -18,10 +18,11 @@ const SongCardResizableDraggable: FunctionComponent<SongCardResizableDraggablePr
         values={props.SongQueue} 
         onReorder={(newOrder: Song[]) => props.onDragEnd(newOrder, props.queueType)}
         axis="y"
+        as="div"
         layoutScroll
-        style={{ overflowY: "scroll" }}>
+        style={{ overflowY: "scroll"}}>
                 {props.SongQueue.map((song, index) =>
-                        <Reorder.Item value={song} key={song.id}>
+                        <Reorder.Item value={song} key={song.id} as="div">
                             <SongCardResizable 
                                 key={index}
                                 cover={song.cover} 

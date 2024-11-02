@@ -99,7 +99,7 @@ const HistoryUpcoming: FunctionComponent<HistoryUpcomingprops> = (props: History
     const { scrollTop, scrollHeight, clientHeight } = scrollRefUpcoming.current;
 
     if (scrollTop === 0) {setUpcomingPosition("Top");}
-    else if (scrollTop + clientHeight >= scrollHeight) {setUpcomingPosition("Bottom");}
+    else if (Math.ceil(scrollTop) + clientHeight >= scrollHeight) {setUpcomingPosition("Bottom");}
     else {setUpcomingPosition("Middle");}
     }
   };
@@ -109,7 +109,7 @@ const HistoryUpcoming: FunctionComponent<HistoryUpcomingprops> = (props: History
       const { scrollTop, scrollHeight, clientHeight } = scrollRefHistory.current;
 
       if (scrollTop === 0) {setHistoryPosition("Top");}
-      else if (scrollTop + clientHeight >= scrollHeight) {setHistoryPosition("Bottom");}
+      else if (Math.ceil(scrollTop) + clientHeight >= scrollHeight) {setHistoryPosition("Bottom");}
       else {setHistoryPosition("Middle");}
       }
   };
