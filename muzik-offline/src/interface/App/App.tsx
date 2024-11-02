@@ -7,21 +7,25 @@ import { type } from '@tauri-apps/api/os';
 import { invoke } from "@tauri-apps/api";
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { HistoryNextFloating } from "@layouts/index";
-import { OSTYPEenum, toastType } from "@muziktypes/index";
+import { OSTYPEenum, Payload } from "@muziktypes/index";
 import { AnimatePresence } from "framer-motion";
-import { useWallpaperStore, useSavedObjectStore, useToastStore } from "@store/index";
+import { useWallpaperStore, useSavedObjectStore, useIsMaximisedStore, useIsFSStore } from "@store/index";
 import { SavedObject } from "@database/saved_object";
 import { isPermissionGranted, requestPermission } from '@tauri-apps/api/notification';
 import { MiniPlayer } from "@App/index";
+import { listen } from "@tauri-apps/api/event";
+import { processOSMediaControlsEvent } from "@utils/OSeventControl";
 
 const App = () => {
   const [openMiniPlayer, setOpenMiniPlayer] = useState<boolean>(false);
   const [openSettings, setOpenSettings] = useState<boolean>(false);
   const [FSplayerState, setFSplayerState] = useState<boolean>(false);
   const [FloatingHNState, setFloatingHNState] = useState<boolean>(false);
+  const { isMaximised } = useIsMaximisedStore((state) => { return { isMaximised: state.isMaximised}; });
   const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
   const { wallpaper } = useWallpaperStore((state) => { return { wallpaper: state.wallpaper,}; });
   const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
+  const { appFS } = useIsFSStore((state) => { return { appFS: state.isFS}; });
 
   function closeSetting(){if(openSettings === true)setOpenSettings(false);}
 
@@ -48,11 +52,7 @@ const App = () => {
 
   function connect_to_discord(){ 
     if(local_store.AppActivityDiscord === "Yes"){
-      invoke("allow_connection_and_connect_to_discord_rpc").then().catch((_) => {
-        setToast({
-          title: "Discord connection...", message: "Failed to establish connection with discord", type: toastType.error, timeout: 5000
-        });
-      }); 
+      invoke("allow_connection_and_connect_to_discord_rpc").then().catch(); 
     }
   }
 
@@ -76,10 +76,21 @@ const App = () => {
     await invoke("toggle_miniplayer_view", {openMiniPlayer: !MPV});
   }
 
+  async function listenForOSevents(){
+    const unlisten = await listen<Payload>('os-media-controls', (event) => processOSMediaControlsEvent(event.payload))
+    // later, when you want to stop listening
+    return unlisten
+  }
+
   useEffect(() => {
     checkOSType();
     checkAndRequestNotificationPermission();
     connect_to_discord();
+    const listenForOSeventsfunc = listenForOSevents();
+
+    return () => {
+      listenForOSeventsfunc.then((unlisten) => unlisten());
+    }
   }, [])
 
   return (
@@ -87,7 +98,12 @@ const App = () => {
     { !openMiniPlayer ?
       <Router>
         <div 
-          className={"app_container " + (local_store.OStype ===  OSTYPEenum.Linux || !local_store.AppThemeBlur ? " linux-config " : "")} 
+          className={
+            "app_container " + 
+            (local_store.OStype === OSTYPEenum.Windows && ((!appFS && !isMaximised) || local_store.AlwaysRoundedCornersWindows === "Yes") ? " windows-app-config " : "") +
+            (local_store.OStype === OSTYPEenum.Linux || !local_store.AppThemeBlur ? " linux-config " : "")
+            
+          } 
           data-theme={local_store.ThemeColour} 
           wallpaper-opacity={local_store.WallpaperOpacityAmount}
           onContextMenu={(e) => e.preventDefault()}>

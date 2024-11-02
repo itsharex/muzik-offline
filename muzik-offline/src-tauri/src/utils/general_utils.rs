@@ -2,6 +2,14 @@ use image::imageops::FilterType;
 use std::{path::Path, io::Cursor};
 use rayon::prelude::*;
 use base64::{Engine as _, engine::general_purpose};
+use std::net::TcpListener;
+
+use crate::components::song::Song;
+use crate::constants::null_cover_four::NULL_COVER_FOUR;
+use crate::constants::null_cover_null::NULL_COVER_NULL;
+use crate::constants::null_cover_one::NULL_COVER_ONE;
+use crate::constants::null_cover_three::NULL_COVER_THREE;
+use crate::constants::null_cover_two::NULL_COVER_TWO;
 
 pub fn duration_to_string(duration: &u64) -> String {
     let seconds = duration;
@@ -118,4 +126,117 @@ pub fn decode_image_in_parallel(image_as_string: &String) -> Result<Vec<u8>, Str
     If you’re seeing “=” characters in the middle of your Base64 string, 
     it suggests that something has gone wrong with the encoding process.
      */
+}
+
+pub fn get_song_cover_as_bytes(song: &Song, key: i32) -> Vec<u8> {
+    match &song.cover{
+        Some(cover) => {
+            match decode_image_in_parallel(&cover){
+                Ok(cover) => {
+                    return cover;
+                },
+                Err(_) => {
+                    return Vec::new();
+                },
+            }
+        },
+        None => {
+            match key{
+                key if key % 4 == 0 => {
+                    match decode_image_in_parallel(&NULL_COVER_ONE.to_owned()){
+                        Ok(cover) => {
+                            return cover;
+                        },
+                        Err(_) => {
+                            return Vec::new();
+                        },
+                    }
+                },
+                key if key % 4 == 1 => {
+                    match decode_image_in_parallel(&NULL_COVER_TWO.to_owned()){
+                        Ok(cover) => {
+                            return cover;
+                        },
+                        Err(_) => {
+                            return Vec::new();
+                        },
+                    }
+                },
+                key if key % 4 == 2 => {
+                    match decode_image_in_parallel(&NULL_COVER_THREE.to_owned()){
+                        Ok(cover) => {
+                            return cover;
+                        },
+                        Err(_) => {
+                            return Vec::new();
+                        },
+                    }
+                },
+                key if key % 4 == 3 => {
+                    match decode_image_in_parallel(&NULL_COVER_FOUR.to_owned()){
+                        Ok(cover) => {
+                            return cover;
+                        },
+                        Err(_) => {
+                            return Vec::new();
+                        },
+                    }
+                },
+                i32::MIN..=i32::MAX => {
+                    match decode_image_in_parallel(&NULL_COVER_NULL.to_owned()){
+                        Ok(cover) => {
+                            return cover;
+                        },
+                        Err(_) => {
+                            return Vec::new();
+                        },
+                    }
+                },
+            }
+        },
+    } 
+}
+
+pub fn get_random_port() -> u16 {
+    match TcpListener::bind("127.0.0.1:0"){
+        Ok(listener) => {
+            match listener.local_addr(){
+                Ok(addr) => {
+                    addr.port()
+                },
+                Err(_) => {
+                    30340
+                },
+            }
+        },
+        Err(_) => {
+            30340
+        },
+    }
+}
+
+pub fn get_cover_url_for_discord(_name: String, _artist: String, has_cover: bool,id: i32) -> String{
+    if !has_cover{
+        match id{
+            id if id % 4 == 0 => {
+                return format!("nullcoverone");
+            },
+            id if id % 4 == 1 => {
+                return format!("nullcovertwo");
+            },
+            id if id % 4 == 2 => {
+                return format!("nullcoverthree");
+            },
+            id if id % 4 == 3 => {
+                return format!("nullcoverfour");
+            },
+            i32::MIN..=i32::MAX => {
+                return format!("nullcovernull");
+            },
+        }
+    } else{
+        return format!("nullcovernull");
+        // use musicbrainz api to get a close enough matching url for the cover using the name and artist
+        // future impl
+    }
 }

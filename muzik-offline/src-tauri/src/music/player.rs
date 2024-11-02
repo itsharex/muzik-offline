@@ -2,11 +2,11 @@ use tauri::State;
 use kira::{
 	sound::{streaming::{StreamingSoundData, StreamingSoundSettings, StreamingSoundHandle}, FromFileError}, tween::Tween
 };
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use crate::components::audio_manager::SharedAudioManager;
 
 #[tauri::command]
-pub fn load_and_play_song_from_path(audio_manager: State<'_, Mutex<SharedAudioManager>>, sound_path: &str, volume: f64){
+pub fn load_and_play_song_from_path(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, sound_path: &str, volume: f64){
     match audio_manager.lock(){
         Ok(mut manager) => {
             //stop and clear all sounds that are playing
@@ -68,7 +68,7 @@ pub fn load_and_play_song_from_path(audio_manager: State<'_, Mutex<SharedAudioMa
 }
 
 #[tauri::command]
-pub fn load_a_song_from_path(audio_manager: State<'_, Mutex<SharedAudioManager>>, sound_path: &str, volume: f64){
+pub fn load_a_song_from_path(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, sound_path: &str, volume: f64){
     match audio_manager.lock(){
         Ok(mut manager) => {
             //stop and clear all sounds that are playing
@@ -146,7 +146,7 @@ pub fn load_a_song_from_path(audio_manager: State<'_, Mutex<SharedAudioManager>>
 }
 
 #[tauri::command]
-pub fn pause_song(audio_manager: State<'_, Mutex<SharedAudioManager>>) {
+pub fn pause_song(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>) {
     match audio_manager.lock(){
         Ok(mut manager) => {
             match &mut manager.instance_handle{
@@ -172,7 +172,7 @@ pub fn pause_song(audio_manager: State<'_, Mutex<SharedAudioManager>>) {
 }
 
 #[tauri::command]
-pub fn stop_song(audio_manager: State<'_, Mutex<SharedAudioManager>>){
+pub fn stop_song(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>){
     match audio_manager.lock(){
         Ok(mut manager) => {
             match &mut manager.instance_handle{
@@ -199,7 +199,7 @@ pub fn stop_song(audio_manager: State<'_, Mutex<SharedAudioManager>>){
 }
 
 #[tauri::command]
-pub fn resume_playing(audio_manager: State<'_, Mutex<SharedAudioManager>>){
+pub fn resume_playing(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>){
     match audio_manager.lock(){
         Ok(mut manager) => {
             match &mut manager.instance_handle{
@@ -225,7 +225,7 @@ pub fn resume_playing(audio_manager: State<'_, Mutex<SharedAudioManager>>){
 }
 
 #[tauri::command]
-pub fn seek_to(audio_manager: State<'_, Mutex<SharedAudioManager>>, position: f64){
+pub fn seek_to(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, position: f64){
     match audio_manager.lock(){
         Ok(mut manager) => {
             //get volume
@@ -253,7 +253,7 @@ pub fn seek_to(audio_manager: State<'_, Mutex<SharedAudioManager>>, position: f6
 }
 
 #[tauri::command]
-pub fn seek_by(audio_manager: State<'_, Mutex<SharedAudioManager>>, delta: f64){
+pub fn seek_by(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, delta: f64){
     match audio_manager.lock(){
         Ok(mut manager) => {
             match &mut manager.instance_handle{
@@ -278,7 +278,7 @@ pub fn seek_by(audio_manager: State<'_, Mutex<SharedAudioManager>>, delta: f64){
 }
 
 #[tauri::command]
-pub fn get_song_position(audio_manager: State<'_, Mutex<SharedAudioManager>>) -> f64{
+pub fn get_song_position(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>) -> f64{
     match audio_manager.lock(){
         Ok(mut manager) => {
             match &mut manager.instance_handle{
@@ -300,7 +300,7 @@ pub fn get_song_position(audio_manager: State<'_, Mutex<SharedAudioManager>>) ->
 }
 
 #[tauri::command]
-pub fn set_volume(audio_manager: State<'_, Mutex<SharedAudioManager>>, volume: f64){
+pub fn set_volume(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, volume: f64){
     match audio_manager.lock(){
         Ok(mut manager) => {
             match &mut manager.instance_handle{

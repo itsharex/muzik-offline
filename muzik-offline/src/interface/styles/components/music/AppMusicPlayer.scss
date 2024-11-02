@@ -1,7 +1,7 @@
 @import "../../constants/constants";
 
 .app_music_player{
-    position: fixed;
+    position: absolute;
     z-index: $z-index-8000;
     bottom: 0;
     min-width: 980px;
@@ -14,7 +14,6 @@
     --buffered-width: 0%;
     overflow: hidden;
     background: var(--var-glass-music-bar-bg);
-    border-top: 1px solid $songs-container-border-col;
 
     .music_cover_art{
         min-width: 980px;
@@ -45,6 +44,7 @@
     }
 
     .music_art_bg_layer{
+        border-top: 1px solid $songs-container-border-col;
         min-width: 980px;
         width: 100vw;
         height: 70px;
@@ -310,18 +310,31 @@
 }
 
 .app_music_player_border{
-    border: 1px solid $songs-container-border-col;
-    min-width: 978px;
-    width: calc(100vw - 2px);
+    min-width: 979px;
+    width: calc(100vw - 1px);
     .music_cover_art{
-        min-width: 978px;
-        width: calc(100vw - 2px);
+        min-width: 979px;
+        width: calc(100vw - 1px);
     }
     .music_art_bg_layer{
-        min-width: 978px;
-        width: calc(100vw - 2px);
+        min-width: 979px;
+        width: calc(100vw - 1px);
         background: var(--var-glass-music-bar-bg);
-        backdrop-filter: var(--var-bg-blur-150);
-        -webkit-backdrop-filter: var(--var-bg-blur-150);
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        border: 1px solid $songs-container-border-col;
+    }
+}
+
+.app-music-player-windows-config{
+    bottom: 2px;
+    .music_art_bg_layer{
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        border-top: 1px solid $songs-container-border-col;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
     }
 }

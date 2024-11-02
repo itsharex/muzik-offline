@@ -14,7 +14,8 @@ export enum selectedGeneralSettingEnum{
     CompressImage = "CompressImage",
     UpcomingHistoryLimit = "UpcomingHistoryLimit",
     SeekStepAmount = "SeekStepAmount",
-    SongLengthORremaining = "SongLengthORremaining"
+    SongLengthORremaining = "SongLengthORremaining",
+    AlwaysRoundedCornersWindows = "AlwaysRoundedCornersWindows"
 }
 
 export enum OSTYPEenum{
@@ -50,6 +51,12 @@ export enum toastType{
     error = "error",
     info = "info",
     warning = "warning"
+}
+
+export enum playerState{
+    Playing = "playing",
+    Paused = "paused",
+    Stopped = "stopped"
 }
 
 export interface toast{
@@ -142,4 +149,12 @@ export interface PlaylistMD {
     playlist_data: playlist | null,
     song_count: number;
     length: string;
+}
+
+export interface Payload {
+    event: string;
+    seek_direction: string;
+    duration?: number;
+    volume?: number;
+    uri?: string;
 }

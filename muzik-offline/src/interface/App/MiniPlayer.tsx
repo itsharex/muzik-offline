@@ -6,6 +6,7 @@ import { changeVolumeLevel, changeSeekerPosition, changeVolumeLevelBtnPress, dra
 import { motion } from "framer-motion";
 import { FunctionComponent, useRef, useEffect, useState } from "react";
 import "@styles/App/MiniPlayer.scss";
+import { OSTYPEenum } from "@muziktypes/index";
 
 type MiniPlayerProps = {
     isOpen: boolean;
@@ -18,7 +19,7 @@ const MiniPlayer: FunctionComponent<MiniPlayerProps> = (props: MiniPlayerProps) 
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
     const {playingPosInSec, setplayingPosInSec} = usePlayingPositionSec((state) => { return {playingPosInSec: state.position, setplayingPosInSec: state.setPosition}; });
     const {playingPosition, setplayingPosition} = usePlayingPosition((state) => { return {playingPosition: state.position, setplayingPosition: state.setPosition}; });
-    const intervalIdRef = useRef<number>();
+    const intervalIdRef = useRef<number | NodeJS.Timeout>();
 
     function changeVolume(event : any){changeVolumeLevel(event.target.value);}
 
@@ -78,7 +79,7 @@ const MiniPlayer: FunctionComponent<MiniPlayerProps> = (props: MiniPlayerProps) 
     }, [Player.isPlaying]);
 
     return (
-        <div className={"MiniPlayer " + (props.isOpen ? " MiniPlayer-visible" : "")}>
+        <div className="MiniPlayer">
             <div className="image-container">
                 <div className="music_cover_art">
                     {!Player.playingSongMetadata && <NullCoverNull />}{/**no song is loaded onto the player */}
@@ -86,7 +87,7 @@ const MiniPlayer: FunctionComponent<MiniPlayerProps> = (props: MiniPlayerProps) 
                     {Player.playingSongMetadata && !Player.playingSongMetadata.cover && (getRandomCover(Player.playingSongMetadata ? Player.playingSongMetadata.id : 0))()}{/**the cover art is null */}
                 </div>
             </div>
-            <div data-tauri-drag-region className="player">
+            <div data-tauri-drag-region className={"player" + (local_store.OStype ===  OSTYPEenum.Windows ? " windows-miniplayer-config " : "")}>
                 <div className="art_container" onMouseDown={dragWindow}>
                     {!Player.playingSongMetadata && <NullCoverNull/>}{/**no song is loaded onto the player */}
                     {Player.playingSongMetadata && Player.playingSongMetadata.cover && (<img src={`data:image/png;base64,${Player.playingSongMetadata.cover}`} alt="song-art" />)}{/**there is cover art */}
