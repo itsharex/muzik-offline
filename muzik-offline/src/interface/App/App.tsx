@@ -24,7 +24,6 @@ const App = () => {
   const { isMaximised } = useIsMaximisedStore((state) => { return { isMaximised: state.isMaximised}; });
   const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
   const { wallpaper } = useWallpaperStore((state) => { return { wallpaper: state.wallpaper,}; });
-  const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
   const { appFS } = useIsFSStore((state) => { return { appFS: state.isFS}; });
 
   function closeSetting(){if(openSettings === true)setOpenSettings(false);}
