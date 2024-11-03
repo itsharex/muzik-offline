@@ -709,7 +709,7 @@ pub fn insert_song_into_tree(song: &Song) {
     }
 }
 
-pub fn song_exists_in_tree(uuid: &str) -> bool {
+pub fn song_exists_in_tree(path: &str) -> bool {
     match DbManager::new() {
         Ok(mut dbm) => {
             let song_tree = match dbm.get_song_tree() {
@@ -717,7 +717,7 @@ pub fn song_exists_in_tree(uuid: &str) -> bool {
                 Err(_) => {return false;}
             };
 
-            match song_tree.get(uuid) {
+            match song_tree.get(uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_URL, path.as_bytes()).to_string()) {
                 Ok(Some(_)) => {
                     return true;
                 }
