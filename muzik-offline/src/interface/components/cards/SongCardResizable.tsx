@@ -19,7 +19,7 @@ const SongCardResizable: FunctionComponent<SongCardResizableProps> = (props: Son
     return (
         <div className="SongCardResizable">
             <motion.div className="song_cover" whileHover={{scale: 1.02}} whileTap={{scale: 0.98}}>
-                { !props.cover ? (getRandomCover(props.keyV))() : getCoverURL(props.cover) }
+                { !props.cover ? (getRandomCover(props.keyV))() : <img src={getCoverURL(props.cover)} alt="song-card" /> }
             </motion.div>
             <div className="song_name">
                 <motion.h3 whileTap={{scale: 0.98}} onClick={() => props.navigateTo(props.keyV, "song")}>{props.songName}</motion.h3>

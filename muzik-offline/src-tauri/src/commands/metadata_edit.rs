@@ -4,6 +4,7 @@ use lofty::TaggedFileExt;
 
 use crate::database::db_api::insert_into_album_tree;
 use crate::database::db_api::insert_into_artist_tree;
+use crate::database::db_api::insert_into_covers_tree;
 use crate::database::db_api::insert_into_genre_tree;
 use crate::database::db_api::insert_song_into_tree;
 use crate::{components::song::Song, utils::general_utils::decode_image_in_parallel};
@@ -17,8 +18,11 @@ pub fn edit_song_metadata(
 ) -> Result<String, String> {
     //convert song_metadata to Song using serde_json
     match serde_json::from_str::<Song>(&song_metadata) {
-        Ok(song) => {
-            if let Ok(()) = edit_metadata_id3(&song_path, &song, &has_changed_cover, &cover) {
+        Ok(mut song) => {
+            if let Ok(cov_as_vec) = edit_metadata_id3(&song_path, &song, &has_changed_cover, &cover) {
+                if has_changed_cover == true {
+                    song.cover_uuid = Some(insert_into_covers_tree(cov_as_vec, &song.path).to_string());
+                }
                 insert_song_into_tree(&song);
                 insert_into_album_tree(&song);
                 insert_into_artist_tree(&song);
@@ -65,13 +69,14 @@ fn edit_metadata_id3(
     song: &Song,
     has_changed_cover: &bool,
     cover: &String
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let mut tag = id3::Tag::read_from_path(song_path)?;
+    let mut cov_as_vec = Vec::new();
     set_title_id3(&mut tag, song);
     set_artist_id3(&mut tag, song);
     set_album_id3(&mut tag, song);
     if *has_changed_cover == true {
-        set_cover_id3(&mut tag, cover);
+        cov_as_vec = set_cover_id3(&mut tag, cover);
     }
     set_genre_id3(&mut tag, song);
     set_year_id3(&mut tag, song);
@@ -79,7 +84,7 @@ fn edit_metadata_id3(
     tag.set_date_released(create_timestamp(&song.date_released));
 
     match tag.write_to_path(song_path, id3::Version::Id3v24) {
-        Ok(_) => Ok(()),
+        Ok(_) => Ok(cov_as_vec),
         Err(_) => Err("Error writing to file".into()),
     }
 }
@@ -285,7 +290,7 @@ fn set_year_lofty(tag: &mut lofty::Tag, song_meta_data: &Song) {
     }
 }
 
-fn set_cover_id3(tag: &mut id3::Tag, cover: &String) {
+fn set_cover_id3(tag: &mut id3::Tag, cover: &String) -> Vec<u8> {
     //COVER
     match decode_image_in_parallel(cover) {
         Ok(cover_as_vec) => {
@@ -295,12 +300,15 @@ fn set_cover_id3(tag: &mut id3::Tag, cover: &String) {
                     mime_type: "image/jpeg".to_string(),
                     picture_type: id3::frame::PictureType::CoverFront,
                     description: "Cover".to_string(),
-                    data: cover_as_vec,
+                    data: cover_as_vec.clone(),
                 }),
             ));
+
+            cover_as_vec
         }
         Err(_) => {
             //do nothing
+            Vec::new()
         }
     }
 }

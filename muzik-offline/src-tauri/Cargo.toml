@@ -39,7 +39,7 @@ tauri-plugin-os = "2"
 [dependencies.uuid]
 version = "1.11.0"
 features = [
-    "v7", "v5",              # Lets you generate random UUIDs
+    "v5",              # Lets you generate random UUIDs
     "fast-rng",          # Use a faster (but still sufficiently random) RNG
     "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
 ]

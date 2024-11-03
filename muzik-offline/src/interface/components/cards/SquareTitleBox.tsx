@@ -22,7 +22,7 @@ const SquareTitleBox: FunctionComponent<SquareTitleBoxProps> = (props: SquareTit
             props.setMenuOpenData(props.keyV, {xPos: e.pageX, yPos: e.pageY});
         }}>
             <motion.div className="title_cover" whileHover={{scale: 1.02}} whileTap={{scale: 0.98}} onClick={navigateTo}>
-                    {  !props.cover ? (getRandomCover(props.keyV))() : getCoverURL(props.cover) }
+                    {  !props.cover ? (getRandomCover(props.keyV))() : <img src={getCoverURL(props.cover)} alt="square-image" /> }
             </motion.div>
             <motion.h3 whileTap={{scale: 0.98}} onClick={navigateTo}>{props.title}</motion.h3>
         </div>

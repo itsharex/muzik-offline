@@ -83,7 +83,7 @@ pub async fn get_all_songs_in_db() -> String {
 pub async fn get_all_albums() -> String {
     match DbManager::new() {
         Ok(mut dbm) => {
-            let album_tree = match dbm.get_song_tree() {
+            let album_tree = match dbm.get_album_tree() {
                 Ok(tree) => tree,
                 Err(e) => {
                     return String::from(format!(
@@ -159,7 +159,7 @@ pub async fn get_all_albums() -> String {
 pub async fn get_all_artists() -> String {
     match DbManager::new() {
         Ok(mut dbm) => {
-            let artist_tree = match dbm.get_song_tree() {
+            let artist_tree = match dbm.get_artist_tree() {
                 Ok(tree) => tree,
                 Err(e) => {
                     return String::from(format!(
@@ -235,7 +235,7 @@ pub async fn get_all_artists() -> String {
 pub async fn get_all_genres() -> String {
     match DbManager::new() {
         Ok(mut dbm) => {
-            let genre_tree = match dbm.get_song_tree() {
+            let genre_tree = match dbm.get_genre_tree() {
                 Ok(tree) => tree,
                 Err(e) => {
                     return String::from(format!(

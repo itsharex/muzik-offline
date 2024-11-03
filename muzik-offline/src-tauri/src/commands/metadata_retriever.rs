@@ -111,7 +111,7 @@ fn lofty_read_from_path(
 
     let mut song_meta_data = Song {
         id: *song_id,
-        uuid: uuid::Uuid::now_v7(),
+        uuid: uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_URL, path.as_bytes()),
         title: String::from(""),
         name: String::from(""),
         artist: String::from(""),
@@ -187,7 +187,7 @@ fn read_from_path(
 
     let mut song_meta_data = Song {
         id: *song_id,
-        uuid: uuid::Uuid::now_v7(),
+        uuid: uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_URL, path.as_bytes()),
         title: String::from(""),
         name: String::from(""),
         artist: String::from(""),

@@ -152,7 +152,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let port = get_random_port();
 
     // Start the warp server and serve both routes
-    tokio::spawn(async move {
+    spawn(async move {
         warp::serve(routes).run(([127, 0, 0, 1], port)).await;
     });
 
