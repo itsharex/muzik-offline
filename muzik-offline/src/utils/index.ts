@@ -4,26 +4,35 @@ import { Song, album, artist, genre, playlist } from "@muziktypes/index";
 import { useHistorySongs, usePortStore, useUpcomingSongs } from "@store/index";
 import { invoke } from "@tauri-apps/api/core";
 
-export const fetch_library = async(): Promise<{status: string, message: string}> => {
-    const res_songs = await fetch_songs_metadata();
+export const fetch_library = async(fresh_library: boolean): Promise<{status: string, message: string}> => {
+    const res_songs = await fetch_songs_metadata(fresh_library);
     if(res_songs.status === "error")return res_songs;
 
-    const res_albums = await fetch_albums_metadata();
+    const res_albums = await fetch_albums_metadata(fresh_library);
     if(res_albums.status === "error")return res_albums;
 
 
-    const res_artists = await fetch_artists_metadata();
+    const res_artists = await fetch_artists_metadata(fresh_library);
     if(res_artists.status === "error")return res_artists;
 
-    const res_genres = await fetch_genres_metadata();
+    const res_genres = await fetch_genres_metadata(fresh_library);
     if(res_genres.status === "error")return res_genres;
 
     return {status: "success", message: ""};
 }
 
-export const fetch_songs_metadata = async(): Promise<{status: string, message: string}> => {
-    const res: any = await invoke("get_all_songs_in_db");
+export const fetch_songs_metadata = async(fresh_library: boolean): Promise<{status: string, message: string}> => {
+    let res: any;
+    if(fresh_library){
+        res = await invoke("get_all_songs_in_db");
+    } else{
+        const local_songs = await local_songs_db.songs.toArray();
+        const uuids = local_songs.map((song) => song.uuid);
+        res = await invoke("get_songs_not_in_vec", {uuidsNotToMatch: uuids});
+    }
+
     const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
+    console.log(res);
     if(responseobject.status === "success"){
         const songs: Song[] = responseobject.data;
         await local_songs_db.songs.bulkAdd(songs);
@@ -31,8 +40,16 @@ export const fetch_songs_metadata = async(): Promise<{status: string, message: s
     } else { return {status: "error", message: "failed to retrieve songs, please try again"}; }
 }
 
-export const fetch_albums_metadata = async(): Promise<{status: string, message: string}> => {
-    const res: any = await invoke("get_all_albums");
+export const fetch_albums_metadata = async(fresh_library: boolean): Promise<{status: string, message: string}> => {
+    let res: any;
+    if(fresh_library){
+        res = await invoke("get_all_albums");
+    } else{
+        const local_albums = await local_albums_db.albums.toArray();
+        const uuids = local_albums.map((album) => album.uuid);
+        res = await invoke("get_albums_not_in_vec", {uuidsNotToMatch: uuids});
+    }
+
     const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
     if(responseobject.status === "success"){
         const albums: album[] = responseobject.data;
@@ -41,8 +58,16 @@ export const fetch_albums_metadata = async(): Promise<{status: string, message: 
     } else { return {status: "error", message: "failed to retrieve albums, please try again"}; }
 }
 
-export const fetch_artists_metadata = async(): Promise<{status: string, message: string}> => {
-    const res: any = await invoke("get_all_artists");
+export const fetch_artists_metadata = async(fresh_library: boolean): Promise<{status: string, message: string}> => {
+    let res: any;
+    if(fresh_library){
+        res = await invoke("get_all_artists");
+    } else{
+        const local_artists = await local_artists_db.artists.toArray();
+        const uuids = local_artists.map((artist) => artist.uuid);
+        res = await invoke("get_artists_not_in_vec", {uuidsNotToMatch: uuids});
+    }
+
     const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
     if(responseobject.status === "success"){
         const artists: artist[] = responseobject.data;
@@ -51,8 +76,16 @@ export const fetch_artists_metadata = async(): Promise<{status: string, message:
     } else { return {status: "error", message: "failed to retrieve albums, please try again"}; }
 }
 
-export const fetch_genres_metadata = async(): Promise<{status: string, message: string}> => {
-    const res: any = await invoke("get_all_genres");
+export const fetch_genres_metadata = async(fresh_library: boolean): Promise<{status: string, message: string}> => {
+    let res: any;
+    if(fresh_library){
+        res = await invoke("get_all_genres");
+    } else{
+        const local_genres = await local_genres_db.genres.toArray();
+        const uuids = local_genres.map((genre) => genre.uuid);
+        res = await invoke("get_genres_not_in_vec", {uuidsNotToMatch: uuids});
+    }
+
     const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
     if(responseobject.status === "success"){
         const genres: genre[] = responseobject.data;

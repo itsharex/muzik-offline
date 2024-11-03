@@ -30,7 +30,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
 
         invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(directories), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
             .then(async() => {
-                const res = await fetch_library();
+                const res = await fetch_library(true);
                 let message = "";
 
                 if(res.status === "error")message = res.message;
@@ -103,7 +103,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
         await local_artists_db.artists.clear();
         await local_genres_db.genres.clear();
 
-        const res = await fetch_library();
+        const res = await fetch_library(true);
         let message = "";
 
         if(res.status === "error")message = res.message;

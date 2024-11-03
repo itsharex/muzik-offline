@@ -1,5 +1,5 @@
 use crate::components::song::Song;
-use crate::database::db_api::{clear_all_trees, insert_into_album_tree, insert_into_artist_tree, insert_into_covers_tree, insert_into_genre_tree, insert_song_into_tree};
+use crate::database::db_api::{clear_all_trees, insert_into_album_tree, insert_into_artist_tree, insert_into_covers_tree, insert_into_genre_tree, insert_song_into_tree, song_exists_in_tree};
 use crate::utils::general_utils::{
     duration_to_string, extract_file_name, resize_and_compress_image,
 };
@@ -26,6 +26,7 @@ pub async fn get_all_songs(
             &path,
             &mut song_id,
             &compress_image_option,
+            false,
         )
         .await;
     }
@@ -59,8 +60,8 @@ pub async fn get_songs_in_path(
     dir_path: &str,
     song_id: &mut i32,
     compress_image_option: &bool,
+    check_if_exists: bool,
 ){
-
     match tokio::fs::read_dir(dir_path).await {
         Ok(mut paths) => {
             while let Ok(Some(entry)) = paths.next_entry().await {
@@ -72,6 +73,13 @@ pub async fn get_songs_in_path(
                                 continue;
                             }
                             Err(_) => {
+                                continue;
+                            }
+                        }
+
+                        if check_if_exists {
+                            // check if song is already in the library
+                            if song_exists_in_tree(full_path) {
                                 continue;
                             }
                         }

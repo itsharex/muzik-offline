@@ -80,6 +80,84 @@ pub async fn get_all_songs_in_db() -> String {
 }
 
 #[tauri::command]
+pub async fn get_songs_not_in_vec(uuids_not_to_match: Vec<String>) -> String{
+    match DbManager::new() {
+        Ok(mut dbm) => {
+            let song_tree = match dbm.get_song_tree() {
+                Ok(tree) => tree,
+                Err(e) => {
+                    return String::from(format!(
+                        "{{\"status\":\"error\",\"message\":\"{}\",\"data\":[]}}",
+                        e
+                    ));
+                }
+            };
+            let mut songs: Vec<Song> = Vec::new();
+
+            let could_retrieve_songs = tokio::task::spawn_blocking(move || {
+                for result in song_tree.iter() {
+                    match result {
+                        Ok((_, song_as_ivec)) => {
+                            let song_as_bytes = song_as_ivec.as_ref();
+                            let song_as_str = String::from_utf8_lossy(song_as_bytes);
+                            match serde_json::from_str::<Song>(&song_as_str.to_string()) {
+                                Ok(song) => {
+                                    if !uuids_not_to_match.iter().any(|uuid| uuid == &song.uuid.to_string()) {
+                                        songs.push(song);
+                                    }
+                                }
+                                Err(_) => {
+                                    println!("error converting song from json to struct");
+                                }
+                            }
+                        }
+                        Err(_) => {
+                            println!("error getting this key from the song tree");
+                        }
+                    }
+                }
+
+                //convert songs vec to json and return
+                match serde_json::to_string(&ResponseObject {
+                    status: String::from("success"),
+                    message: String::from(""),
+                    data: songs,
+                }) {
+                    Ok(songs_as_json) => {
+                        return songs_as_json;
+                    }
+                    Err(e) => {
+                        return String::from(format!(
+                            "{{\"status\":\"json parse error\",\"message\":\"{}\",\"data\":[]}}",
+                            e.to_string()
+                        ));
+                    }
+                }
+            })
+            .await;
+
+            match could_retrieve_songs {
+                Ok(songs_as_json) => {
+                    return songs_as_json;
+                }
+                Err(e) => {
+                    return String::from(format!(
+                        "{{\"status\":\"thread error\",\"message\":\"{}\",\"data\":[]}}",
+                        e.to_string()
+                    ));
+                }
+            }
+        }
+        Err(e) => {
+            return String::from(format!(
+                "{{\"status\":\"lock error\",\"message\":\"{}\",\"data\":[]}}",
+                e
+            ));
+        }
+    }
+}
+
+#[tauri::command]
 pub async fn get_all_albums() -> String {
     match DbManager::new() {
         Ok(mut dbm) => {
@@ -103,6 +181,84 @@ pub async fn get_all_albums() -> String {
                             match serde_json::from_str::<Album>(&album_as_str.to_string()) {
                                 Ok(album) => {
                                     albums.push(album);
+                                }
+                                Err(_) => {
+                                    println!("error converting album from json to struct");
+                                }
+                            }
+                        }
+                        Err(_) => {
+                            println!("error getting this key from the album tree");
+                        }
+                    }
+                }
+
+                //convert albums vec to json and return
+                match serde_json::to_string(&ResponseObject {
+                    status: String::from("success"),
+                    message: String::from(""),
+                    data: albums,
+                }) {
+                    Ok(albums_as_json) => {
+                        return albums_as_json;
+                    }
+                    Err(e) => {
+                        return String::from(format!(
+                            "{{\"status\":\"json parse error\",\"message\":\"{}\",\"data\":[]}}",
+                            e.to_string()
+                        ));
+                    }
+                }
+            })
+            .await;
+
+            match could_retrieve_albums {
+                Ok(albums_as_json) => {
+                    return albums_as_json;
+                }
+                Err(e) => {
+                    return String::from(format!(
+                        "{{\"status\":\"thread error\",\"message\":\"{}\",\"data\":[]}}",
+                        e.to_string()
+                    ));
+                }
+            }
+        }
+        Err(e) => {
+            return String::from(format!(
+                "{{\"status\":\"lock error\",\"message\":\"{}\",\"data\":[]}}",
+                e
+            ));
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn get_albums_not_in_vec(uuids_not_to_match: Vec<String>) -> String{
+    match DbManager::new() {
+        Ok(mut dbm) => {
+            let album_tree = match dbm.get_album_tree() {
+                Ok(tree) => tree,
+                Err(e) => {
+                    return String::from(format!(
+                        "{{\"status\":\"error\",\"message\":\"{}\",\"data\":[]}}",
+                        e
+                    ));
+                }
+            };
+            let mut albums: Vec<Album> = Vec::new();
+
+            let could_retrieve_albums = tokio::task::spawn_blocking(move || {
+                for result in album_tree.iter() {
+                    match result {
+                        Ok((_, album_as_ivec)) => {
+                            let album_as_bytes = album_as_ivec.as_ref();
+                            let album_as_str = String::from_utf8_lossy(album_as_bytes);
+                            match serde_json::from_str::<Album>(&album_as_str.to_string()) {
+                                Ok(album) => {
+                                    if !uuids_not_to_match.iter().any(|uuid| uuid == &album.uuid.to_string()) {
+                                        albums.push(album);
+                                    }
                                 }
                                 Err(_) => {
                                     println!("error converting album from json to struct");
@@ -232,6 +388,84 @@ pub async fn get_all_artists() -> String {
 }
 
 #[tauri::command]
+pub async fn get_artists_not_in_vec(uuids_not_to_match: Vec<String>) -> String{
+    match DbManager::new() {
+        Ok(mut dbm) => {
+            let artist_tree = match dbm.get_artist_tree() {
+                Ok(tree) => tree,
+                Err(e) => {
+                    return String::from(format!(
+                        "{{\"status\":\"error\",\"message\":\"{}\",\"data\":[]}}",
+                        e
+                    ));
+                }
+            };
+            let mut artists: Vec<Artist> = Vec::new();
+
+            let could_retrieve_artists = tokio::task::spawn_blocking(move || {
+                for result in artist_tree.iter() {
+                    match result {
+                        Ok((_, artist_as_ivec)) => {
+                            let artist_as_bytes = artist_as_ivec.as_ref();
+                            let artist_as_str = String::from_utf8_lossy(artist_as_bytes);
+                            match serde_json::from_str::<Artist>(&artist_as_str.to_string()) {
+                                Ok(artist) => {
+                                    if !uuids_not_to_match.iter().any(|uuid| uuid == &artist.uuid.to_string()) {
+                                        artists.push(artist);
+                                    }
+                                }
+                                Err(_) => {
+                                    println!("error converting artist from json to struct");
+                                }
+                            }
+                        }
+                        Err(_) => {
+                            println!("error getting this key from the artist tree");
+                        }
+                    }
+                }
+
+                //convert artists vec to json and return
+                match serde_json::to_string(&ResponseObject {
+                    status: String::from("success"),
+                    message: String::from(""),
+                    data: artists,
+                }) {
+                    Ok(artists_as_json) => {
+                        return artists_as_json;
+                    }
+                    Err(e) => {
+                        return String::from(format!(
+                            "{{\"status\":\"json parse error\",\"message\":\"{}\",\"data\":[]}}",
+                            e.to_string()
+                        ));
+                    }
+                }
+            })
+            .await;
+
+            match could_retrieve_artists {
+                Ok(artists_as_json) => {
+                    return artists_as_json;
+                }
+                Err(e) => {
+                    return String::from(format!(
+                        "{{\"status\":\"thread error\",\"message\":\"{}\",\"data\":[]}}",
+                        e.to_string()
+                    ));
+                }
+            }
+        }
+        Err(e) => {
+            return String::from(format!(
+                "{{\"status\":\"lock error\",\"message\":\"{}\",\"data\":[]}}",
+                e
+            ));
+        }
+    }
+}
+
+#[tauri::command]
 pub async fn get_all_genres() -> String {
     match DbManager::new() {
         Ok(mut dbm) => {
@@ -255,6 +489,84 @@ pub async fn get_all_genres() -> String {
                             match serde_json::from_str::<Genre>(&genre_as_str.to_string()) {
                                 Ok(genre) => {
                                     genres.push(genre);
+                                }
+                                Err(_) => {
+                                    println!("error converting genre from json to struct");
+                                }
+                            }
+                        }
+                        Err(_) => {
+                            println!("error getting this key from the genre tree");
+                        }
+                    }
+                }
+
+                //convert genres vec to json and return
+                match serde_json::to_string(&ResponseObject {
+                    status: String::from("success"),
+                    message: String::from(""),
+                    data: genres,
+                }) {
+                    Ok(genres_as_json) => {
+                        return genres_as_json;
+                    }
+                    Err(e) => {
+                        return String::from(format!(
+                            "{{\"status\":\"json parse error\",\"message\":\"{}\",\"data\":[]}}",
+                            e.to_string()
+                        ));
+                    }
+                }
+            })
+            .await;
+
+            match could_retrieve_genres {
+                Ok(genres_as_json) => {
+                    return genres_as_json;
+                }
+                Err(e) => {
+                    return String::from(format!(
+                        "{{\"status\":\"thread error\",\"message\":\"{}\",\"data\":[]}}",
+                        e.to_string()
+                    ));
+                }
+            }
+        }
+        Err(e) => {
+            return String::from(format!(
+                "{{\"status\":\"lock error\",\"message\":\"{}\",\"data\":[]}}",
+                e
+            ));
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn get_genres_not_in_vec(uuids_not_to_match: Vec<String>) -> String{
+    match DbManager::new() {
+        Ok(mut dbm) => {
+            let genre_tree = match dbm.get_genre_tree() {
+                Ok(tree) => tree,
+                Err(e) => {
+                    return String::from(format!(
+                        "{{\"status\":\"error\",\"message\":\"{}\",\"data\":[]}}",
+                        e
+                    ));
+                }
+            };
+            let mut genres: Vec<Genre> = Vec::new();
+
+            let could_retrieve_genres = tokio::task::spawn_blocking(move || {
+                for result in genre_tree.iter() {
+                    match result {
+                        Ok((_, genre_as_ivec)) => {
+                            let genre_as_bytes = genre_as_ivec.as_ref();
+                            let genre_as_str = String::from_utf8_lossy(genre_as_bytes);
+                            match serde_json::from_str::<Genre>(&genre_as_str.to_string()) {
+                                Ok(genre) => {
+                                    if !uuids_not_to_match.iter().any(|uuid| uuid == &genre.uuid.to_string()) {
+                                        genres.push(genre);
+                                    }
                                 }
                                 Err(_) => {
                                     println!("error converting genre from json to struct");
@@ -394,6 +706,32 @@ pub fn insert_song_into_tree(song: &Song) {
             }
         }
         Err(_) => {}
+    }
+}
+
+pub fn song_exists_in_tree(uuid: &str) -> bool {
+    match DbManager::new() {
+        Ok(mut dbm) => {
+            let song_tree = match dbm.get_song_tree() {
+                Ok(tree) => tree,
+                Err(_) => {return false;}
+            };
+
+            match song_tree.get(uuid) {
+                Ok(Some(_)) => {
+                    return true;
+                }
+                Ok(None) => {
+                    return false;
+                }
+                Err(_) => {
+                    return false;
+                }
+            }
+        }
+        Err(_) => {
+            return false;
+        }
     }
 }
 

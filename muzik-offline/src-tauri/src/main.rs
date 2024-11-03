@@ -11,9 +11,10 @@ mod socials;
 mod utils;
 
 use commands::general_commands::get_server_port;
+use commands::refresh_paths_at_start::refresh_paths;
 use components::audio_manager::SharedAudioManager;
 use constants::null_cover_null::NULL_COVER_NULL;
-use database::db_api::get_image_from_tree;
+use database::db_api::{get_albums_not_in_vec, get_artists_not_in_vec, get_genres_not_in_vec, get_image_from_tree, get_songs_not_in_vec};
 use kira::manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings};
 use music::media_control_api::configure_media_controls;
 use socials::discord_rpc::{set_discord_rpc_activity_with_timestamps, DiscordRpc};
@@ -81,6 +82,7 @@ fn main() {
             get_audio_dir,
             edit_song_metadata,
             get_server_port,
+            refresh_paths,
             // MUSIC PLAYER
             load_and_play_song_from_path,
             load_a_song_from_path,
@@ -99,9 +101,13 @@ fn main() {
             mlo_get_next_batch_as_size,
             // DATABASE API
             get_all_songs_in_db,
+            get_songs_not_in_vec,
             get_all_albums,
+            get_albums_not_in_vec,
             get_all_artists,
+            get_artists_not_in_vec,
             get_all_genres,
+            get_genres_not_in_vec,
             // DISCORD RPC
             allow_connection_and_connect_to_discord_rpc,
             attempt_to_connect_if_possible,

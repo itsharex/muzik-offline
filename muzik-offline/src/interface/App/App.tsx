@@ -7,14 +7,15 @@ import { type } from '@tauri-apps/plugin-os';
 import { invoke } from "@tauri-apps/api/core";
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { HistoryNextFloating } from "@layouts/index";
-import { OSTYPEenum, Payload } from "@muziktypes/index";
+import { OSTYPEenum, Payload, toastType } from "@muziktypes/index";
 import { AnimatePresence } from "framer-motion";
-import { useWallpaperStore, useSavedObjectStore, useIsMaximisedStore, useIsFSStore, usePortStore } from "@store/index";
+import { useWallpaperStore, useSavedObjectStore, useIsMaximisedStore, useIsFSStore, usePortStore, useFisrstRunStore, useDirStore, useToastStore } from "@store/index";
 import { SavedObject } from "@database/saved_object";
-import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { MiniPlayer } from "@App/index";
 import { listen } from "@tauri-apps/api/event";
 import { processOSMediaControlsEvent } from "@utils/OSeventControl";
+import { fetch_library } from "@utils/index";
 
 const App = () => {
   const [openMiniPlayer, setOpenMiniPlayer] = useState<boolean>(false);
@@ -26,6 +27,9 @@ const App = () => {
   const { wallpaper } = useWallpaperStore((state) => { return { wallpaper: state.wallpaper,}; });
   const { appFS } = useIsFSStore((state) => { return { appFS: state.isFS}; });
   const { setPort } = usePortStore((state) => { return { port: state.port, setPort: state.setPort}; });
+  const { firstRun, setFirstRun } = useFisrstRunStore((state) => { return { firstRun: state.firstRun, setFirstRun: state.setFirstRun}; });
+  const { dir, setDir } = useDirStore((state) => { return { dir: state.dir, setDir: state.setDir}; });
+  const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
 
   function closeSetting(){if(openSettings === true)setOpenSettings(false);}
 
@@ -38,7 +42,7 @@ const App = () => {
   function toggleFloatingHNState(){setFloatingHNState(!FloatingHNState);}
 
   async function checkOSType(){
-    const osType = await type();
+    const osType = type();
     let temp: SavedObject = local_store;
     temp.OStype = osType.toString();
     if(osType === OSTYPEenum.Linux)temp.AppThemeBlur = false;
@@ -87,11 +91,38 @@ const App = () => {
     setPort(port);
   }
 
+  async function check_paths_for_new_music(){
+    let paths = dir.Dir;
+    if(firstRun){
+      const audio_dir: any = await invoke("get_audio_dir");
+      // append the audio directory to the directories array
+      if(paths.includes(audio_dir) === false){
+        setDir({Dir: [...dir.Dir, audio_dir]});
+        paths.push(audio_dir);
+      }
+      setFirstRun(false);
+    }
+    invoke("refresh_paths", { pathsAsJsonArray: JSON.stringify(paths), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
+    .then(async() => {
+      const res = await fetch_library(false);
+      let message = "";
+
+      if(res.status === "error")message = res.message;
+      else message = "Successfully loaded all the songs in the paths specified. You may need to reload the page you are on to see your new songs";
+
+      setToast({title: "Loading songs...", message: message, type: toastType.success, timeout: 5000});
+
+      const permissionGranted = await isPermissionGranted();
+      if(permissionGranted)sendNotification({ title: 'Loading songs...', body: message });
+    });
+  }
+
   useEffect(() => {
     checkOSType();
     checkAndRequestNotificationPermission();
     connect_to_discord();
     get_server_port();
+    check_paths_for_new_music();
     const listenForOSeventsfunc = listenForOSevents();
 
     return () => {
