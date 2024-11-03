@@ -9,7 +9,7 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { HistoryNextFloating } from "@layouts/index";
 import { OSTYPEenum, Payload } from "@muziktypes/index";
 import { AnimatePresence } from "framer-motion";
-import { useWallpaperStore, useSavedObjectStore, useIsMaximisedStore, useIsFSStore } from "@store/index";
+import { useWallpaperStore, useSavedObjectStore, useIsMaximisedStore, useIsFSStore, usePortStore } from "@store/index";
 import { SavedObject } from "@database/saved_object";
 import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
 import { MiniPlayer } from "@App/index";
@@ -25,6 +25,7 @@ const App = () => {
   const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
   const { wallpaper } = useWallpaperStore((state) => { return { wallpaper: state.wallpaper,}; });
   const { appFS } = useIsFSStore((state) => { return { appFS: state.isFS}; });
+  const { setPort } = usePortStore((state) => { return { port: state.port, setPort: state.setPort}; });
 
   function closeSetting(){if(openSettings === true)setOpenSettings(false);}
 
@@ -81,10 +82,16 @@ const App = () => {
     return unlisten
   }
 
+  async function get_server_port(){
+    const port: any = await invoke("get_server_port");
+    setPort(port);
+  }
+
   useEffect(() => {
     checkOSType();
     checkAndRequestNotificationPermission();
     connect_to_discord();
+    get_server_port();
     const listenForOSeventsfunc = listenForOSevents();
 
     return () => {

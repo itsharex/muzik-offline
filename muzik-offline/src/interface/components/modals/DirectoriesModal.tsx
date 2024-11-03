@@ -7,7 +7,7 @@ import { toastType } from "@muziktypes/index";
 import { useDirStore, useSavedObjectStore, useToastStore } from "store";
 import { isPermissionGranted, sendNotification } from '@tauri-apps/plugin-notification';
 import { motion } from "framer-motion";
-import { fetch_library_in_chunks } from "utils";
+import { fetch_library } from "utils";
 import { local_albums_db, local_artists_db, local_genres_db, local_songs_db } from "@database/database";
 import { modal_variants } from "@content/index";
 
@@ -30,7 +30,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
 
         invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(directories), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
             .then(async() => {
-                const res = await fetch_library_in_chunks();
+                const res = await fetch_library();
                 let message = "";
 
                 if(res.status === "error")message = res.message;
@@ -103,7 +103,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
         await local_artists_db.artists.clear();
         await local_genres_db.genres.clear();
 
-        const res = await fetch_library_in_chunks();
+        const res = await fetch_library();
         let message = "";
 
         if(res.status === "error")message = res.message;

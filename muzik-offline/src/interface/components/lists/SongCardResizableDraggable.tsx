@@ -25,7 +25,7 @@ const SongCardResizableDraggable: FunctionComponent<SongCardResizableDraggablePr
                         <Reorder.Item value={song} key={song.id} as="div">
                             <SongCardResizable 
                                 key={index}
-                                cover={song.cover} 
+                                cover={song.cover_uuid} 
                                 songName={song.name}
                                 artist={song.artist}
                                 keyV={song.id}

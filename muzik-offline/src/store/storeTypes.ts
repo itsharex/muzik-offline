@@ -10,6 +10,11 @@ export interface MaximisedState {
     setMaximised: (nM: boolean) => void;
 }
 
+export interface portState{
+    port: number;
+    setPort: (nPort: number) => void;
+}
+
 export interface FSState{
     isFS: boolean;
     setFS: (nFS: boolean) => void;

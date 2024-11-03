@@ -10,8 +10,10 @@ mod music;
 mod socials;
 mod utils;
 
+use commands::general_commands::get_server_port;
 use components::audio_manager::SharedAudioManager;
 use constants::null_cover_null::NULL_COVER_NULL;
+use database::db_api::get_image_from_tree;
 use kira::manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings};
 use music::media_control_api::configure_media_controls;
 use socials::discord_rpc::{set_discord_rpc_activity_with_timestamps, DiscordRpc};
@@ -22,7 +24,7 @@ use warp::{http::Uri, reply::Response, Filter, Reply};
 
 use std::sync::{Arc, Mutex};
 use tauri::async_runtime::{self, spawn};
-use tauri::{AppHandle, Manager, Window};
+use tauri::Manager;
 use tokio::sync::mpsc;
 
 use crate::app::controller::{drag_app_window, toggle_app_pin, toggle_miniplayer_view};
@@ -32,7 +34,7 @@ use crate::commands::general_commands::{
     get_audio_dir, open_in_file_manager, resize_frontend_image_to_fixed_height,
 };
 use crate::database::db_api::{
-    get_batch_of_albums, get_batch_of_artists, get_batch_of_genres, get_batch_of_songs,
+    get_all_albums, get_all_artists, get_all_genres, get_all_songs_in_db,
 };
 use crate::music::media_control_api::{
     config_mca, event_handler, set_player_state, update_metadata,
@@ -78,6 +80,7 @@ fn main() {
             set_volume,
             get_audio_dir,
             edit_song_metadata,
+            get_server_port,
             // MUSIC PLAYER
             load_and_play_song_from_path,
             load_a_song_from_path,
@@ -95,10 +98,10 @@ fn main() {
             mlo_reset_and_set_remaining_keys,
             mlo_get_next_batch_as_size,
             // DATABASE API
-            get_batch_of_songs,
-            get_batch_of_albums,
-            get_batch_of_artists,
-            get_batch_of_genres,
+            get_all_songs_in_db,
+            get_all_albums,
+            get_all_artists,
+            get_all_genres,
             // DISCORD RPC
             allow_connection_and_connect_to_discord_rpc,
             attempt_to_connect_if_possible,
@@ -124,6 +127,7 @@ fn initialize_audio_manager() -> Arc<Mutex<SharedAudioManager>> {
         cover: decode_image_in_parallel(&NULL_COVER_NULL.to_owned())
             .expect("failed to decode image"),
         cover_url: String::new(),
+        port: 0,
     }))
 }
 
@@ -140,13 +144,17 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         .expect("failed to get window");
 
     // Set up the image route
-    let image_route = create_image_route(shared_audio_manager.clone());
+    let cover_image_route = create_image_route(shared_audio_manager.clone());
+    let image_route_with_uuid = create_image_route_with_uuid();
+    let routes = cover_image_route.or(image_route_with_uuid);
 
     // get random port for warp server
     let port = get_random_port();
 
-    // Start the warp server
-    spawn(warp::serve(image_route).run(([127, 0, 0, 1], port)));
+    // Start the warp server and serve both routes
+    tokio::spawn(async move {
+        warp::serve(routes).run(([127, 0, 0, 1], port)).await;
+    });
 
     // add url to shared audio manager
     shared_audio_manager
@@ -157,6 +165,12 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // Set up media controls
     let mut controls = config_mca(&window).expect("Failed to initialize media controls");
     setup_media_controls(&mut controls, tx.clone(), port);
+
+    // Set port in shared audio manager
+    shared_audio_manager
+        .lock()
+        .expect("failed to lock shared audio manager")
+        .port = port;
 
     // Store the controls in the shared audio manager
     shared_audio_manager
@@ -189,6 +203,15 @@ fn create_image_route(
                     .into_response()
             }
         }
+    })
+}
+
+/// Creates the image route for serving the :uuid cover image.
+fn create_image_route_with_uuid(
+) -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
+    warp::path!("image" / String).and(warp::get()).map(move |uuid: String| {
+        warp::reply::with_header(get_image_from_tree(uuid.as_str()), "Content-Type", "image/png")
+            .into_response()
     })
 }
 

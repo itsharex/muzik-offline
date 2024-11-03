@@ -4,7 +4,7 @@ import { Song, toastType } from "@muziktypes/index";
 import "@styles/components/modals/EditPropertiesModal.scss";
 import { invoke } from "@tauri-apps/api/core";
 import { modal_variants } from "@content/index";
-import { getRandomCover } from "@utils/index";
+import { getCoverURL, getRandomCover } from "@utils/index";
 import { useToastStore } from "@store/index";
 import { local_songs_db } from "@database/database";
 import {DateInput} from "@components/index";
@@ -17,6 +17,7 @@ type EditPropertiesModalProps = {
 
 const emptySong: Song = {
     id: 0,
+    uuid: "",
     title: "",
     name: "",
     artist: "",
@@ -26,7 +27,7 @@ const emptySong: Song = {
     duration: "",
     duration_seconds: 0,
     path: "",
-    cover: null,
+    cover_uuid: null,
     date_recorded: "",
     date_released: "",
     file_size: 0,
@@ -41,6 +42,7 @@ const emptySong: Song = {
 const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props: EditPropertiesModalProps) => {
 
     const [song, setSong] = useState<Song>(emptySong);
+    const [cover, setCover] = useState<string | null>(null);
     const [oldsong, setOldSong] = useState<Song>(emptySong);
     const [isid3Supported, setISid3Supported] = useState<boolean>(false);
     const [hasChangedCover, setHasChangedCover] = useState<boolean>(false);
@@ -62,7 +64,7 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
                     cover = cover.replace("data:image/png;base64,", "");
                 }
             }
-            setSong({...song, cover});
+            setCover(cover);
             setHasChangedCover(true);
         });
     }
@@ -77,7 +79,7 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
         if(song_v.title === oldsong.title && song_v.artist === oldsong.artist 
             && song_v.album === oldsong.album && song_v.genre === oldsong.genre 
             && song_v.year === oldsong.year && song_v.date_recorded === oldsong.date_recorded
-            && song_v.date_released === oldsong.date_released && song_v.cover === oldsong.cover){
+            && song_v.date_released === oldsong.date_released && cover === null){
                 return;
         }
 
@@ -117,9 +119,9 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
                             <div className="img-container-and-upload">
                                 <div className="img-container">
                                     {
-                                        song.cover === null ? (getRandomCover(song.id))() :
-                                        <img src={song.cover.startsWith("data:image/png;base64,") || song.cover.startsWith("data:image/jpeg;base64,") ? 
-                                            song.cover :`data:image/png;base64,${song.cover}`} alt="img" />
+                                        cover !== null ? <img src={cover} alt="img" /> :
+                                        song.cover_uuid === null ? (getRandomCover(song.id))() :
+                                        <img src={getCoverURL(song.cover_uuid)} alt="img" />
                                     }
                                 </div>
                                 <motion.label className="button_select" whileHover={{scale: 1.03}} whileTap={{scale: 0.98}}>

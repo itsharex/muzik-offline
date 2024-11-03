@@ -71,6 +71,7 @@ export interface toast{
 
 export interface Song{
     id: number,
+    uuid: string,
     title: string,
     name: string,
     artist: string,
@@ -80,7 +81,7 @@ export interface Song{
     duration: string,
     duration_seconds: number,
     path: string,
-    cover: string | null,
+    cover_uuid: string | null,
     date_recorded: string,
     date_released: string,
     file_size: number,
@@ -94,6 +95,7 @@ export interface Song{
 
 export interface artist {
     key: number;
+    uuid: string;
     cover: string | null;
     artist_name: string;
 }
@@ -109,12 +111,14 @@ export interface playlist {
 
 export interface genre {
     key: number;
+    uuid: string;
     cover: string | null;
     title: string;
 }
 
 export interface album {
     key: number;
+    uuid: string;
     cover: string | null;
     title: string;
 }

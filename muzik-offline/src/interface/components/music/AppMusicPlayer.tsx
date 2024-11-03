@@ -3,7 +3,7 @@ import "@styles/components/music/AppMusicPlayer.scss";
 import {ChromeCast, ListIcon, NullCoverNull, Pause, Play, Repeat, RepeatOne, Shuffle, SkipBack, SkipFwd, VolumeMax, VolumeMin} from "@icons/index"
 import { motion } from "framer-motion";
 import { useIsFSStore, useIsMaximisedStore, usePlayerStore, usePlayingPosition, usePlayingPositionSec, useSavedObjectStore } from "store";
-import { getRandomCover, secondsToTimeFormat } from "@utils/index";
+import { getCoverURL, getRandomCover, secondsToTimeFormat } from "@utils/index";
 import { invoke } from "@tauri-apps/api/core";
 import { changeVolumeLevel, changeSeekerPosition, changeVolumeLevelBtnPress, dragSeeker, pauseSong, playSong, repeatToggle, shuffleToggle, setVolumeLevel, reconfigurePlayer_AtEndOfSong, playPreviousSong, playNextSong, changeSeekerPositionBtnPress } from "@utils/playerControl";
 import { AirplayCastModal, MusicPopOver } from "@components/index";
@@ -86,17 +86,17 @@ const AppMusicPlayer : FunctionComponent<AppMusicPlayerProps> = (props: AppMusic
                 <div className="music_cover_art">
                     {!local_store.PlayerBar && !Player.playingSongMetadata
                         && <NullCoverNull />}{/**no song is loaded onto the player */}
-                    {!local_store.PlayerBar && Player.playingSongMetadata && Player.playingSongMetadata.cover
-                        && (<img src={`data:image/png;base64,${Player.playingSongMetadata.cover}`} alt="cover-art" />)}{/**there is cover art */}
-                    {!local_store.PlayerBar && Player.playingSongMetadata && !Player.playingSongMetadata.cover
+                    {!local_store.PlayerBar && Player.playingSongMetadata && Player.playingSongMetadata.cover_uuid
+                        && (<img src={getCoverURL(Player.playingSongMetadata.cover_uuid)} alt="cover-art" />)}{/**there is cover art */}
+                    {!local_store.PlayerBar && Player.playingSongMetadata && !Player.playingSongMetadata.cover_uuid
                         && (getRandomCover(Player.playingSongMetadata ? Player.playingSongMetadata.id : 0))()}{/**the cover art is null */}
                 </div>
                 <div className="music_art_bg_layer">
                     <div className="art_and_song_details">
                         <motion.div className="mini_art_container" whileTap={{scale: 0.98}} onMouseEnter={() => setOpenMusicPopOver(true)}>
                                 {!Player.playingSongMetadata && <NullCoverNull />}{/**no song is loaded onto the player */}
-                                {Player.playingSongMetadata && Player.playingSongMetadata.cover && (<img src={`data:image/png;base64,${Player.playingSongMetadata.cover}`} alt="song-art" />)}{/**there is cover art */}
-                                {Player.playingSongMetadata && !Player.playingSongMetadata.cover && (getRandomCover(Player.playingSongMetadata ? Player.playingSongMetadata.id : 0))()}{/**the cover art is null */}
+                                {Player.playingSongMetadata && Player.playingSongMetadata.cover_uuid && (<img src={getCoverURL(Player.playingSongMetadata.cover_uuid)} alt="song-art" />)}{/**there is cover art */}
+                                {Player.playingSongMetadata && !Player.playingSongMetadata.cover_uuid && (getRandomCover(Player.playingSongMetadata ? Player.playingSongMetadata.id : 0))()}{/**the cover art is null */}
                         </motion.div>
                         <div className="song_details">
                             <h2>{Player.playingSongMetadata ? Player.playingSongMetadata.name : "No song is playing"}</h2>
@@ -179,7 +179,7 @@ const AppMusicPlayer : FunctionComponent<AppMusicPlayerProps> = (props: AppMusic
                 isOpen={openMusicPopOver}
                 isPlayingSong={Player.playingSongMetadata ? true : false}
                 songid={Player.playingSongMetadata ? Player.playingSongMetadata.id : null}
-                cover={Player.playingSongMetadata ? Player.playingSongMetadata.cover : null}
+                cover={Player.playingSongMetadata ? Player.playingSongMetadata.cover_uuid : null}
                 name={Player.playingSongMetadata ? Player.playingSongMetadata.name : null}
                 artist={Player.playingSongMetadata ? Player.playingSongMetadata.artist : null}
                 onClose={(action: "fullscreen" | "miniplayer" | "popover" | "navigateSong" | "navigateArtist") => {

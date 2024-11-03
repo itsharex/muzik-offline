@@ -339,7 +339,7 @@ function setDiscordActivityWithTimestamps(song: Song | null, curr_poss_sec: numb
             name: song.name, 
             artist: song.artist, 
             durationAsNum: song.duration_seconds - curr_poss_sec,
-            hasCover: song.cover !== null,
+            hasCover: song.cover_uuid !== null,
             id: song.id
         }).then().catch();
     }
@@ -354,7 +354,7 @@ function setDiscordActivity(song: Song | null){
         invoke("set_discord_rpc_activity", {
             name: song.name, 
             artist: song.artist,
-            hasCover: song.cover !== null,
+            hasCover: song.cover_uuid !== null,
             id: song.id
         }).then().catch();
     }

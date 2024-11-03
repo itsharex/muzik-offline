@@ -1,106 +1,64 @@
 import { NullCoverOne, NullCoverTwo, NullCoverThree, NullCoverFour } from "@assets/index";
 import { local_albums_db, local_artists_db, local_genres_db, local_playlists_db, local_songs_db } from "@database/database";
 import { Song, album, artist, genre, playlist } from "@muziktypes/index";
-import { useHistorySongs, useUpcomingSongs } from "@store/index";
+import { useHistorySongs, usePortStore, useUpcomingSongs } from "@store/index";
 import { invoke } from "@tauri-apps/api/core";
-const batch_size: number = 50;
 
-export const fetch_library_in_chunks = async(): Promise<{status: string, message: string}> => {
-    const res_songs = await fetch_songs_metadata_in_chunks();
+export const fetch_library = async(): Promise<{status: string, message: string}> => {
+    const res_songs = await fetch_songs_metadata();
     if(res_songs.status === "error")return res_songs;
 
-    const res_albums = await fetch_albums_metadata_in_chunks();
+    const res_albums = await fetch_albums_metadata();
     if(res_albums.status === "error")return res_albums;
 
 
-    const res_artists = await fetch_artists_metadata_in_chunks();
+    const res_artists = await fetch_artists_metadata();
     if(res_artists.status === "error")return res_artists;
 
-    const res_genres = await fetch_genres_metadata_in_chunks();
+    const res_genres = await fetch_genres_metadata();
     if(res_genres.status === "error")return res_genres;
 
     return {status: "success", message: ""};
 }
 
-export const fetch_songs_metadata_in_chunks = async(): Promise<{status: string, message: string}> => {
-    //fetch songs in bulk
-    let last_song_id = 0;
-    while(true){
-        const res: any = await invoke("get_batch_of_songs", {batchSize: batch_size, lastId: last_song_id});
-        const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
-        if(responseobject.status === "success"){
-            const songs: Song[] = responseobject.data;
-            if(songs.length < batch_size){
-                await local_songs_db.songs.bulkAdd(songs);
-                return {status: "success", message: ""};
-            }
-            else{ 
-                await local_songs_db.songs.bulkAdd(songs);
-                last_song_id = songs[songs.length - 1].id + 1;
-            }
-        }
-        else{ return {status: "error", message: "failed to retrieve songs, please try again"}; }
-    } 
+export const fetch_songs_metadata = async(): Promise<{status: string, message: string}> => {
+    const res: any = await invoke("get_all_songs_in_db");
+    const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
+    if(responseobject.status === "success"){
+        const songs: Song[] = responseobject.data;
+        await local_songs_db.songs.bulkAdd(songs);
+        return {status: "success", message: ""};
+    } else { return {status: "error", message: "failed to retrieve songs, please try again"}; }
 }
 
-export const fetch_albums_metadata_in_chunks = async(): Promise<{status: string, message: string}> => {
-    let last_album_id = 0;
-    while(true){
-        const res: any = await invoke("get_batch_of_albums", {batchSize: batch_size, lastId: last_album_id});
-        const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
-        if(responseobject.status === "success"){
-            const albums: album[] = responseobject.data;
-            if(albums.length < batch_size){
-                await local_albums_db.albums.bulkAdd(albums);
-                return {status: "success", message: ""};
-            }
-            else{ 
-                await local_albums_db.albums.bulkAdd(albums);
-                last_album_id = albums[albums.length - 1].key + 1;
-            }
-        }
-        else{ return {status: "error", message: "failed to retrieve albums, please try again"}; }
-    }
+export const fetch_albums_metadata = async(): Promise<{status: string, message: string}> => {
+    const res: any = await invoke("get_all_albums");
+    const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
+    if(responseobject.status === "success"){
+        const albums: album[] = responseobject.data;
+        await local_albums_db.albums.bulkAdd(albums);
+        return {status: "success", message: ""};
+    } else { return {status: "error", message: "failed to retrieve albums, please try again"}; }
 }
 
-export const fetch_artists_metadata_in_chunks = async(): Promise<{status: string, message: string}> => {
-    let last_artist_id = 0;
-    while(true){
-        const res: any = await invoke("get_batch_of_artists", {batchSize: batch_size, lastId: last_artist_id});
-        const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
-        if(responseobject.status === "success"){
-            const artists: artist[] = responseobject.data;
-            if(artists.length < batch_size){
-                await local_artists_db.artists.bulkAdd(artists);
-                return {status: "success", message: ""};
-            }
-            else{ 
-                await local_artists_db.artists.bulkAdd(artists);
-                last_artist_id = artists[artists.length - 1].key + 1;
-            }
-        }
-        else{ return {status: "error", message: "failed to retrieve albums, please try again"}; }
-    }
+export const fetch_artists_metadata = async(): Promise<{status: string, message: string}> => {
+    const res: any = await invoke("get_all_artists");
+    const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
+    if(responseobject.status === "success"){
+        const artists: artist[] = responseobject.data;
+        await local_artists_db.artists.bulkAdd(artists);
+        return {status: "success", message: ""};
+    } else { return {status: "error", message: "failed to retrieve albums, please try again"}; }
 }
 
-export const fetch_genres_metadata_in_chunks = async(): Promise<{status: string, message: string}> => {
-    let last_genre_id = 0;
-    while(true){
-        const res: any = await invoke("get_batch_of_genres", {batchSize: batch_size, lastId: last_genre_id});
-        const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
-        if(responseobject.status === "success"){
-            const genres: genre[] = responseobject.data;
-            if(genres.length < batch_size){
-                await local_genres_db.genres.bulkAdd(genres)
-                return {status: "success", message: ""};
-            }
-            else{ 
-                local_genres_db.genres.bulkAdd(genres);
-                last_genre_id = genres[genres.length - 1].key + 1;
-            }
-        }
-        else{ return {status: "error", message: "failed to retrieve albums, please try again"}; }
-    }
+export const fetch_genres_metadata = async(): Promise<{status: string, message: string}> => {
+    const res: any = await invoke("get_all_genres");
+    const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
+    if(responseobject.status === "success"){
+        const genres: genre[] = responseobject.data;
+        await local_genres_db.genres.bulkAdd(genres);
+        return {status: "success", message: ""};
+    } else { return {status: "error", message: "failed to retrieve albums, please try again"}; }
 }
 
 export function secondsToTimeFormat(totalSeconds: number) {
@@ -129,7 +87,7 @@ export const getAlbumSongs = async(res: album, artist_name: string): Promise<{ s
     albumSongs.forEach((song) => {
         totalDuration += song.duration_seconds;
         songs.push(song);
-        if(cover === null && song.cover)cover = song.cover;
+        if(cover === null && song.cover_uuid)cover = song.cover_uuid;
     });
     return { songs, totalDuration, cover };
 }
@@ -142,7 +100,7 @@ export const getGenreSongs = async(res: genre): Promise<{ songs: Song[]; totalDu
     genreSongs.forEach((song) => {
         totalDuration += song.duration_seconds;
         songs.push(song);
-        if(cover === null && song.cover)cover = song.cover;
+        if(cover === null && song.cover_uuid)cover = song.cover_uuid;
     });
     return { songs, totalDuration, cover };
 }
@@ -155,7 +113,7 @@ export const getPlaylistSongs = async(res: playlist): Promise<{ songs: Song[]; t
     playlistSongs.forEach((song, index) => {
         totalDuration += song.duration_seconds;
         pathIndexMap[song.path] = index;
-        if(cover === null && song.cover)cover = song.cover;
+        if(cover === null && song.cover_uuid)cover = song.cover_uuid;
     });
     
     const songs: Song[] = res.tracksPaths.map((path) => {return playlistSongs[pathIndexMap[path]]});
@@ -171,7 +129,7 @@ export const getArtistsAlbums = async(artist_name: string): Promise<{ albums: al
     artistSongs.forEach((song) => {
         totalDuration += song.duration_seconds;
         if(!uniqueSet.has(song.album))uniqueSet.add(song.album);
-        if(cover === null && song.cover)cover = song.cover;
+        if(cover === null && song.cover_uuid)cover = song.cover_uuid;
     });
 
     const albums: album[] = await local_albums_db.albums.where('title').anyOf([...uniqueSet]).toArray();
@@ -184,6 +142,11 @@ export const getRandomCover = (value: number): () => JSX.Element => {
     else if(modv === 1)return NullCoverTwo;
     else if(modv === 2)return NullCoverThree;
     else return NullCoverFour;
+}
+
+export const getCoverURL = (uuid: string): string => {
+    const port = usePortStore.getState().port;
+    return `http://localhost:${port}/image/${uuid}`;
 }
 
 export const getSongPaths = async(

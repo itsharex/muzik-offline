@@ -10,6 +10,7 @@ use crate::constants::null_cover_null::NULL_COVER_NULL;
 use crate::constants::null_cover_one::NULL_COVER_ONE;
 use crate::constants::null_cover_three::NULL_COVER_THREE;
 use crate::constants::null_cover_two::NULL_COVER_TWO;
+use crate::database::db_api::get_image_from_tree;
 
 pub fn duration_to_string(duration: &u64) -> String {
     let seconds = duration;
@@ -163,14 +164,10 @@ pub fn check_with_lofty(path: &Path) -> Result<bool, Box<dyn std::error::Error>>
 }
 
 pub fn get_song_cover_as_bytes(song: &Song, key: i32) -> Vec<u8> {
-    match &song.cover {
-        Some(cover) => match decode_image_in_parallel(&cover) {
-            Ok(cover) => {
-                return cover;
-            }
-            Err(_) => {
-                return Vec::new();
-            }
+    match &song.cover_uuid {
+        Some(cover_uuid) => 
+        {
+            return get_image_from_tree(cover_uuid.as_str())
         },
         None => match key {
             key if key % 4 == 0 => match decode_image_in_parallel(&NULL_COVER_ONE.to_owned()) {

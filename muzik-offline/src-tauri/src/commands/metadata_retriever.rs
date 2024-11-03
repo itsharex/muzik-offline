@@ -1,60 +1,36 @@
-use crate::components::{hmaptype::HMapType, song::Song};
-use crate::database::db_api::{compare_and_set_hash_map, start_insertion};
+use crate::components::song::Song;
+use crate::database::db_api::{clear_all_trees, insert_into_album_tree, insert_into_artist_tree, insert_into_covers_tree, insert_into_genre_tree, insert_song_into_tree};
 use crate::utils::general_utils::{
     duration_to_string, extract_file_name, resize_and_compress_image,
 };
-use crate::utils::general_utils::{encode_image_in_parallel, is_media_file};
+use crate::utils::general_utils::is_media_file;
 use id3::TagLike;
 use lofty::Accessor;
 use lofty::TaggedFileExt;
 use lofty::{AudioFile, Probe};
 use serde_json::Value;
-use std::{collections::HashMap, path::Path};
+use std::path::Path;
 
 #[tauri::command]
 pub async fn get_all_songs(
     paths_as_json_array: String,
     compress_image_option: bool,
 ) -> Result<String, String> {
+    clear_all_trees();
+    
     let paths_as_vec = decode_directories(&paths_as_json_array);
-
-    let mut songs: Vec<Song> = Vec::new();
-    let mut albums_hash_map: HashMap<String, HMapType> = HashMap::new();
-    let mut artists_hash_map: HashMap<String, HMapType> = HashMap::new();
-    let mut genres_hash_map: HashMap<String, HMapType> = HashMap::new();
 
     let mut song_id: i32 = 0;
     for path in &paths_as_vec {
-        songs.extend(
-            get_songs_in_path(
-                &path,
-                &mut song_id,
-                &compress_image_option,
-                &mut albums_hash_map,
-                &mut artists_hash_map,
-                &mut genres_hash_map,
-            )
-            .await,
-        );
+        get_songs_in_path(
+            &path,
+            &mut song_id,
+            &compress_image_option,
+        )
+        .await;
     }
 
-    let songs_vec_len = songs.len();
-
-    match start_insertion(songs, albums_hash_map, artists_hash_map, genres_hash_map).await {
-        Ok(_) => {
-            if songs_vec_len.to_string() == song_id.to_string() {
-                return Ok("{\"status\":\"success\"}".into());
-            } else {
-                return Err(
-                    "{\"status\":\"error\",\"message\":\"the song id does not match song length\"}"
-                        .into(),
-                );
-            }
-        }
-        Err(e) => {
-            return Err(e);
-        }
-    }
+    return Ok("{\"status\":\"success\"}".into());
 }
 
 pub fn decode_directories(paths_as_json: &str) -> Vec<String> {
@@ -83,11 +59,7 @@ pub async fn get_songs_in_path(
     dir_path: &str,
     song_id: &mut i32,
     compress_image_option: &bool,
-    albums_hash_map: &mut HashMap<String, HMapType>,
-    artists_hash_map: &mut HashMap<String, HMapType>,
-    genres_hash_map: &mut HashMap<String, HMapType>,
-) -> Vec<Song> {
-    let mut songs: Vec<Song> = Vec::new();
+){
 
     match tokio::fs::read_dir(dir_path).await {
         Ok(mut paths) => {
@@ -107,25 +79,17 @@ pub async fn get_songs_in_path(
                         if let Ok(song_data) =
                             read_from_path(full_path, song_id, compress_image_option)
                         {
-                            let hmt: HMapType = HMapType {
-                                key: song_data.id.clone(),
-                                cover: song_data.cover.clone(),
-                            };
-                            compare_and_set_hash_map(albums_hash_map, &song_data.album, &hmt);
-                            compare_and_set_hash_map(artists_hash_map, &song_data.artist, &hmt);
-                            compare_and_set_hash_map(genres_hash_map, &song_data.genre, &hmt);
-                            songs.push(song_data);
+                            insert_song_into_tree(&song_data);
+                            insert_into_album_tree(&song_data);
+                            insert_into_artist_tree(&song_data);
+                            insert_into_genre_tree(&song_data);
                         } else if let Ok(song_data) =
                             lofty_read_from_path(full_path, song_id, compress_image_option)
                         {
-                            let hmt: HMapType = HMapType {
-                                key: song_data.id.clone(),
-                                cover: song_data.cover.clone(),
-                            };
-                            compare_and_set_hash_map(albums_hash_map, &song_data.album, &hmt);
-                            compare_and_set_hash_map(artists_hash_map, &song_data.artist, &hmt);
-                            compare_and_set_hash_map(genres_hash_map, &song_data.genre, &hmt);
-                            songs.push(song_data);
+                            insert_song_into_tree(&song_data);
+                            insert_into_album_tree(&song_data);
+                            insert_into_artist_tree(&song_data);
+                            insert_into_genre_tree(&song_data);
                         } else {
                         }
                     }
@@ -135,8 +99,6 @@ pub async fn get_songs_in_path(
         }
         Err(_) => {}
     }
-
-    songs
 }
 
 fn lofty_read_from_path(
@@ -149,6 +111,7 @@ fn lofty_read_from_path(
 
     let mut song_meta_data = Song {
         id: *song_id,
+        uuid: uuid::Uuid::now_v7(),
         title: String::from(""),
         name: String::from(""),
         artist: String::from(""),
@@ -158,7 +121,7 @@ fn lofty_read_from_path(
         duration: String::from(""),
         duration_seconds: 0,
         path: String::from(""),
-        cover: None,
+        cover_uuid: None,
         date_recorded: String::from(""),
         date_released: String::from(""),
         file_size: 0,
@@ -180,7 +143,7 @@ fn lofty_read_from_path(
             set_year_lofty(tag, &mut song_meta_data);
             set_duration_bit_rate_sample_rate_bit_depth_channels(&path, &mut song_meta_data);
             set_path(&path, &mut song_meta_data);
-            set_cover_lofty(tag, &mut song_meta_data, compress_image_option);
+            set_cover_lofty(tag, &mut song_meta_data, compress_image_option, &path);
             set_date_recorded_lofty(tag, &mut song_meta_data);
             set_date_released_lofty(tag, &mut song_meta_data);
             set_file_size(&path, &mut song_meta_data);
@@ -195,7 +158,7 @@ fn lofty_read_from_path(
             song_meta_data.year = 0;
             set_duration_bit_rate_sample_rate_bit_depth_channels(&path, &mut song_meta_data);
             set_path(&path, &mut song_meta_data);
-            song_meta_data.cover = None;
+            song_meta_data.cover_uuid = None;
             song_meta_data.date_recorded = String::from("Unknown date recorded");
             song_meta_data.date_released = String::from("Unknown date recorded");
             set_file_size(&path, &mut song_meta_data);
@@ -224,6 +187,7 @@ fn read_from_path(
 
     let mut song_meta_data = Song {
         id: *song_id,
+        uuid: uuid::Uuid::now_v7(),
         title: String::from(""),
         name: String::from(""),
         artist: String::from(""),
@@ -233,7 +197,7 @@ fn read_from_path(
         duration: String::from(""),
         duration_seconds: 0,
         path: String::from(""),
-        cover: None,
+        cover_uuid: None,
         date_recorded: String::from(""),
         date_released: String::from(""),
         file_size: 0,
@@ -253,7 +217,7 @@ fn read_from_path(
     set_year_id3(&tag, &mut song_meta_data);
     set_duration_bit_rate_sample_rate_bit_depth_channels(&path, &mut song_meta_data);
     set_path(&path, &mut song_meta_data);
-    set_cover_id3(&tag, &mut song_meta_data, compress_image_option);
+    set_cover_id3(&tag, &mut song_meta_data, compress_image_option, &path);
     set_date_recorded_id3(&tag, &mut song_meta_data);
     set_date_released_id3(&tag, &mut song_meta_data);
     set_file_size(&path, &mut song_meta_data);
@@ -400,7 +364,7 @@ fn set_path(path: &str, song_meta_data: &mut Song) {
     song_meta_data.path = path.to_owned();
 }
 
-fn set_cover_id3(tag: &id3::Tag, song_meta_data: &mut Song, compress_image_option: &bool) {
+fn set_cover_id3(tag: &id3::Tag, song_meta_data: &mut Song, compress_image_option: &bool, path: &str) {
     //COVER
     if let Some(cover) = tag.pictures().next() {
         let picture_as_num = cover.data.to_owned();
@@ -411,31 +375,37 @@ fn set_cover_id3(tag: &id3::Tag, song_meta_data: &mut Song, compress_image_optio
                 //compression code goes here
                 match resize_and_compress_image(&picture_as_num, &250) {
                     Some(compressed_image) => {
-                        //we need to convert it to a base64 string
-                        song_meta_data.cover = Some(encode_image_in_parallel(&compressed_image));
+                        song_meta_data.cover_uuid = match insert_into_covers_tree(compressed_image, &path.to_owned()) {
+                            uuid if uuid == uuid::Uuid::nil() => None,
+                            uuid => Some(uuid.to_string()),
+                        }
                     }
                     None => {
-                        song_meta_data.cover = Some(encode_image_in_parallel(&picture_as_num));
+                        song_meta_data.cover_uuid = match insert_into_covers_tree(picture_as_num, &path.to_owned()) {
+                            uuid if uuid == uuid::Uuid::nil() => None,
+                            uuid => Some(uuid.to_string()),
+                        }
                     }
                 }
             }
             false => {
-                //let base64str = general_purpose::STANDARD.encode(&picture_as_num);
-                //song_meta_data.cover = Some(base64str);
-                song_meta_data.cover = Some(encode_image_in_parallel(&picture_as_num));
+                song_meta_data.cover_uuid = match insert_into_covers_tree(picture_as_num, &path.to_owned()) {
+                    uuid if uuid == uuid::Uuid::nil() => None,
+                    uuid => Some(uuid.to_string()),
+                }
             }
         }
     } else {
-        song_meta_data.cover = None;
+        song_meta_data.cover_uuid = None;
     }
 }
 
-fn set_cover_lofty(tag: &lofty::Tag, song_meta_data: &mut Song, compress_image_option: &bool) {
+fn set_cover_lofty(tag: &lofty::Tag, song_meta_data: &mut Song, compress_image_option: &bool, path: &str) {
     //COVER
     let pictures = tag.pictures();
 
     if pictures.len() == 0 {
-        song_meta_data.cover = None;
+        song_meta_data.cover_uuid = None;
     } else {
         for picture in pictures {
             let picture_as_num = picture.data().to_owned();
@@ -446,19 +416,24 @@ fn set_cover_lofty(tag: &lofty::Tag, song_meta_data: &mut Song, compress_image_o
                     //compression code goes here
                     match resize_and_compress_image(&picture_as_num, &250) {
                         Some(compressed_image) => {
-                            //we need to convert it to a base64 string
-                            song_meta_data.cover =
-                                Some(encode_image_in_parallel(&compressed_image));
+                            song_meta_data.cover_uuid = match insert_into_covers_tree(compressed_image, &path.to_owned()) {
+                                uuid if uuid == uuid::Uuid::nil() => None,
+                                uuid => Some(uuid.to_string()),
+                            }
                         }
                         None => {
-                            song_meta_data.cover = Some(encode_image_in_parallel(&picture_as_num));
+                            song_meta_data.cover_uuid = match insert_into_covers_tree(picture_as_num, &path.to_owned()) {
+                                uuid if uuid == uuid::Uuid::nil() => None,
+                                uuid => Some(uuid.to_string()),
+                            }
                         }
                     }
                 }
                 false => {
-                    //let base64str = general_purpose::STANDARD.encode(&picture_as_num);
-                    //song_meta_data.cover = Some(base64str);
-                    song_meta_data.cover = Some(encode_image_in_parallel(&picture_as_num));
+                    song_meta_data.cover_uuid = match insert_into_covers_tree(picture_as_num, &path.to_owned()) {
+                        uuid if uuid == uuid::Uuid::nil() => None,
+                        uuid => Some(uuid.to_string()),
+                    }
                 }
             }
             break;

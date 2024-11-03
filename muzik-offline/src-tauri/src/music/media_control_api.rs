@@ -1,6 +1,6 @@
 use crate::{
-    components::{audio_manager::SharedAudioManager, event_payload::Payload, song::Song},
-    database::db_manager::DbManager,
+    components::{audio_manager::SharedAudioManager, event_payload::Payload},
+    database::db_api::get_song_from_tree,
     utils::general_utils::get_song_cover_as_bytes,
 };
 use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, MediaPlayback, PlatformConfig}; //, MediaPosition};
@@ -202,34 +202,11 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
 }
 
 #[tauri::command]
-pub fn update_metadata(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, key: i32) {
-    let song: Song;
-
-    match DbManager::new() {
-        Ok(dbm) => match dbm.song_tree.get(key.to_ne_bytes()) {
-            Ok(Some(song_as_ivec)) => {
-                let song_as_bytes = song_as_ivec.as_ref();
-                let song_as_str = String::from_utf8_lossy(song_as_bytes);
-                match serde_json::from_str::<Song>(&song_as_str.to_string()) {
-                    Ok(value) => {
-                        song = value;
-                    }
-                    Err(_) => {
-                        return;
-                    }
-                }
-            }
-            Ok(None) => {
-                return;
-            }
-            Err(_) => {
-                return;
-            }
-        },
-        Err(_) => {
-            return;
-        }
-    }
+pub fn update_metadata(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, uuid: String, key: i32) {
+    let song = match get_song_from_tree(uuid.as_str()) {
+        Some(s) => { s }
+        None => { return; }
+    };
 
     let image_data: Vec<u8> = get_song_cover_as_bytes(&song, key);
 

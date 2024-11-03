@@ -9,7 +9,7 @@ export class SongsDexie extends Dexie {
     constructor() {
         super('SongsDatabase');
         this.version(1).stores({
-            songs: 'id,title,name,artist,album,genre,year,duration,duration_seconds,path,cover,date_recorded,date_released,file_size,file_type,overall_bit_rate,audio_bit_rate,sample_rate,bit_depth,channels' // Primary key and indexed props
+            songs: 'id,uuid,title,name,artist,album,genre,year,duration,duration_seconds,path,cover_uuid,date_recorded,date_released,file_size,file_type,overall_bit_rate,audio_bit_rate,sample_rate,bit_depth,channels' // Primary key and indexed props
         });
     }
 }
@@ -22,7 +22,7 @@ export class AlbumsDexie extends Dexie {
     constructor() {
         super('AlbumsDatabase');
         this.version(1).stores({
-            albums: 'key,cover,title' // Primary key and indexed props
+            albums: 'key,uuid,cover,title' // Primary key and indexed props
         });
     }
 }
@@ -35,7 +35,7 @@ export class ArtistsDexie extends Dexie {
     constructor() {
         super('ArtistsDatabase');
         this.version(1).stores({
-            artists: 'key,cover,artist_name' // Primary key and indexed props
+            artists: 'key,uuid,cover,artist_name' // Primary key and indexed props
         });
     }
 }
@@ -48,7 +48,7 @@ export class GenresDexie extends Dexie {
     constructor() {
         super('GenresDatabase');
         this.version(1).stores({
-            genres: 'key,cover,title' // Primary key and indexed props
+            genres: 'key,uuid,cover,title' // Primary key and indexed props
         });
     }
 }

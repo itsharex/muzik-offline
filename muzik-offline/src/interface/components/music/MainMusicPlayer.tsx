@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { SkipBack, Pause, SkipFwd, Shuffle, VolumeMin, VolumeMax, Repeat, Play, RepeatOne, NullCoverNull } from "@icons/index";
 import "@styles/components/music/MainMusicPlayer.scss";
 import { usePlayerStore, usePlayingPosition, usePlayingPositionSec, useSavedObjectStore } from "store";
-import { getRandomCover, secondsToTimeFormat } from "utils";
+import { getCoverURL, getRandomCover, secondsToTimeFormat } from "utils";
 import { changeVolumeLevel, changeSeekerPosition, dragSeeker, changeVolumeLevelBtnPress, repeatToggle, pauseSong, playSong, shuffleToggle, setVolumeLevel, playPreviousSong, playNextSong } from "utils/playerControl";
 import { OSTYPEenum } from "@muziktypes/index";
 
@@ -31,17 +31,17 @@ const MainMusicPlayer = () => {
                     <div className="first_cover">
                         {local_store.OStype !== OSTYPEenum.Linux && !Player.playingSongMetadata && <NullCoverNull />}
                         {/**no song is loaded onto the player */}
-                        {local_store.OStype !== OSTYPEenum.Linux && Player.playingSongMetadata && Player.playingSongMetadata.cover && (<img src={`data:image/png;base64,${Player.playingSongMetadata.cover}`} alt="song-art" />)}
+                        {local_store.OStype !== OSTYPEenum.Linux && Player.playingSongMetadata && Player.playingSongMetadata.cover_uuid && (<img src={getCoverURL(Player.playingSongMetadata.cover_uuid)} alt="song-art" />)}
                         {/**there is cover art */}
-                        {local_store.OStype !== OSTYPEenum.Linux && Player.playingSongMetadata && !Player.playingSongMetadata.cover && (getRandomCover(Player.playingSongMetadata ? Player.playingSongMetadata.id : 0))()}
+                        {local_store.OStype !== OSTYPEenum.Linux && Player.playingSongMetadata && !Player.playingSongMetadata.cover_uuid && (getRandomCover(Player.playingSongMetadata ? Player.playingSongMetadata.id : 0))()}
                         {/**the cover art is null */}
                     </div>
                 <div className="second_cover">
                     {!Player.playingSongMetadata && <NullCoverNull />}
                     {/**no song is loaded onto the player */}
-                    {Player.playingSongMetadata && Player.playingSongMetadata.cover && (<img src={`data:image/png;base64,${Player.playingSongMetadata.cover}`} alt="song-art" />)}
+                    {Player.playingSongMetadata && Player.playingSongMetadata.cover_uuid && (<img src={getCoverURL(Player.playingSongMetadata.cover_uuid)} alt="song-art" />)}
                     {/**there is cover art */}
-                    {Player.playingSongMetadata && !Player.playingSongMetadata.cover && (getRandomCover(Player.playingSongMetadata ? Player.playingSongMetadata.id : 0))()}
+                    {Player.playingSongMetadata && !Player.playingSongMetadata.cover_uuid && (getRandomCover(Player.playingSongMetadata ? Player.playingSongMetadata.id : 0))()}
                     {/**the cover art is null */}
                 </div>
             </div>

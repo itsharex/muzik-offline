@@ -2,6 +2,9 @@ use id3::{Content, Frame, TagLike, Timestamp};
 use lofty::Accessor;
 use lofty::TaggedFileExt;
 
+use crate::database::db_api::insert_into_album_tree;
+use crate::database::db_api::insert_into_artist_tree;
+use crate::database::db_api::insert_into_genre_tree;
 use crate::database::db_api::insert_song_into_tree;
 use crate::{components::song::Song, utils::general_utils::decode_image_in_parallel};
 
@@ -10,20 +13,23 @@ pub fn edit_song_metadata(
     song_path: String,
     song_metadata: String,
     has_changed_cover: bool,
+    cover: String
 ) -> Result<String, String> {
     //convert song_metadata to Song using serde_json
     match serde_json::from_str::<Song>(&song_metadata) {
         Ok(song) => {
-            if let Ok(()) = edit_metadata_id3(&song_path, &song, &has_changed_cover) {
-                match insert_song_into_tree(song) {
-                    Ok(_) => Ok(format!("Metadata edited successfully")),
-                    Err(_) => Err(format!("Error saving song edits")),
-                }
+            if let Ok(()) = edit_metadata_id3(&song_path, &song, &has_changed_cover, &cover) {
+                insert_song_into_tree(&song);
+                insert_into_album_tree(&song);
+                insert_into_artist_tree(&song);
+                insert_into_genre_tree(&song);
+                Ok("Metadata edited successfully".to_string())
             } else if let Ok(()) = edit_metadata_lofty(&song_path, &song) {
-                match insert_song_into_tree(song) {
-                    Ok(_) => Ok(format!("Metadata edited successfully")),
-                    Err(_) => Err(format!("Error saving song edits")),
-                }
+                insert_song_into_tree(&song);
+                insert_into_album_tree(&song);
+                insert_into_artist_tree(&song);
+                insert_into_genre_tree(&song);
+                Ok("Metadata edited successfully".to_string())
             } else {
                 Err(format!("Error editing metadata"))
             }
@@ -58,13 +64,14 @@ fn edit_metadata_id3(
     song_path: &String,
     song: &Song,
     has_changed_cover: &bool,
+    cover: &String
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut tag = id3::Tag::read_from_path(song_path)?;
     set_title_id3(&mut tag, song);
     set_artist_id3(&mut tag, song);
     set_album_id3(&mut tag, song);
     if *has_changed_cover == true {
-        set_cover_id3(&mut tag, song);
+        set_cover_id3(&mut tag, cover);
     }
     set_genre_id3(&mut tag, song);
     set_year_id3(&mut tag, song);
@@ -278,24 +285,22 @@ fn set_year_lofty(tag: &mut lofty::Tag, song_meta_data: &Song) {
     }
 }
 
-fn set_cover_id3(tag: &mut id3::Tag, song_meta_data: &Song) {
+fn set_cover_id3(tag: &mut id3::Tag, cover: &String) {
     //COVER
-    if let Some(cover) = &song_meta_data.cover {
-        match decode_image_in_parallel(cover) {
-            Ok(cover_as_vec) => {
-                tag.add_frame(Frame::with_content(
-                    "APIC",
-                    Content::Picture(id3::frame::Picture {
-                        mime_type: "image/jpeg".to_string(),
-                        picture_type: id3::frame::PictureType::CoverFront,
-                        description: "Cover".to_string(),
-                        data: cover_as_vec,
-                    }),
-                ));
-            }
-            Err(_) => {
-                //do nothing
-            }
+    match decode_image_in_parallel(cover) {
+        Ok(cover_as_vec) => {
+            tag.add_frame(Frame::with_content(
+                "APIC",
+                Content::Picture(id3::frame::Picture {
+                    mime_type: "image/jpeg".to_string(),
+                    picture_type: id3::frame::PictureType::CoverFront,
+                    description: "Cover".to_string(),
+                    data: cover_as_vec,
+                }),
+            ));
+        }
+        Err(_) => {
+            //do nothing
         }
     }
 }
