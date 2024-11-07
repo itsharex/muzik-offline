@@ -92,6 +92,11 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
     }
 
     useEffect(() => {
+        if(props.songID === -1){
+            setSong(emptySong);
+            setOldSong(emptySong);
+            return;
+        }
         local_songs_db.songs.get(props.songID).then((oldSong) => {
             if(oldSong === undefined){
                 setSong(emptySong);
@@ -102,7 +107,7 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
             setSong(oldSong);
             setOldSong(oldSong);
         })
-    }, [props.songID])
+    }, [props.songID, props.isOpen])
 
     return (
         <div className={"EditPropertiesModal" + (props.isOpen ? " EditPropertiesModal-visible" : "")} onClick={

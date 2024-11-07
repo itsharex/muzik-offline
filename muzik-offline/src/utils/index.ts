@@ -224,3 +224,11 @@ export async function onDragEndInPlaylistView(SongList: Song[], playlistKey: num
 
     await local_playlists_db.playlists.update(playlistKey, playlistobj);
 }
+
+export function areArraysDifferent(array1: string[], array2: string[]) {
+    // Check if arrays have different lengths
+    if (array1.length !== array2.length)return true;
+
+    // Check if any item is not present in both arrays
+    return array1.some(item => !array2.includes(item));
+}

@@ -50,6 +50,7 @@ import Minimize from './Layout/Minimize';
 import ListIcon from './General/ListIcon';
 import AlertTriangle from './General/AlertTriangle';
 import Trash from './General/Trash';
+import FolderSearch from './General/FolderSearch';
 
 export {
     Next_page, Prev_page, Search, 
@@ -65,5 +66,5 @@ export {
     NullArtistCoverOne, NullArtistCoverTwo, NullArtistCoverThree, NullArtistCoverFour,
     CheckGreen, CrossRed, InformationCircleContainedOrange, InformationCircleContainedBlue,
     EditImage, Edit, Overlap, Minimize,
-    ListIcon, AlertTriangle, Trash
+    ListIcon, AlertTriangle, Trash, FolderSearch
 }

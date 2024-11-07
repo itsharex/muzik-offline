@@ -64,7 +64,7 @@ const AppearanceSettings = () => {
 
     return (
         <div className="AppearanceSettings">
-            <h2>Appearance</h2>
+            <h2>Appearance Settings</h2>
             <div className="AppearanceSettings_container">
                 <h3>Background</h3>
                 <div className="background_select">

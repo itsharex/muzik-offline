@@ -1,6 +1,7 @@
 export enum selectedSettingENUM {
     General = "General",
     Appearance = "Appearance", 
+    MusicFolders = "Music Folders",
     Security = "Security",
     Advanced = "Advanced",
     About = "About"
