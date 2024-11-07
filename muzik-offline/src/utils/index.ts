@@ -33,6 +33,7 @@ export const fetch_songs_metadata = async(fresh_library: boolean): Promise<{stat
 
     const responseobject: {status: string, message: string, data: []} = JSON.parse(res);
     console.log(res);
+    console.log(responseobject);
     if(responseobject.status === "success"){
         const songs: Song[] = responseobject.data;
         await local_songs_db.songs.bulkAdd(songs);
