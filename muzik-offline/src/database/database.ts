@@ -1,4 +1,4 @@
-import { Song, album, artist, genre, playlist } from '@muziktypes/index';
+import { Song, album, artist, genre, playlist, wallpaper } from '@muziktypes/index';
 import Dexie, { Table } from 'dexie';
 
 export class SongsDexie extends Dexie {
@@ -66,8 +66,22 @@ export class PlaylistsDexie extends Dexie {
     }
 }
 
+export class WallpaperDexie extends Dexie {
+    // 'wallpapers' are added by dexie when declaring the stores()
+    // We just tell the typing system this is the case
+    wallpapers!: Table<wallpaper>;
+
+    constructor() {
+        super('WallpapersDatabase');
+        this.version(1).stores({
+            wallpapers: '++key,uuid' // Primary key and indexed props
+        });
+    }
+}
+
 export const local_songs_db = new SongsDexie();
 export const local_albums_db = new AlbumsDexie();
 export const local_artists_db = new ArtistsDexie();
 export const local_genres_db = new GenresDexie();
 export const local_playlists_db = new PlaylistsDexie();
+export const local_wallpapers_db = new WallpaperDexie();

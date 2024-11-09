@@ -1,5 +1,5 @@
 use super::{db_manager::DbManager, db_struct::ResponseObject};
-use crate::components::{album::Album, artist::Artist, genre::Genre, song::Song};
+use crate::{components::{album::Album, artist::Artist, genre::Genre, song::Song}, utils::general_utils::{decode_image_in_parallel, resize_and_compress_image}};
 use sled::Tree;
 
 //publicly available api functions
@@ -615,6 +615,122 @@ pub async fn get_genres_not_in_vec(uuids_not_to_match: Vec<String>) -> String{
                 "{{\"status\":\"lock error\",\"message\":\"{}\",\"data\":[]}}",
                 e
             ));
+        }
+    }
+}
+
+#[tauri::command]
+pub fn add_new_wallpaper_to_db(wallpaper: String) -> Result<String, String> {
+    let image = match decode_image_in_parallel(&wallpaper) {
+        Ok(image) => image,
+        Err(_) => {
+            return Err(String::from("error decoding image"));
+        }
+    };
+
+    match DbManager::new() {
+        Ok(mut dbm) => {
+            let thumbnail = match resize_and_compress_image(&image, &200) {
+                Some(thumbnail) => thumbnail,
+                None => {
+                    return Err(String::from("error resizing image"));
+                }
+            };
+
+            let wallpaper_uuid = uuid::Uuid::new_v4();
+
+            // add thumbnail to thumbnail db
+            match dbm.get_thumbnail_tree() {
+                Ok(thumbnail_tree) => {
+                    match thumbnail_tree.insert(wallpaper_uuid.to_string(), thumbnail) {
+                        Ok(_) => {}
+                        Err(_) => {}
+                    }
+                }
+                Err(_) => {
+                    return Err(String::from("error getting thumbnail db manager"));
+                }
+            }
+
+            // add normal wallpaper to wallpaper db
+            match dbm.get_wallpaper_tree() {
+                Ok(wallpaper_tree) => {
+                    match wallpaper_tree.insert(wallpaper_uuid.to_string(), image) {
+                        Ok(_) => {
+                            return Ok(wallpaper_uuid.to_string());
+                        }
+                        Err(_) => {
+                            return Err(String::from("error inserting wallpaper into db"));
+                        }
+                    }
+                }
+                Err(_) => {
+                    return Err(String::from("error getting wallpaper db manager"));
+                }
+            }
+        }
+        Err(_) => {
+            return Err(String::from("error getting db manager"));
+        }
+    }
+}
+
+pub fn get_thumbnail(uuid: &str) -> Vec<u8> {
+    match DbManager::new() {
+        Ok(mut dbm) => {
+            let thumbnail_tree = match dbm.get_thumbnail_tree() {
+                Ok(tree) => tree,
+                Err(_) => {
+                    return Vec::new();
+                }
+            };
+
+            match thumbnail_tree.get(uuid) {
+                Ok(Some(thumbnail)) => {
+                    return thumbnail.to_vec();
+                }
+                Ok(None) => {
+                    return Vec::new();
+                }
+                Err(_) => {
+                    return Vec::new();
+                }
+            }
+        }
+        Err(_) => {
+            return Vec::new();
+        }
+    }
+}
+
+pub fn get_wallpaper(uuid: &str) -> Vec<u8> {
+    match DbManager::new() {
+        Ok(mut dbm) => {
+            let wallpaper_tree = match dbm.get_wallpaper_tree() {
+                Ok(tree) => tree,
+                Err(_) => {
+                    println!("error getting wallpaper tree");
+                    return Vec::new();
+                }
+            };
+
+            match wallpaper_tree.get(uuid) {
+                Ok(Some(wallpaper)) => {
+                    println!("got wallpaper");
+                    return wallpaper.to_vec();
+                }
+                Ok(None) => {
+                    println!("no wallpaper found");
+                    return Vec::new();
+                }
+                Err(_) => {
+                    println!("error getting wallpaper");
+                    return Vec::new();
+                }
+            }
+        }
+        Err(_) => {
+            return Vec::new();
         }
     }
 }

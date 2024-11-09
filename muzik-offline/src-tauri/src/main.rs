@@ -14,7 +14,7 @@ use commands::general_commands::get_server_port;
 use commands::refresh_paths_at_start::refresh_paths;
 use components::audio_manager::SharedAudioManager;
 use constants::null_cover_null::NULL_COVER_NULL;
-use database::db_api::{get_albums_not_in_vec, get_artists_not_in_vec, get_genres_not_in_vec, get_image_from_tree, get_songs_not_in_vec};
+use database::db_api::{add_new_wallpaper_to_db, get_albums_not_in_vec, get_artists_not_in_vec, get_genres_not_in_vec, get_image_from_tree, get_songs_not_in_vec, get_thumbnail, get_wallpaper};
 use kira::manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings};
 use music::media_control_api::configure_media_controls;
 use socials::discord_rpc::{set_discord_rpc_activity_with_timestamps, DiscordRpc};
@@ -108,6 +108,7 @@ fn main() {
             get_artists_not_in_vec,
             get_all_genres,
             get_genres_not_in_vec,
+            add_new_wallpaper_to_db,
             // DISCORD RPC
             allow_connection_and_connect_to_discord_rpc,
             attempt_to_connect_if_possible,
@@ -152,7 +153,14 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // Set up the image route
     let cover_image_route = create_image_route(shared_audio_manager.clone());
     let image_route_with_uuid = create_image_route_with_uuid();
-    let routes = cover_image_route.or(image_route_with_uuid);
+    let thumbnail_route_with_uuid = create_thumbnail_route_with_uuid();
+    let wallpaper_route_with_uuid = create_wallpaper_route_with_uuid();
+    let ping_route = create_ping_route();
+    let routes = cover_image_route
+                                                                .or(image_route_with_uuid)
+                                                                .or(thumbnail_route_with_uuid)
+                                                                .or(wallpaper_route_with_uuid)
+                                                                .or(ping_route);
 
     // get random port for warp server
     let port = get_random_port();
@@ -161,6 +169,9 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     spawn(async move {
         warp::serve(routes).run(([127, 0, 0, 1], port)).await;
     });
+
+    // Wait until the Warp server is ready
+    wait_for_server_ready(port);
 
     // add url to shared audio manager
     shared_audio_manager
@@ -193,6 +204,20 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn wait_for_server_ready(port: u16) {
+    let url = format!("http://localhost:{}/ping", port);
+
+    // Poll every 100ms until the server responds
+    while reqwest::blocking::get(&url).is_err() {
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
+}
+
+/// Creates the ping route for checking if the server is ready.
+fn create_ping_route() -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
+    warp::path("ping").and(warp::get()).map(|| warp::reply::json(&"pong").into_response())
+}
+
 /// Creates the image route for serving the cover image.
 fn create_image_route(
     shared_audio_manager: Arc<Mutex<SharedAudioManager>>,
@@ -217,6 +242,24 @@ fn create_image_route_with_uuid(
 ) -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
     warp::path!("image" / String).and(warp::get()).map(move |uuid: String| {
         warp::reply::with_header(get_image_from_tree(uuid.as_str()), "Content-Type", "image/png")
+            .into_response()
+    })
+}
+
+/// Creates the thumbnail route for serving the :uuid thumbnail image.
+fn create_thumbnail_route_with_uuid(
+) -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
+    warp::path!("thumbnail" / String).and(warp::get()).map(move |uuid: String| {
+        warp::reply::with_header(get_thumbnail(uuid.as_str()), "Content-Type", "image/png")
+            .into_response()
+    })
+}
+
+/// Creates the wallpaper route for serving the :uuid wallpaper image.
+fn create_wallpaper_route_with_uuid(
+) -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
+    warp::path!("wallpaper" / String).and(warp::get()).map(move |uuid: String| {
+        warp::reply::with_header(get_wallpaper(uuid.as_str()), "Content-Type", "image/png")
             .into_response()
     })
 }

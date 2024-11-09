@@ -15,7 +15,7 @@ import { isPermissionGranted, requestPermission, sendNotification } from '@tauri
 import { MiniPlayer } from "@App/index";
 import { listen } from "@tauri-apps/api/event";
 import { processOSMediaControlsEvent } from "@utils/OSeventControl";
-import { fetch_library } from "@utils/index";
+import { fetch_library, getWallpaperURL } from "@utils/index";
 
 const App = () => {
   const [openMiniPlayer, setOpenMiniPlayer] = useState<boolean>(false);
@@ -24,7 +24,7 @@ const App = () => {
   const [FloatingHNState, setFloatingHNState] = useState<boolean>(false);
   const { isMaximised } = useIsMaximisedStore((state) => { return { isMaximised: state.isMaximised}; });
   const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
-  const { wallpaper } = useWallpaperStore((state) => { return { wallpaper: state.wallpaper,}; });
+  const { wallpaperUUID } = useWallpaperStore((state) => { return { wallpaperUUID: state.wallpaperUUID,}; });
   const { appFS } = useIsFSStore((state) => { return { appFS: state.isFS}; });
   const { setPort } = usePortStore((state) => { return { port: state.port, setPort: state.setPort}; });
   const { firstRun, setFirstRun } = useFisrstRunStore((state) => { return { firstRun: state.firstRun, setFirstRun: state.setFirstRun}; });
@@ -144,10 +144,10 @@ const App = () => {
           data-theme={local_store.ThemeColour} 
           wallpaper-opacity={local_store.WallpaperOpacityAmount}
           onContextMenu={(e) => e.preventDefault()}>
-            <div className={"background_img " + (wallpaper && wallpaper.DisplayWallpaper ? "" : local_store.BGColour)}>
-              {wallpaper && wallpaper.DisplayWallpaper && (<img src={wallpaper.DisplayWallpaper} alt="wallpaper"/>)}
+            <div className={"background_img " + (wallpaperUUID ? "" : local_store.BGColour)}>
+              {wallpaperUUID && (<img src={getWallpaperURL(wallpaperUUID)} alt="wallpaper"/>)}
             </div>
-            <div className={"app_darkness_layer " + (wallpaper && wallpaper.DisplayWallpaper ? "image_layer" : "color_layer")}>
+            <div className={"app_darkness_layer " + (wallpaperUUID ? "image_layer" : "color_layer")}>
               {
                 local_store.OStype ===  OSTYPEenum.Windows ? 
                   <HeaderWindows toggleSettings={toggleSettings}/>

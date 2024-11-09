@@ -166,3 +166,8 @@ export interface Payload {
     volume?: number;
     uri?: string;
 }
+
+export interface wallpaper{
+    key: number | undefined;
+    uuid: string;
+}

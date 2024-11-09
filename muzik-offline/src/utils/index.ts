@@ -183,6 +183,16 @@ export const getCoverURL = (uuid: string): string => {
     return `http://localhost:${port}/image/${uuid}`;
 }
 
+export const getThumbnailURL = (uuid: string): string => {
+    const port = usePortStore.getState().port;
+    return `http://localhost:${port}/thumbnail/${uuid}`;
+}
+
+export const getWallpaperURL = (uuid: string): string => {
+    const port = usePortStore.getState().port;
+    return `http://localhost:${port}/wallpaper/${uuid}`;
+}
+
 export const getSongPaths = async(
     values: {album?: string, artist?: string, genre?: string, playlist?: string}
 ): Promise<string[]> => {

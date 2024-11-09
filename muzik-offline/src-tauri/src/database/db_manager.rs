@@ -41,4 +41,12 @@ impl DbManager {
     pub fn get_covers_tree(&mut self) -> Result<Tree, String> {
         self.db.open_tree(b"covers").map_err(|e| e.to_string())
     }
+
+    pub fn get_thumbnail_tree(&mut self) -> Result<Tree, String> {
+        self.db.open_tree(b"thumbnails").map_err(|e| e.to_string())
+    }
+
+    pub fn get_wallpaper_tree(&mut self) -> Result<Tree, String> {
+        self.db.open_tree(b"wallpapers").map_err(|e| e.to_string())
+    }
 }
