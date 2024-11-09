@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { FunctionComponent, useState, useEffect } from 'react';
 import "@styles/pages/Settings.scss";
 import { ChevronDown, ComponentIcon, InformationCircleContained, Layout, SettingsIcon, FolderSearch } from "@icons/index";
-import { DeleteDiretoryModal, SettingsNavigator } from '@components/index';
+import { DeleteDiretoryModal, SettingsNavigator, WallpapersSelectionModal } from '@components/index';
 import { selectedSettingENUM } from 'types';
 import { AppearanceSettings, GeneralSettings, AdvancedSettings, AboutSettings, MusicFoldersSettings } from '@layouts/index';
 import { useSavedObjectStore } from 'store';
@@ -22,6 +22,7 @@ const Settings: FunctionComponent<SettingsProps> = (props: SettingsProps) => {
     const [selectedSetting, setSelectedSetting] = useState<selectedSettingENUM>(selectedSettingENUM.General);
     const {local_store,} = useSavedObjectStore((state) => { return { local_store: state.local_store}; });
     const [currentPath, setCurrentPath] = useState<string | null>(null);
+    const [wallpapersModal, setWallpapersModal] = useState<boolean>(false);
 
     function convertToEnum(arg: string){
         if(arg === selectedSettingENUM.General)return selectedSettingENUM.General;
@@ -67,7 +68,7 @@ const Settings: FunctionComponent<SettingsProps> = (props: SettingsProps) => {
                                             case selectedSettingENUM.General:
                                                 return <GeneralSettings/>
                                             case selectedSettingENUM.Appearance:
-                                                return <AppearanceSettings />
+                                                return <AppearanceSettings openModal={() => setWallpapersModal(true)}/>
                                             //case selectedSettingENUM.Security:
                                             //    return <SecuritySettings />
                                             case selectedSettingENUM.MusicFolders:
@@ -84,6 +85,7 @@ const Settings: FunctionComponent<SettingsProps> = (props: SettingsProps) => {
                         </div>
             </motion.div>
             <DeleteDiretoryModal path={currentPath ?? ""} isOpen={currentPath !== null} closeModal={() => setCurrentPath(null)}/>
+            <WallpapersSelectionModal isOpen={wallpapersModal} closeModal={() => setWallpapersModal(false)}/>
         </>
     )
 }

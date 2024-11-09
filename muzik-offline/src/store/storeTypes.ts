@@ -2,7 +2,6 @@ import { SavedDirectories } from "@database/directories";
 import { Player } from "@database/player";
 import { SavedObject } from "@database/saved_object";
 import { viewableSideEl } from "@database/side_elements";
-import { SavedWallpaper } from "@database/wallpaper";
 import { toast } from "@muziktypes/index";
 
 export interface MaximisedState {
@@ -37,8 +36,8 @@ export interface searchInterface{
 }
 
 export interface wallpaperInterface{
-    wallpaper: SavedWallpaper | null;
-    setWallpaper: (nW: SavedWallpaper) => void;
+    wallpaperUUID: string | null;
+    setWallpaper: (nW: string) => void;
     unsetWallpaper: () => void;
 }
 

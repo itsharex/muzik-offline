@@ -36,10 +36,10 @@ const GeneralContextMenu: FunctionComponent<GeneralContextMenuProps> = (props: G
         //    scmHeight = 250;
         //}
         else if(props.CMtype === contextMenuEnum.ArtistCM || props.CMtype === contextMenuEnum.AlbumCM
-            || props.CMtype === contextMenuEnum.PlaylistSongsCM || props.CMtype === contextMenuEnum.SongCM){//6 items
+            || props.CMtype === contextMenuEnum.SongCM){//6 items
             scmHeight = 280;
         }
-        else if(props.CMtype === contextMenuEnum.PlaylistCM){//7 items
+        else if(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.PlaylistSongsCM){//7 items
             scmHeight = 310;
         }
         if(props.overRideY)return yPos;
@@ -62,7 +62,8 @@ const GeneralContextMenu: FunctionComponent<GeneralContextMenuProps> = (props: G
             {(props.CMtype === contextMenuEnum.GenreCM) && <ShowGenreButton  title={props.title} chooseOption={props.chooseOption}/>}
             {(props.CMtype === contextMenuEnum.PlaylistCM) && <ShowPlaylistButton  title={props.title} chooseOption={props.chooseOption}/>}
             {(props.CMtype === contextMenuEnum.AlbumCM) && <ShowAlbumButton title={props.title} chooseOption={props.chooseOption}/>}
-            {props.CMtype === contextMenuEnum.SongCM && <EditSongButton title={props.title} chooseOption={props.chooseOption}/>}
+            {(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.SongCM || props.CMtype === contextMenuEnum.PlaylistSongsCM) 
+                && <EditSongButton title={props.title} chooseOption={props.chooseOption}/>}
             {(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.SongCM || props.CMtype === contextMenuEnum.PlaylistSongsCM) 
                 && <ShowInfoButton chooseOption={props.chooseOption}/>}
             {(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.PlaylistSongsCM) 

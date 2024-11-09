@@ -204,5 +204,6 @@ export interface UpcomingHistoryInterface{
     SongHistory: Song[],
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
     kindex_sq: {key: number, index: number, queueType: "SongQueue" | "SongHistory"},
 }

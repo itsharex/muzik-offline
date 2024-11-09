@@ -134,7 +134,9 @@
 
             .cancel_button{
                 background: $on-hover-song;
-                color: $white-900;
+                h3{
+                    color: $white-900;
+                }
             }
         }
 

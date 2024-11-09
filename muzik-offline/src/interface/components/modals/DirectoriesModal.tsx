@@ -16,6 +16,11 @@ type DirectoriesModalProps = {
     closeModal: () => void;
 }
 
+/**
+ * @deprecated This component is deprecated and will be removed in future releases.
+ * Directory control has been shifted to an entirely seperate page as it is easier for the user to 
+ * control it that way. Please have a look at `MusicFoldersSettings` to see the new organisation.
+ */
 const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: DirectoriesModalProps) => {
     const { dir, setDir } = useDirStore((state) => { return { dir: state.dir, setDir: state.setDir}; });
     const [directories, setDirectories] = useState<string[]>(dir.Dir);

@@ -5,7 +5,6 @@ import { emptyDirectories } from '@database/directories';
 import { emptyPlayer } from '@database/player';
 import { emptySavedObject } from '@database/saved_object';
 import { viewableSideElements } from '@database/side_elements';
-import { emptyWallpaper } from '@database/wallpaper';
 import { alltracksReducer, AllTracksState } from './reducerStore';
 import { reducerType, AllTracksStateInterface, Action } from './reducerTypes';
 
@@ -70,11 +69,11 @@ export const useWallpaperStore = create<wallpaperInterface>()(
     devtools(
         persist(
             (set) => ({
-                wallpaper: emptyWallpaper,
-                setWallpaper: (nW) => set((_state) => ({ wallpaper: nW })),
-                unsetWallpaper: () => set((_state) => ({ wallpaper: null})),
+                wallpaperUUID: "",
+                setWallpaper: (nW) => set((_state) => ({ wallpaperUUID: nW })),
+                unsetWallpaper: () => set((_state) => ({ wallpaperUUID: null})),
             }),
-        {name: 'SavedWallpaper-offline',}
+        {name: 'SavedWallpaperUUID-offline',}
         )
     )
 )

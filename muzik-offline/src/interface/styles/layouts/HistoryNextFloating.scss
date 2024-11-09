@@ -18,11 +18,6 @@
     flex-direction: column;
     justify-content: space-between;
 
-    /* Track */
-    ::-webkit-scrollbar {
-        display: none;
-    }
-
     .Upcoming_view, .History_view{
         height: calc(100% - 44px);
         overflow-y: auto;
@@ -34,6 +29,10 @@
             rgba(0, 0, 0, 1) 85%,
             rgb(0, 0, 0, 0) 100%
         );
+    }
+
+    ::-webkit-scrollbar{
+        display: none;
     }
 
     .top_view{
