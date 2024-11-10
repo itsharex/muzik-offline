@@ -4,7 +4,7 @@ use kira::{
 };
 use souvlaki::MediaControls;
 
-pub struct SharedAudioManager {
+pub struct BackendStateManager {
     pub manager: AudioManager<DefaultBackend>,
     pub instance_handle: Option<StreamingSoundHandle<FromFileError>>,
     pub controls: Option<MediaControls>,

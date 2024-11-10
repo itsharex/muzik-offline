@@ -103,7 +103,8 @@ const App = () => {
       setFirstRun(false);
     }
     invoke("refresh_paths", { pathsAsJsonArray: JSON.stringify(paths), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
-    .then(async() => {
+    .then(async(response: any) => {
+      if(response === "No new songs detected")return;
       const res = await fetch_library(false);
       let message = "";
 

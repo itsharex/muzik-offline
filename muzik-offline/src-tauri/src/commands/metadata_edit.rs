@@ -9,8 +9,14 @@ use crate::database::db_api::insert_into_genre_tree;
 use crate::database::db_api::insert_song_into_tree;
 use crate::{components::song::Song, utils::general_utils::decode_image_in_parallel};
 
+use std::sync::{Arc, Mutex};
+use tauri::State;
+
+use crate::database::db_manager::DbManager;
+
 #[tauri::command]
 pub fn edit_song_metadata(
+    db_manager: State<'_, Arc<Mutex<DbManager>>>,
     song_path: String,
     song_metadata: String,
     has_changed_cover: bool,
@@ -21,19 +27,19 @@ pub fn edit_song_metadata(
         Ok(mut song) => {
             if let Ok(cov_as_vec) = edit_metadata_id3(&song_path, &song, &has_changed_cover, &cover) {
                 if has_changed_cover == true {
-                    song.cover_uuid = Some(insert_into_covers_tree(cov_as_vec, &song.path).to_string());
+                    song.cover_uuid = Some(insert_into_covers_tree(db_manager.clone(), cov_as_vec, &song.path).to_string());
                 }
-                insert_song_into_tree(&song);
-                insert_into_album_tree(&song);
-                insert_into_artist_tree(&song);
-                insert_into_genre_tree(&song);
-                Ok("Metadata edited successfully".to_string())
+                insert_song_into_tree(db_manager.clone(), &song);
+                insert_into_album_tree(db_manager.clone(), &song);
+                insert_into_artist_tree(db_manager.clone(), &song);
+                insert_into_genre_tree(db_manager.clone(), &song);
+                Ok(song.cover_uuid.unwrap_or("Error acquiring cover uuid".to_string()))
             } else if let Ok(()) = edit_metadata_lofty(&song_path, &song) {
-                insert_song_into_tree(&song);
-                insert_into_album_tree(&song);
-                insert_into_artist_tree(&song);
-                insert_into_genre_tree(&song);
-                Ok("Metadata edited successfully".to_string())
+                insert_song_into_tree(db_manager.clone(), &song);
+                insert_into_album_tree(db_manager.clone(), &song);
+                insert_into_artist_tree(db_manager.clone(), &song);
+                insert_into_genre_tree(db_manager.clone(), &song);
+                Ok(song.cover_uuid.unwrap_or("Error acquiring cover uuid".to_string()))
             } else {
                 Err(format!("Error editing metadata"))
             }

@@ -1,6 +1,6 @@
 use crate::{
-    components::{audio_manager::SharedAudioManager, event_payload::Payload},
-    database::db_api::get_song_from_tree,
+    components::{audio_manager::BackendStateManager, event_payload::Payload},
+    database::{db_api::get_song_from_tree, db_manager::DbManager},
     utils::general_utils::get_song_cover_as_bytes,
 };
 use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, MediaPlayback, PlatformConfig}; //, MediaPosition};
@@ -202,13 +202,13 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
 }
 
 #[tauri::command]
-pub fn update_metadata(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, uuid: String, key: i32) {
-    let song = match get_song_from_tree(uuid.as_str()) {
-        Some(s) => { s }
-        None => { return; }
+pub fn update_metadata(audio_manager: State<'_, Arc<Mutex<BackendStateManager>>>, db_manager: State<'_, Arc<Mutex<DbManager>>>, uuid: String, key: i32) {
+    let song = match get_song_from_tree(db_manager.clone(), &uuid) {
+        Some(song) => song,
+        None => return,
     };
 
-    let image_data: Vec<u8> = get_song_cover_as_bytes(&song, key);
+    let image_data: Vec<u8> = get_song_cover_as_bytes(db_manager, &song, key);
 
     match audio_manager.lock() {
         Ok(mut manager) => {
@@ -235,7 +235,7 @@ pub fn update_metadata(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>,
 }
 
 #[tauri::command]
-pub fn set_player_state(audio_manager: State<'_, Arc<Mutex<SharedAudioManager>>>, state: &str) {
+pub fn set_player_state(audio_manager: State<'_, Arc<Mutex<BackendStateManager>>>, state: &str) {
     //,position: f64
     match audio_manager.lock() {
         Ok(mut manager) => {

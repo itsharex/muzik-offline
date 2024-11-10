@@ -84,7 +84,10 @@ const EditPropertiesModal: FunctionComponent<EditPropertiesModalProps> = (props:
         }
 
         invoke("edit_song_metadata", {songPath: song_v.path, songMetadata: JSON.stringify(song_v), hasChangedCover: hasChangedCover}).
-        then(async() => { 
+        then(async(cover_uuid: any) => { 
+            if(cover_uuid !== "Error acquiring cover uuid"){
+                song_v.cover_uuid = cover_uuid;
+            }
             await local_songs_db.songs.update(song_v.id, song_v);
             setToast({ title: "Editing song...", message: "Successfully updated metadata", type: toastType.success, timeout: 3000 });
         }).

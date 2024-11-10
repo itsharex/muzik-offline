@@ -11,10 +11,11 @@ mod socials;
 mod utils;
 
 use commands::general_commands::get_server_port;
-use commands::refresh_paths_at_start::refresh_paths;
-use components::audio_manager::SharedAudioManager;
+use commands::refresh_paths_at_start::{detect_deleted_songs, refresh_paths};
+use components::audio_manager::BackendStateManager;
 use constants::null_cover_null::NULL_COVER_NULL;
 use database::db_api::{add_new_wallpaper_to_db, get_albums_not_in_vec, get_artists_not_in_vec, get_genres_not_in_vec, get_image_from_tree, get_songs_not_in_vec, get_thumbnail, get_wallpaper};
+use database::db_manager::DbManager;
 use kira::manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings};
 use music::media_control_api::configure_media_controls;
 use socials::discord_rpc::{set_discord_rpc_activity_with_timestamps, DiscordRpc};
@@ -63,10 +64,9 @@ fn main() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_shell::init())
         .manage(initialize_audio_manager())
+        .manage(Arc::new(Mutex::new(DbManager::new().expect("failed to initialize db manager"))))
         .manage(Mutex::new(MLO::new()))
-        .manage(Mutex::new(
-            DiscordRpc::new().expect("failed to initialize discord rpc"),
-        ))
+        .manage(Mutex::new(DiscordRpc::new().expect("failed to initialize discord rpc")))
         .setup(setup_app)
         .invoke_handler(tauri::generate_handler![
             // WINDOW CONTROL
@@ -83,6 +83,7 @@ fn main() {
             edit_song_metadata,
             get_server_port,
             refresh_paths,
+            detect_deleted_songs,
             // MUSIC PLAYER
             load_and_play_song_from_path,
             load_a_song_from_path,
@@ -121,12 +122,12 @@ fn main() {
         .expect("error while running tauri application");
 }
 
-/// Initializes the SharedAudioManager with required settings.
-fn initialize_audio_manager() -> Arc<Mutex<SharedAudioManager>> {
+/// Initializes the BackendStateManager with required settings.
+fn initialize_audio_manager() -> Arc<Mutex<BackendStateManager>> {
     let audio_manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default())
         .expect("failed to initialize audio manager");
 
-    Arc::new(Mutex::new(SharedAudioManager {
+    Arc::new(Mutex::new(BackendStateManager {
         manager: audio_manager,
         instance_handle: None,
         volume: 0.0,
@@ -144,7 +145,8 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         mpsc::Sender<MediaControlEvent>,
         mpsc::Receiver<MediaControlEvent>,
     ) = mpsc::channel(32);
-    let shared_audio_manager = Arc::clone(&app.state::<Arc<Mutex<SharedAudioManager>>>());
+    let shared_audio_manager = Arc::clone(&app.state::<Arc<Mutex<BackendStateManager>>>());
+    let shared_db_manager = Arc::clone(&app.state::<Arc<Mutex<DbManager>>>());
     let window = app
         .app_handle()
         .get_window("main")
@@ -152,15 +154,13 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 
     // Set up the image route
     let cover_image_route = create_image_route(shared_audio_manager.clone());
-    let image_route_with_uuid = create_image_route_with_uuid();
-    let thumbnail_route_with_uuid = create_thumbnail_route_with_uuid();
-    let wallpaper_route_with_uuid = create_wallpaper_route_with_uuid();
-    let ping_route = create_ping_route();
+    let image_route_with_uuid = create_image_route_with_uuid(shared_db_manager.clone());
+    let thumbnail_route_with_uuid = create_thumbnail_route_with_uuid(shared_db_manager.clone());
+    let wallpaper_route_with_uuid = create_wallpaper_route_with_uuid(shared_db_manager.clone());
     let routes = cover_image_route
                                                                 .or(image_route_with_uuid)
                                                                 .or(thumbnail_route_with_uuid)
-                                                                .or(wallpaper_route_with_uuid)
-                                                                .or(ping_route);
+                                                                .or(wallpaper_route_with_uuid);
 
     // get random port for warp server
     let port = get_random_port();
@@ -169,9 +169,6 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     spawn(async move {
         warp::serve(routes).run(([127, 0, 0, 1], port)).await;
     });
-
-    // Wait until the Warp server is ready
-    wait_for_server_ready(port);
 
     // add url to shared audio manager
     shared_audio_manager
@@ -204,23 +201,9 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn wait_for_server_ready(port: u16) {
-    let url = format!("http://localhost:{}/ping", port);
-
-    // Poll every 100ms until the server responds
-    while reqwest::blocking::get(&url).is_err() {
-        std::thread::sleep(std::time::Duration::from_millis(100));
-    }
-}
-
-/// Creates the ping route for checking if the server is ready.
-fn create_ping_route() -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
-    warp::path("ping").and(warp::get()).map(|| warp::reply::json(&"pong").into_response())
-}
-
 /// Creates the image route for serving the cover image.
 fn create_image_route(
-    shared_audio_manager: Arc<Mutex<SharedAudioManager>>,
+    shared_audio_manager: Arc<Mutex<BackendStateManager>>,
 ) -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
     warp::path("cover").and(warp::get()).map(move || {
         match shared_audio_manager.lock() {
@@ -239,28 +222,58 @@ fn create_image_route(
 
 /// Creates the image route for serving the :uuid cover image.
 fn create_image_route_with_uuid(
+    shared_db_manager: Arc<Mutex<DbManager>>,
 ) -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
     warp::path!("image" / String).and(warp::get()).map(move |uuid: String| {
-        warp::reply::with_header(get_image_from_tree(uuid.as_str()), "Content-Type", "image/png")
-            .into_response()
+        match shared_db_manager.lock() {
+            Ok(db_manager) => {
+                warp::reply::with_header(get_image_from_tree(db_manager, uuid.as_str()), "Content-Type", "image/png")
+                    .into_response()
+            }
+            Err(_) => {
+                // Redirect to default image on Imgur
+                warp::redirect::temporary(Uri::from_static("https://i.imgur.com/1bJ0j6V.png"))
+                    .into_response()
+            }
+        }
     })
 }
 
 /// Creates the thumbnail route for serving the :uuid thumbnail image.
 fn create_thumbnail_route_with_uuid(
+    shared_db_manager: Arc<Mutex<DbManager>>,
 ) -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
     warp::path!("thumbnail" / String).and(warp::get()).map(move |uuid: String| {
-        warp::reply::with_header(get_thumbnail(uuid.as_str()), "Content-Type", "image/png")
-            .into_response()
+        match shared_db_manager.lock() {
+            Ok(db_manager) => {
+                warp::reply::with_header(get_thumbnail(db_manager, uuid.as_str()), "Content-Type", "image/png")
+                    .into_response()
+            }
+            Err(_) => {
+                // Redirect to default image on Imgur
+                warp::redirect::temporary(Uri::from_static("https://i.imgur.com/1bJ0j6V.png"))
+                    .into_response()
+            }
+        }
     })
 }
 
 /// Creates the wallpaper route for serving the :uuid wallpaper image.
 fn create_wallpaper_route_with_uuid(
+    shared_db_manager: Arc<Mutex<DbManager>>,
 ) -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
     warp::path!("wallpaper" / String).and(warp::get()).map(move |uuid: String| {
-        warp::reply::with_header(get_wallpaper(uuid.as_str()), "Content-Type", "image/png")
-            .into_response()
+        match shared_db_manager.lock() {
+            Ok(db_manager) => {
+                warp::reply::with_header(get_wallpaper(db_manager, uuid.as_str()), "Content-Type", "image/png")
+                    .into_response()
+            }
+            Err(_) => {
+                // Redirect to default image on Imgur
+                warp::redirect::temporary(Uri::from_static("https://i.imgur.com/1bJ0j6V.png"))
+                    .into_response()
+            }
+        }
     })
 }
 
