@@ -502,7 +502,7 @@ pub fn get_genres_not_in_vec(db_manager: State<'_, Arc<Mutex<DbManager>>>, uuids
 }
 
 #[tauri::command]
-pub fn add_new_wallpaper_to_db(db_manager: State<'_, Arc<Mutex<DbManager>>>, wallpaper: String) -> Result<String, String> {
+pub async fn add_new_wallpaper_to_db(db_manager: State<'_, Arc<Mutex<DbManager>>>, wallpaper: String) -> Result<String, String> {
     let image = match decode_image_in_parallel(&wallpaper) {
         Ok(image) => image,
         Err(_) => {
