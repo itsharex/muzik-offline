@@ -14,7 +14,7 @@ const variants_cover_hidden = {large: { width: "250px", height: "250px"},small: 
 type LargeResizableCoverProps = {
     id: string | undefined;
     resizeHeader: boolean;
-    cover: string | null;
+    cover: string | null | undefined;
 }
 
 const LargeResizableCover = (props: LargeResizableCoverProps) => {

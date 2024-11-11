@@ -50,7 +50,10 @@ pub fn detect_deleted_songs(db_manager: State<'_, Arc<Mutex<DbManager>>>) -> Res
     }
 
     match delete_uuids.len() {
-        0 => Ok("No deleted songs detected".to_string()),
+        0 => {
+            let empty_vec_as_json = serde_json::to_string(&delete_uuids).unwrap_or("Error serializing deleted songs".to_string());
+            Ok(empty_vec_as_json)
+        },
         _ => {
             let delete_uuids_as_json = serde_json::to_string(&delete_uuids).unwrap_or("Error serializing deleted songs".to_string());
             Ok(delete_uuids_as_json)

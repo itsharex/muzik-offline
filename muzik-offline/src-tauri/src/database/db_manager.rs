@@ -11,7 +11,6 @@ pub struct DbManager {
     pub covers_tree: RwLock<Tree>,
     pub thumbnails_tree: RwLock<Tree>,
     pub wallpapers_tree: RwLock<Tree>,
-    pub playlists_tree: RwLock<Tree>,
 }
 
 impl DbManager {
@@ -31,7 +30,6 @@ impl DbManager {
         let covers_tree = db.open_tree(b"covers").map_err(|e| e.to_string())?;
         let thumbnails_tree = db.open_tree(b"thumbnails").map_err(|e| e.to_string())?;
         let wallpapers_tree = db.open_tree(b"wallpapers").map_err(|e| e.to_string())?;
-        let playlists_tree = db.open_tree(b"playlists").map_err(|e| e.to_string())?;
 
         Ok(DbManager {
             song_tree: RwLock::new(song_tree),
@@ -41,7 +39,6 @@ impl DbManager {
             covers_tree: RwLock::new(covers_tree),
             thumbnails_tree: RwLock::new(thumbnails_tree),
             wallpapers_tree: RwLock::new(wallpapers_tree),
-            playlists_tree: RwLock::new(playlists_tree),
         })
     }
 }

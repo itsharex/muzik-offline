@@ -103,7 +103,8 @@ export interface artist {
 
 export interface playlist {
     key: number;
-    cover: any | null;
+    uuid: string;
+    cover: string | null;
     title: string;
     dateCreated: string;
     dateEdited: string;

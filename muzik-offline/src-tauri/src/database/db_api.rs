@@ -502,6 +502,63 @@ pub fn get_genres_not_in_vec(db_manager: State<'_, Arc<Mutex<DbManager>>>, uuids
 }
 
 #[tauri::command]
+pub async fn create_playlist_cover(db_manager: State<'_, Arc<Mutex<DbManager>>>, playlist_name: String, cover: String, compress_image: bool) -> Result<String, String>{
+    let image_as_bytes = match decode_image_in_parallel(&cover) {
+        Ok(image) => image,
+        Err(_) => {
+            return Err(String::from("error decoding image"));
+        }
+    };
+    
+    if compress_image {
+        match resize_and_compress_image(&image_as_bytes, &250) {
+            Some(thumbnail) => {
+                match insert_into_covers_tree(db_manager.clone(), thumbnail, &playlist_name) {
+                    uuid => {
+                        return Ok(uuid.to_string());
+                    }
+                }
+            }
+            None => {
+                return Err(String::from("error resizing image"));
+            }
+        }
+    } else {
+        match insert_into_covers_tree(db_manager.clone(), image_as_bytes, &playlist_name) {
+            uuid => {
+                return Ok(uuid.to_string());
+            }
+        }
+    }
+}
+
+#[tauri::command]
+pub fn delete_playlist_cover(db_manager: State<'_, Arc<Mutex<DbManager>>>, playlist_name: String) -> String{
+    match db_manager.lock() {
+        Ok(dbm) => {
+            let covers_tree = match dbm.covers_tree.write() {
+                Ok(tree) => tree,
+                Err(_) => {
+                    return String::from("{\"status\":\"error\",\"message\":\"error getting covers tree\",\"data\":[]}");
+                }
+            };
+
+            match covers_tree.remove(uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_URL, playlist_name.as_bytes()).to_string()) {
+                Ok(_) => {
+                    return String::from("{\"status\":\"success\",\"message\":\"\",\"data\":[]}");
+                }
+                Err(_) => {
+                    return String::from("{\"status\":\"error\",\"message\":\"error removing cover from covers tree\",\"data\":[]}");
+                }
+            }
+        }
+        Err(_) => {
+            return String::from("{\"status\":\"error\",\"message\":\"error getting db manager\",\"data\":[]}");
+        }
+    }
+}
+
+#[tauri::command]
 pub async fn add_new_wallpaper_to_db(db_manager: State<'_, Arc<Mutex<DbManager>>>, wallpaper: String) -> Result<String, String> {
     let image = match decode_image_in_parallel(&wallpaper) {
         Ok(image) => image,
@@ -553,6 +610,44 @@ pub async fn add_new_wallpaper_to_db(db_manager: State<'_, Arc<Mutex<DbManager>>
         }
         Err(_) => {
             return Err(String::from("error getting db manager"));
+        }
+    }
+}
+
+#[tauri::command]
+pub fn delete_thumbnail_and_wallpaper(db_manager: State<'_, Arc<Mutex<DbManager>>>, uuid: String) -> String {
+    match db_manager.lock() {
+        Ok(dbm) => {
+            let thumbnail_tree = match dbm.thumbnails_tree.write() {
+                Ok(tree) => tree,
+                Err(_) => {
+                    return String::from("{\"status\":\"error\",\"message\":\"error getting thumbnail tree\",\"data\":[]}");
+                }
+            };
+
+            let wallpaper_tree = match dbm.wallpapers_tree.write() {
+                Ok(tree) => tree,
+                Err(_) => {
+                    return String::from("{\"status\":\"error\",\"message\":\"error getting wallpaper tree\",\"data\":[]}");
+                }
+            };
+
+            match thumbnail_tree.remove(&uuid) {
+                Ok(_) => {}
+                Err(_) => {}
+            }
+
+            match wallpaper_tree.remove(&uuid) {
+                Ok(_) => {
+                    return String::from("{\"status\":\"success\",\"message\":\"\",\"data\":[]}");
+                }
+                Err(_) => {
+                    return String::from("{\"status\":\"error\",\"message\":\"error removing wallpaper from wallpaper tree\",\"data\":[]}");
+                }
+            }
+        }
+        Err(_) => {
+            return String::from("{\"status\":\"error\",\"message\":\"error getting db manager\",\"data\":[]}");
         }
     }
 }

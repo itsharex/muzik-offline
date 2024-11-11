@@ -32,6 +32,8 @@ export enum reducerType {
     SET_SONG_QUEUE = "SET_SONG_QUEUE",
     SET_SONG_HISTORY = "SET_SONG_HISTORY",
     SET_KEY_INDEX_SONG_QUEUE = "SET_KEY_INDEX_SONG_QUEUE",
+    ADD_PLAYLIST = "ADD_PLAYLIST",
+    REMOVE_PLAYLIST = "REMOVE_PLAYLIST",
 }
 
 export type Action =
@@ -65,6 +67,8 @@ export type Action =
     | { type: reducerType.SET_SONG_QUEUE; payload: Song[] }
     | { type: reducerType.SET_SONG_HISTORY; payload: Song[] }
     | { type: reducerType.SET_KEY_INDEX_SONG_QUEUE; payload: {key: number, index: number, queueType: "SongQueue" | "SongHistory"} }
+    | { type: reducerType.ADD_PLAYLIST; payload: playlist }
+    | { type: reducerType.REMOVE_PLAYLIST; payload: number }
 
 
 
