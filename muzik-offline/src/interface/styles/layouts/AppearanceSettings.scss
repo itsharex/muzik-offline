@@ -41,6 +41,15 @@
                 align-items: center;
                 justify-content: center;
                 font-size: 13px;
+                overflow: hidden;
+
+                img{
+                    display: inline;
+                    min-width: 100%;
+                    margin: 0 auto;
+                    height: 100%;
+                    object-fit: cover;
+                }
             }
 
             .button_selected{

@@ -130,7 +130,7 @@ const GenreView = () => {
                     <h2 style={{ marginTop: state.resizeHeader ? "25px" : "68px" }}>{state.genre_metadata.genreName}</h2>
                     { !state.resizeHeader &&
                         <>
-                            <h4>{state.genre_metadata.song_count} songs</h4>
+                            <h4>{state.genre_metadata.song_count} {state.genre_metadata.song_count === 1 ? "Song" : "Songs"}</h4>
                             <div className="action_buttons">
                                 <motion.div className="PlayIcon" whileHover={{scale: 1.02}} whileTap={{scale: 0.98}} onClick={() => playThisSong(-1)}>
                                     <Play />

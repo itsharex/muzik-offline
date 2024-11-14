@@ -17,9 +17,6 @@ import { listen } from "@tauri-apps/api/event";
 import { processOSMediaControlsEvent } from "@utils/OSeventControl";
 import { fetch_library, getWallpaperURL } from "@utils/index";
 import { local_songs_db } from "@database/database";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { LogicalSize } from "@tauri-apps/api/dpi";
-const appWindow = getCurrentWebviewWindow();
 
 const App = () => {
   const [openMiniPlayer, setOpenMiniPlayer] = useState<boolean>(false);
@@ -129,58 +126,6 @@ const App = () => {
     });
   }
 
-  async function changeMouseToResizeCursor(e: MouseEvent){
-    // if user goes within 2px of edge of window, the cursor will change to a resize cursor
-    const isFS = await appWindow.isFullscreen();
-    const isMaximised = await appWindow.isMaximized();
-    if(!openMiniPlayer && !isFS && !isMaximised){
-      if(e.clientX <= 1 || e.clientX >= window.innerWidth - 1 || e.clientY <= 1 || e.clientY >= window.innerHeight - 1){
-        if(e.clientX <= 1 || e.clientX >= window.innerWidth - 1){//if dragging from the left or right edge of the window
-          document.body.style.cursor = "ew-resize";
-        } else if(e.clientY <= 1 || e.clientY >= window.innerHeight - 1){//if dragging from the top or bottom edge of the window
-          document.body.style.cursor = "ns-resize";
-        } else if(e.clientX <= 1 && e.clientY <= 1){//if dragging from the top left corner of the window
-          document.body.style.cursor = "nw-resize";
-        } else if(e.clientX >= window.innerWidth - 1 && e.clientY <= 1){//if dragging from the top right corner of the window
-          document.body.style.cursor = "ne-resize";
-        } else if(e.clientX <= 1 && e.clientY >= window.innerHeight - 1){//if dragging from the bottom left corner of the window
-          document.body.style.cursor = "sw-resize";
-        } else if(e.clientX >= window.innerWidth - 1 && e.clientY >= window.innerHeight - 1){//if dragging from the bottom right corner of the window
-          document.body.style.cursor = "se-resize";
-        }
-      }
-      else{
-        document.body.style.cursor = "auto";
-      }
-    }
-  }
-
-  async function windowResizeHandler(e: MouseEvent){
-    if(!openMiniPlayer){
-      // if user goes within 1px of edge of window and clicks and drags, the window will resize
-      if(e.clientX <= 1 || e.clientX >= window.innerWidth - 1 || e.clientY <= 1 || e.clientY >= window.innerHeight - 1){
-        const physicalSize = await appWindow.innerSize();
-        if(e.clientY <= 1){//if dragging from the top edge of the window
-          appWindow.setSize(new LogicalSize(physicalSize.width, physicalSize.height - e.movementY));
-        } else if(e.clientY >= window.innerHeight - 1){//if dragging from the bottom edge of the window
-          appWindow.setSize(new LogicalSize(physicalSize.width, physicalSize.height + e.movementY));
-        } else if(e.clientX <= 1){//if dragging from the left edge of the window
-          appWindow.setSize(new LogicalSize(physicalSize.width - e.movementX, physicalSize.height));
-        } else if(e.clientX >= window.innerWidth - 1){//if dragging from the right edge of the window
-          appWindow.setSize(new LogicalSize(physicalSize.width + e.movementX, physicalSize.height));
-        } else if(e.clientX <= 1 && e.clientY <= 1){//if dragging from the top left corner of the window
-          appWindow.setSize(new LogicalSize(physicalSize.width - e.movementX, physicalSize.height - e.movementY));
-        } else if(e.clientX >= window.innerWidth - 1 && e.clientY <= 1){//if dragging from the top right corner of the window
-          appWindow.setSize(new LogicalSize(physicalSize.width + e.movementX, physicalSize.height - e.movementY));
-        } else if(e.clientX <= 1 && e.clientY >= window.innerHeight - 1){//if dragging from the bottom left corner of the window
-          appWindow.setSize(new LogicalSize(physicalSize.width - e.movementX, physicalSize.height + e.movementY));
-        } else if(e.clientX >= window.innerWidth - 1 && e.clientY >= window.innerHeight - 1){//if dragging from the bottom right corner of the window
-          appWindow.setSize(new LogicalSize(physicalSize.width + e.movementX, physicalSize.height + e.movementY));
-        }
-      }
-    }
-  }
-
   useEffect(() => {
     checkOSType();
     checkAndRequestNotificationPermission();
@@ -188,15 +133,9 @@ const App = () => {
     get_server_port();
     check_paths_for_new_music();
     check_if_paths_are_still_valid();
-    window.addEventListener("mousemove", changeMouseToResizeCursor);
-    window.addEventListener("mousedown", windowResizeHandler);
     const listenForOSeventsfunc = listenForOSevents();
 
-    return () => {
-      window.removeEventListener("mousemove", changeMouseToResizeCursor);
-      window.removeEventListener("mousedown", windowResizeHandler);
-      listenForOSeventsfunc.then((unlisten) => unlisten());
-    }
+    return () => { listenForOSeventsfunc.then((unlisten) => unlisten()); }
   }, [])
 
   return (

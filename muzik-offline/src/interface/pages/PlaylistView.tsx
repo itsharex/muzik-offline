@@ -178,7 +178,7 @@ const PlaylistView = () => {
                     <h2 style={{ marginTop: state.resizeHeader ? "25px" : "68px" }}>{state.playlist_metadata.playlist_data?.title}</h2>
                     { !state.resizeHeader &&
                         <>
-                            <h4>{state.playlist_metadata.song_count} {state.playlist_metadata.song_count > 1 || state.playlist_metadata.song_count === 0 ? "songs" : "song"}</h4>
+                            <h4>{state.playlist_metadata.song_count} {state.playlist_metadata.song_count === 1 ? "song" : "songs"}</h4>
                             <div className="action_buttons">
                                 <motion.div className="PlayIcon" whileHover={{scale: 1.02}} whileTap={{scale: 0.98}} onClick={() => playThisSong(-1)}>
                                     <Play /><p>play</p>

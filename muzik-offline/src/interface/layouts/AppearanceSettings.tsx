@@ -5,6 +5,7 @@ import { ArrowRefresh, CancelRight } from "@assets/icons";
 import { useSavedObjectStore, useWallpaperStore } from "@store/index";
 import { OSTYPEenum } from "@muziktypes/index";
 import { FunctionComponent } from "react";
+import { getThumbnailURL } from "@utils/index";
 
 const accentColurs: string[] = ["saucy", "salmon", "violet","gloss", "lipstick", "lime", "grass",
     "sunny", "ubuntu", "blueberry", "sky", "midnight", "blinding"]
@@ -66,7 +67,7 @@ const AppearanceSettings: FunctionComponent<AppearanceSettingsProps> = (props: A
                     whileHover={{scale: 1.03}} 
                     whileTap={{scale: 0.98}}
                     onClick={() => { props.openModal() }}>
-                        add/change wallpaper
+                        {wallpaperUUID ? <img src={getThumbnailURL(wallpaperUUID)} alt="thumbnail-image" /> : <>add/change wallpaper</>}
                     </motion.div>
                     <motion.div 
                         className={"button_select black_linear " + (local_store.BGColour === "black_linear" ? "button_selected" : "")}
