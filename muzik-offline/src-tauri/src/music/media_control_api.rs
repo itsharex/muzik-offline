@@ -1,24 +1,31 @@
+use std::{sync::{Arc, Mutex}, time::Duration};
+
 use crate::{
     components::{audio_manager::BackendStateManager, event_payload::Payload},
     database::{db_api::get_song_from_tree, db_manager::DbManager},
     utils::general_utils::get_song_cover_as_bytes,
+    app::window,
 };
-use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, MediaPlayback, PlatformConfig}; //, MediaPosition};
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
-use tauri::{Emitter, State, Window};
 
-pub fn config_mca(window: &Window) -> Option<MediaControls> {
+use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, MediaPlayback, PlatformConfig};
+
+use tauri::{AppHandle, Emitter, State};
+
+pub fn config_mca() -> Option<MediaControls> {
     #[cfg(not(target_os = "windows"))]
     let hwnd: Option<*mut c_void> = None;
 
     // map(|handle| handle as *mut std::os::raw::c_void)
     #[cfg(target_os = "windows")]
-    let hwnd: Option<*mut std::os::raw::c_void> = match window.hwnd() {
-        Ok(handle) => Some(handle.0 as *mut std::os::raw::c_void),
-        Err(_) => None,
+    let hwnd = {
+        let window = match window::windows::Window::new(){
+            Ok(window) => window,
+            Err(err) => {
+                println!("Failed to create dummy window: {:?}", err);
+                return None;
+            }
+        };
+        Some(window)
     };
 
     let config = PlatformConfig {
@@ -51,11 +58,11 @@ pub fn configure_media_controls(controls: &mut MediaControls, cover_url: &str) {
     }
 }
 
-pub fn event_handler(window: &Window, event: &MediaControlEvent) {
+pub fn event_handler(app: &AppHandle, event: &MediaControlEvent) {
     match event {
         MediaControlEvent::Play => {
             // emit play event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(MediaControlEvent::Play, None, None, None, None),
             ) {
@@ -65,7 +72,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::Pause => {
             // emit pause event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(MediaControlEvent::Pause, None, None, None, None),
             ) {
@@ -75,7 +82,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::Next => {
             // emit next event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(MediaControlEvent::Next, None, None, None, None),
             ) {
@@ -85,7 +92,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::Previous => {
             // emit previous event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(MediaControlEvent::Previous, None, None, None, None),
             ) {
@@ -95,7 +102,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::Stop => {
             // emit stop event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(MediaControlEvent::Stop, None, None, None, None),
             ) {
@@ -105,7 +112,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::Seek(sd) => {
             // emit seek event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(MediaControlEvent::Seek(*sd), Some(*sd), None, None, None),
             ) {
@@ -115,7 +122,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::SeekBy(sd, duration) => {
             // emit seek by event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(
                     MediaControlEvent::SeekBy(*sd, *duration),
@@ -131,7 +138,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::SetPosition(mp) => {
             // emit set position event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(
                     MediaControlEvent::SetPosition(*mp),
@@ -147,7 +154,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::SetVolume(volume) => {
             // emit set volume event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(
                     MediaControlEvent::SetVolume(*volume),
@@ -163,7 +170,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::OpenUri(uri) => {
             // emit open uri event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(
                     MediaControlEvent::OpenUri(uri.clone()),
@@ -179,7 +186,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::Raise => {
             // emit raise event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(MediaControlEvent::Raise, None, None, None, None),
             ) {
@@ -189,7 +196,7 @@ pub fn event_handler(window: &Window, event: &MediaControlEvent) {
         }
         MediaControlEvent::Quit => {
             // emit quit event to window but don't crash/expect error if it fails we will just ignore the event request
-            match window.emit(
+            match app.emit(
                 "os-media-controls",
                 Payload::new(MediaControlEvent::Quit, None, None, None, None),
             ) {

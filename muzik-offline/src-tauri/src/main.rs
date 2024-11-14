@@ -151,10 +151,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     ) = mpsc::channel(32);
     let shared_audio_manager = Arc::clone(&app.state::<Arc<Mutex<BackendStateManager>>>());
     let shared_db_manager = Arc::clone(&app.state::<Arc<Mutex<DbManager>>>());
-    let window = app
-        .app_handle()
-        .get_window("main")
-        .expect("failed to get window");
+    let window = app.handle().clone();
 
     // Set up the image route
     let cover_image_route = create_image_route(shared_audio_manager.clone());
@@ -181,7 +178,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         .cover_url = format!("http://localhost:{}/cover", port);
 
     // Set up media controls
-    let mut controls = config_mca(&window).expect("Failed to initialize media controls");
+    let mut controls = config_mca().expect("Failed to initialize media controls");
     setup_media_controls(&mut controls, tx.clone(), port);
 
     // Set port in shared audio manager
@@ -302,4 +299,13 @@ fn setup_media_controls(
         controls,
         &format!("http://localhost:{}/cover", port).to_owned(),
     );
+}
+
+/// Collect args from the command line and return them as a vector of strings.
+fn collect_args(window: &Apphandle) {
+    let args = std::env::args().collect();
+    if args.len() > 1 {
+        let audio_file_path = &args[1];
+        window.emit("loadSong", audio_file_path).expect("failed to emit loadSong");
+    }
 }
