@@ -26,7 +26,6 @@
         ],
         "name": "Music File",
         "description": "Music file",
-        "icon": "icons/128x128.png",
         "mimeType": "audio/*",
         "role": "Editor"
       }

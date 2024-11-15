@@ -27,7 +27,7 @@ use warp::{http::Uri, reply::Response, Filter, Reply};
 
 use std::sync::{Arc, Mutex};
 use tauri::async_runtime::{self, spawn};
-use tauri::Manager;
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::mpsc;
 
 use crate::app::controller::{drag_app_window, toggle_app_pin, toggle_miniplayer_view};
@@ -199,6 +199,9 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
             event_handler(&window, &event);
         }
     });
+
+    // Collect args from the command line
+    collect_args(app.handle());
     Ok(())
 }
 
@@ -302,10 +305,10 @@ fn setup_media_controls(
 }
 
 /// Collect args from the command line and return them as a vector of strings.
-fn collect_args(window: &Apphandle) {
-    let args = std::env::args().collect();
+fn collect_args(app: &AppHandle) {
+    let args: Vec<String> = std::env::args().collect();
     if args.len() > 1 {
         let audio_file_path = &args[1];
-        window.emit("loadSong", audio_file_path).expect("failed to emit loadSong");
+        app.emit("loadSong", audio_file_path).expect("failed to emit loadSong");
     }
 }

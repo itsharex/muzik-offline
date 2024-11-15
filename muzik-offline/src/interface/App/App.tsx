@@ -17,6 +17,7 @@ import { listen } from "@tauri-apps/api/event";
 import { processOSMediaControlsEvent } from "@utils/OSeventControl";
 import { fetch_library, getWallpaperURL } from "@utils/index";
 import { local_songs_db } from "@database/database";
+import { startPlayingNewSong } from "@utils/playerControl";
 
 const App = () => {
   const [openMiniPlayer, setOpenMiniPlayer] = useState<boolean>(false);
@@ -126,7 +127,15 @@ const App = () => {
     });
   }
 
+  function request_song(){
+    listen<String>("loadSong", async(path) => {
+      const song = await local_songs_db.songs.where("path").equals(path.payload.toString()).first();
+      if(song)await startPlayingNewSong(song);
+    });
+  }
+
   useEffect(() => {
+    request_song();
     checkOSType();
     checkAndRequestNotificationPermission();
     connect_to_discord();
