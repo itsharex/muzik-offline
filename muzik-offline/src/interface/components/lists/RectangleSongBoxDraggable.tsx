@@ -32,7 +32,7 @@ const RectangleSongBoxDraggable = (props: RectangleSongBoxDraggableProps) => {
                                     key={song.id}
                                     keyV={song.id}
                                     index={index + 1} 
-                                    cover={song.cover} 
+                                    cover={song.cover_uuid} 
                                     songName={song.name} 
                                     artist={song.artist}
                                     length={song.duration} 

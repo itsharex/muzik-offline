@@ -30,6 +30,7 @@ const GenreView = () => {
     function chooseOption(arg: contextMenuButtons){
         if(arg === contextMenuButtons.ShowInfo){ dispatch({ type: reducerType.SET_PROPERTIES_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.AddToPlaylist){ dispatch({ type: reducerType.SET_PLAYLIST_MODAL, payload: true}); }
+        else if(arg === contextMenuButtons.EditSong){ dispatch({ type: reducerType.SET_EDIT_SONG_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.PlayNext && state.songMenuToOpen){ 
             addThisSongToPlayNext([state.songMenuToOpen.id]);
             closeContextMenu(dispatch); 
@@ -129,7 +130,7 @@ const GenreView = () => {
                     <h2 style={{ marginTop: state.resizeHeader ? "25px" : "68px" }}>{state.genre_metadata.genreName}</h2>
                     { !state.resizeHeader &&
                         <>
-                            <h4>{state.genre_metadata.song_count} songs</h4>
+                            <h4>{state.genre_metadata.song_count} {state.genre_metadata.song_count === 1 ? "Song" : "Songs"}</h4>
                             <div className="action_buttons">
                                 <motion.div className="PlayIcon" whileHover={{scale: 1.02}} whileTap={{scale: 0.98}} onClick={() => playThisSong(-1)}>
                                     <Play />
@@ -156,7 +157,7 @@ const GenreView = () => {
                                 key={song.id}
                                 keyV={song.id}
                                 index={index + 1}
-                                cover={song.cover}
+                                cover={song.cover_uuid}
                                 songName={song.name}
                                 artist={song.artist}
                                 length={song.duration}

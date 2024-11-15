@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize)]
 pub struct Song {
     pub id: i32,
+    pub uuid: Uuid,
     pub title: String,
     pub name: String,
     pub artist: String,
@@ -12,7 +14,7 @@ pub struct Song {
     pub duration: String,
     pub duration_seconds: u64,
     pub path: String,
-    pub cover: Option<String>,
+    pub cover_uuid: Option<String>,
     pub date_recorded: String,
     pub date_released: String,
     pub file_size: u64,

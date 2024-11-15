@@ -10,6 +10,7 @@ import { AllPlaylistsState, allPlaylistsReducer } from "@store/reducerStore";
 import { reducerType } from "@store/index";
 import { closeContextMenu, closeCreatePlaylistModal, closeDeletePlaylistModal, closePlaylistModal, closePropertiesModal, setOpenedDDM } from "@utils/reducerUtils";
 import { addTheseSongsToPlayNext, addTheseSongsToPlayLater, playTheseSongs } from "@utils/playerControl";
+import { invoke } from "@tauri-apps/api/core";
 
 const AllPlaylists = () => {
     const [state , dispatch] = useReducer(allPlaylistsReducer, AllPlaylistsState);
@@ -57,11 +58,26 @@ const AllPlaylists = () => {
     }
 
     async function shouldDeletePlaylist(deletePlaylist: boolean){
-        if(deletePlaylist && state.playlistMenuToOpen)await local_playlists_db.playlists.delete(state.playlistMenuToOpen.key);
+        if(deletePlaylist && state.playlistMenuToOpen){
+            await local_playlists_db.playlists.delete(state.playlistMenuToOpen.key);
+            dispatch({ type: reducerType.REMOVE_PLAYLIST, payload: state.playlistMenuToOpen.key});
+            await invoke("delete_playlist_cover", {playlistName: state.playlistMenuToOpen.title}).then(() => {});
+        }
         closeDeletePlaylistModal(dispatch);
     }
 
-    useEffect(() => { setList(); }, [state.sort, state.isCreatePlaylistModalOpen, state.isDeletePlayListModalOpen])
+    function addPlaylistToList(key: number | undefined){
+        if(key){
+            local_playlists_db.playlists.where("key").equals(key).first().then((playlist) => {
+                if(playlist){
+                    dispatch({ type: reducerType.ADD_PLAYLIST, payload: playlist });
+                }
+            });
+        }
+        closeCreatePlaylistModal(dispatch);
+    }
+
+    useEffect(() => { setList(); }, [state.sort])
     
     return (
         <motion.div className="AllPlaylists"
@@ -126,7 +142,7 @@ const AllPlaylists = () => {
                 )
             }
             <div className="bottom_margin"/>
-            <CreatePlaylistModal isOpen={state.isCreatePlaylistModalOpen} closeModal={() => closeCreatePlaylistModal(dispatch)}/>
+            <CreatePlaylistModal isOpen={state.isCreatePlaylistModalOpen} closeModal={addPlaylistToList}/>
             <PropertiesModal isOpen={state.isPropertiesModalOpen} playlist={state.playlistMenuToOpen ? state.playlistMenuToOpen : undefined} 
                 closeModal={() => closePropertiesModal(dispatch)}/>
             <AddSongsToPlaylistModal 

@@ -1,7 +1,9 @@
 use base64::{engine::general_purpose, Engine as _};
 use image::imageops::FilterType;
 use rayon::prelude::*;
+use tauri::State;
 use std::net::TcpListener;
+use std::sync::{Arc, Mutex};
 use std::{io::Cursor, path::Path};
 
 use crate::components::song::Song;
@@ -10,6 +12,8 @@ use crate::constants::null_cover_null::NULL_COVER_NULL;
 use crate::constants::null_cover_one::NULL_COVER_ONE;
 use crate::constants::null_cover_three::NULL_COVER_THREE;
 use crate::constants::null_cover_two::NULL_COVER_TWO;
+use crate::database::db_api::get_image_from_tree;
+use crate::database::db_manager::DbManager;
 
 pub fn duration_to_string(duration: &u64) -> String {
     let seconds = duration;
@@ -162,14 +166,17 @@ pub fn check_with_lofty(path: &Path) -> Result<bool, Box<dyn std::error::Error>>
     Ok(false)
 }
 
-pub fn get_song_cover_as_bytes(song: &Song, key: i32) -> Vec<u8> {
-    match &song.cover {
-        Some(cover) => match decode_image_in_parallel(&cover) {
-            Ok(cover) => {
-                return cover;
-            }
-            Err(_) => {
-                return Vec::new();
+pub fn get_song_cover_as_bytes(db_manager: State<'_, Arc<Mutex<DbManager>>>, song: &Song, key: i32) -> Vec<u8> {
+    match &song.cover_uuid {
+        Some(cover_uuid) => 
+        {
+            match db_manager.lock() {
+                Ok(db_manager) => {
+                    return get_image_from_tree(db_manager, cover_uuid.as_str())
+                },
+                Err(_) => {
+                    return Vec::new()
+                }
             }
         },
         None => match key {

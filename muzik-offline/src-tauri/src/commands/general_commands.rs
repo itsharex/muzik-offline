@@ -1,8 +1,9 @@
-use crate::utils::general_utils::{
+use crate::{components::audio_manager::BackendStateManager, utils::general_utils::{
     decode_image_in_parallel, encode_image_in_parallel, resize_and_compress_image,
-};
+}};
 use dirs::audio_dir;
-use std::process::Command;
+use tauri::State;
+use std::{process::Command, sync::{Arc, Mutex}};
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 //#[tauri::command]
@@ -15,6 +16,18 @@ use std::process::Command;
 #[tauri::command]
 pub fn open_in_file_manager(file_path: &str) {
     open_file_at(&file_path);
+}
+
+#[tauri::command]
+pub fn get_server_port(audio_manager: State<'_, Arc<Mutex<BackendStateManager>>>) -> u16{
+    match audio_manager.lock() {
+        Ok(audio_manager) => {
+            return audio_manager.port;
+        }
+        Err(_) => {
+            return 0;
+        }
+    }
 }
 
 #[tauri::command]

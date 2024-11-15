@@ -16,7 +16,21 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "longDescription": "A desktop music player for listening to music offline that is downloaded onto your computer in the form of mp3, wav, ogg files etc.",
+    "fileAssociations": [
+      {
+        "ext": [
+          "mp3",
+          "wav",
+          "ogg",
+          "flac"
+        ],
+        "name": "Music File",
+        "description": "Music file",
+        "mimeType": "audio/*",
+        "role": "Editor"
+      }
+    ],
+    "longDescription": "A desktop music player for listening to music offline that is downloaded onto your computer in the form of mp3, wav, ogg, flac files etc.",
     "shortDescription": "A desktop music player for listening to music offline.",
     "linux": {
       "deb": {
@@ -44,6 +58,7 @@
         "titleBarStyle": "Transparent",
         "decorations": false,
         "transparent": true,
+        "shadow": false,
         "center": true
       }
     ],

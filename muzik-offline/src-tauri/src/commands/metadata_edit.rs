@@ -2,28 +2,44 @@ use id3::{Content, Frame, TagLike, Timestamp};
 use lofty::Accessor;
 use lofty::TaggedFileExt;
 
+use crate::database::db_api::insert_into_album_tree;
+use crate::database::db_api::insert_into_artist_tree;
+use crate::database::db_api::insert_into_covers_tree;
+use crate::database::db_api::insert_into_genre_tree;
 use crate::database::db_api::insert_song_into_tree;
 use crate::{components::song::Song, utils::general_utils::decode_image_in_parallel};
 
+use std::sync::{Arc, Mutex};
+use tauri::State;
+
+use crate::database::db_manager::DbManager;
+
 #[tauri::command]
 pub fn edit_song_metadata(
+    db_manager: State<'_, Arc<Mutex<DbManager>>>,
     song_path: String,
     song_metadata: String,
     has_changed_cover: bool,
+    cover: String
 ) -> Result<String, String> {
     //convert song_metadata to Song using serde_json
     match serde_json::from_str::<Song>(&song_metadata) {
-        Ok(song) => {
-            if let Ok(()) = edit_metadata_id3(&song_path, &song, &has_changed_cover) {
-                match insert_song_into_tree(song) {
-                    Ok(_) => Ok(format!("Metadata edited successfully")),
-                    Err(_) => Err(format!("Error saving song edits")),
+        Ok(mut song) => {
+            if let Ok(cov_as_vec) = edit_metadata_id3(&song_path, &song, &has_changed_cover, &cover) {
+                if has_changed_cover == true {
+                    song.cover_uuid = Some(insert_into_covers_tree(db_manager.clone(), cov_as_vec, &song.path).to_string());
                 }
+                insert_song_into_tree(db_manager.clone(), &song);
+                insert_into_album_tree(db_manager.clone(), &song);
+                insert_into_artist_tree(db_manager.clone(), &song);
+                insert_into_genre_tree(db_manager.clone(), &song);
+                Ok(song.cover_uuid.unwrap_or("Error acquiring cover uuid".to_string()))
             } else if let Ok(()) = edit_metadata_lofty(&song_path, &song) {
-                match insert_song_into_tree(song) {
-                    Ok(_) => Ok(format!("Metadata edited successfully")),
-                    Err(_) => Err(format!("Error saving song edits")),
-                }
+                insert_song_into_tree(db_manager.clone(), &song);
+                insert_into_album_tree(db_manager.clone(), &song);
+                insert_into_artist_tree(db_manager.clone(), &song);
+                insert_into_genre_tree(db_manager.clone(), &song);
+                Ok(song.cover_uuid.unwrap_or("Error acquiring cover uuid".to_string()))
             } else {
                 Err(format!("Error editing metadata"))
             }
@@ -58,13 +74,15 @@ fn edit_metadata_id3(
     song_path: &String,
     song: &Song,
     has_changed_cover: &bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+    cover: &String
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let mut tag = id3::Tag::read_from_path(song_path)?;
+    let mut cov_as_vec = Vec::new();
     set_title_id3(&mut tag, song);
     set_artist_id3(&mut tag, song);
     set_album_id3(&mut tag, song);
     if *has_changed_cover == true {
-        set_cover_id3(&mut tag, song);
+        cov_as_vec = set_cover_id3(&mut tag, cover);
     }
     set_genre_id3(&mut tag, song);
     set_year_id3(&mut tag, song);
@@ -72,7 +90,7 @@ fn edit_metadata_id3(
     tag.set_date_released(create_timestamp(&song.date_released));
 
     match tag.write_to_path(song_path, id3::Version::Id3v24) {
-        Ok(_) => Ok(()),
+        Ok(_) => Ok(cov_as_vec),
         Err(_) => Err("Error writing to file".into()),
     }
 }
@@ -278,24 +296,25 @@ fn set_year_lofty(tag: &mut lofty::Tag, song_meta_data: &Song) {
     }
 }
 
-fn set_cover_id3(tag: &mut id3::Tag, song_meta_data: &Song) {
+fn set_cover_id3(tag: &mut id3::Tag, cover: &String) -> Vec<u8> {
     //COVER
-    if let Some(cover) = &song_meta_data.cover {
-        match decode_image_in_parallel(cover) {
-            Ok(cover_as_vec) => {
-                tag.add_frame(Frame::with_content(
-                    "APIC",
-                    Content::Picture(id3::frame::Picture {
-                        mime_type: "image/jpeg".to_string(),
-                        picture_type: id3::frame::PictureType::CoverFront,
-                        description: "Cover".to_string(),
-                        data: cover_as_vec,
-                    }),
-                ));
-            }
-            Err(_) => {
-                //do nothing
-            }
+    match decode_image_in_parallel(cover) {
+        Ok(cover_as_vec) => {
+            tag.add_frame(Frame::with_content(
+                "APIC",
+                Content::Picture(id3::frame::Picture {
+                    mime_type: "image/jpeg".to_string(),
+                    picture_type: id3::frame::PictureType::CoverFront,
+                    description: "Cover".to_string(),
+                    data: cover_as_vec.clone(),
+                }),
+            ));
+
+            cover_as_vec
+        }
+        Err(_) => {
+            //do nothing
+            Vec::new()
         }
     }
 }

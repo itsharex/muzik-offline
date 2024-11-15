@@ -6,7 +6,7 @@ import { HistoryUpcoming, MainMusicPlayer } from "@components/index";
 import { OSTYPEenum } from "@muziktypes/index";
 import { Minimize, NullCoverNull, Overlap } from "@icons/index";
 import { useSavedObjectStore, usePlayerStore, useIsFSStore } from "store";
-import { getRandomCover } from "utils";
+import { getCoverURL, getRandomCover } from "utils";
 const appWindow = getCurrentWebviewWindow()
 
 type FSMusicPlayerProps = {
@@ -75,9 +75,9 @@ const FSMusicPlayer: FunctionComponent<FSMusicPlayerProps> = (props: FSMusicPlay
                                 variants={variants_list_appearance}>
                                     {!Player.playingSongMetadata && <NullCoverNull />}
                                     {/**no song is loaded onto the player */}
-                                    {Player.playingSongMetadata && Player.playingSongMetadata.cover && (<img src={`data:image/png;base64,${Player.playingSongMetadata.cover}`} alt="song-art" loading="lazy"/>)}
+                                    {Player.playingSongMetadata && Player.playingSongMetadata.cover_uuid && (<img src={getCoverURL(Player.playingSongMetadata.cover_uuid)} alt="song-art" loading="lazy"/>)}
                                     {/**there is cover art */}
-                                    {Player.playingSongMetadata && !Player.playingSongMetadata.cover && (getRandomCover(Player.playingSongMetadata ? Player.playingSongMetadata.id : 0))()}
+                                    {Player.playingSongMetadata && !Player.playingSongMetadata.cover_uuid && (getRandomCover(Player.playingSongMetadata ? Player.playingSongMetadata.id : 0))()}
                                     {/**the cover art is null */}
                             </motion.div>}
                     </div>

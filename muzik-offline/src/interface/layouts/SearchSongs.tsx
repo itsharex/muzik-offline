@@ -26,6 +26,7 @@ const SearchSongs = () => {
     function chooseOption(arg: contextMenuButtons){
         if(arg === contextMenuButtons.ShowInfo){ dispatch({ type: reducerType.SET_PROPERTIES_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.AddToPlaylist){ dispatch({ type: reducerType.SET_PLAYLIST_MODAL, payload: true}); }
+        else if(arg === contextMenuButtons.EditSong){ dispatch({ type: reducerType.SET_EDIT_SONG_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.PlayNext && state.songMenuToOpen){ 
             addThisSongToPlayNext([state.songMenuToOpen.id]);
             closeContextMenu(dispatch); 
@@ -112,7 +113,7 @@ const SearchSongs = () => {
                         key={song.id}
                         keyV={song.id}
                         index={index + 1} 
-                        cover={song.cover} 
+                        cover={song.cover_uuid} 
                         songName={song.name} 
                         artist={song.artist}
                         length={song.duration} 

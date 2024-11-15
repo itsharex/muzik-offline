@@ -3,7 +3,7 @@ import "@styles/layouts/GeneralSettings.scss";
 import { SavedObject, viewableSideEl } from "@database/index";
 import { ChevronDown, Disk, LayersThree, Menu, Microphone, MusicalNote } from "@icons/index";
 import { OSTYPEenum, selectedGeneralSettingEnum, toastType } from "@muziktypes/index";
-import { FunctionComponent, useState } from "react";
+import { useState } from "react";
 import { DropDownMenuLarge, RadioComponent } from "@components/index";
 import { useSavedObjectStore, useViewableSideElStore, useToastStore } from "@store/index";
 import { invoke } from "@tauri-apps/api/core";
@@ -40,11 +40,8 @@ const settings_data: {
     }
 ]
 
-type GeneralSettingsProps = {
-    openDirectoryModal: () => void;
-}
 
-const GeneralSettings: FunctionComponent<GeneralSettingsProps> = (props: GeneralSettingsProps) => {
+const GeneralSettings = () => {
     const [selectedGeneralSetting, setselectedGeneralSetting] = useState<selectedGeneralSettingEnum>(selectedGeneralSettingEnum.Nothing);
     const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
     const {viewableEl, setviewableEl } = useViewableSideElStore((state) => { return { viewableEl: state.viewableEl, setviewableEl: state.setviewableEl}; });
@@ -132,12 +129,6 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = (props: General
                         null
                     )
                 }
-                <div className="setting">
-                    <h3>Directories</h3>
-                    <div className="directories_container">
-                        <motion.h4 whileTap={{scale: 0.98}} onClick={props.openDirectoryModal}>click here to change directories</motion.h4>
-                    </div>
-                </div>
                 <div className="setting">
                     <h3>Viewable side elements</h3>
                 </div>

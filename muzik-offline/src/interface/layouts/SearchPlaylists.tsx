@@ -6,6 +6,7 @@ import { local_playlists_db } from "@database/database";
 import { useSearchStore } from "@store/index";
 import { useNavigate } from "react-router-dom";
 import { addTheseSongsToPlayNext, addTheseSongsToPlayLater, playTheseSongs } from "@utils/playerControl";
+import { invoke } from "@tauri-apps/api/core";
 
 const SearchPlaylists = () => {
     const [co_ords, setCoords] = useState<mouse_coOrds>({xPos: 0, yPos: 0});
@@ -50,7 +51,11 @@ const SearchPlaylists = () => {
     }
 
     async function shouldDeletePlaylist(deletePlaylist: boolean){
-        if(deletePlaylist && playlistMenuToOpen)await local_playlists_db.playlists.delete(playlistMenuToOpen.key);
+        if(deletePlaylist && playlistMenuToOpen){
+            await local_playlists_db.playlists.delete(playlistMenuToOpen.key);
+            setPlaylists(playlists.filter(item => item.key !== playlistMenuToOpen.key));
+            await invoke("delete_playlist_cover", {playlistName: playlistMenuToOpen.title}).then(() => {});
+        }
         closeContextMenu();
         setIsDeletePlaylistModalOpen(false);
     }
@@ -69,7 +74,7 @@ const SearchPlaylists = () => {
         }
 
         resetPlaylists();
-    }, [query, isDeletePlaylistModalOpen])
+    }, [query])
 
     return (
         <div className="SearchPlaylists">
