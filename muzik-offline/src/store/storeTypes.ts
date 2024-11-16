@@ -4,6 +4,27 @@ import { SavedObject } from "@database/saved_object";
 import { viewableSideEl } from "@database/side_elements";
 import { SavedWallpaper } from "@database/wallpaper";
 import { AudioLabPreset, toast } from "@muziktypes/index";
+import { toast } from "@muziktypes/index";
+
+export interface MaximisedState {
+    isMaximised: boolean;
+    setMaximised: (nM: boolean) => void;
+}
+
+export interface firstRunState{
+    firstRun: boolean;
+    setFirstRun: (nFR: boolean) => void;
+}
+
+export interface portState{
+    port: number;
+    setPort: (nPort: number) => void;
+}
+
+export interface FSState{
+    isFS: boolean;
+    setFS: (nFS: boolean) => void;
+}
 
 export interface toastInterface{
     toastObject: toast | null;
@@ -17,8 +38,8 @@ export interface searchInterface{
 }
 
 export interface wallpaperInterface{
-    wallpaper: SavedWallpaper | null;
-    setWallpaper: (nW: SavedWallpaper) => void;
+    wallpaperUUID: string | null;
+    setWallpaper: (nW: string) => void;
     unsetWallpaper: () => void;
 }
 

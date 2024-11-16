@@ -12,6 +12,7 @@ export enum reducerType {
     SET_EDIT_PLAYLIST_MODAL = "SET_EDIT_PLAYLIST_MODAL",
     SET_CREATE_PLAYLIST_MODAL = "SET_CREATE_PLAYLIST_MODAL",
     SET_PROPERTIES_MODAL = "SET_PROPERTIES_MODAL",
+    SET_EDIT_SONG_MODAL = "SET_EDIT_SONG_MODAL",
     SET_DELETE_MODAL = "SET_DELETE_MODAL",
     SET_RESIZE_HEADER = "SET_RESIZE_HEADER",
     SET_SONG_LIST = "SET_SONG_LIST",
@@ -31,6 +32,8 @@ export enum reducerType {
     SET_SONG_QUEUE = "SET_SONG_QUEUE",
     SET_SONG_HISTORY = "SET_SONG_HISTORY",
     SET_KEY_INDEX_SONG_QUEUE = "SET_KEY_INDEX_SONG_QUEUE",
+    ADD_PLAYLIST = "ADD_PLAYLIST",
+    REMOVE_PLAYLIST = "REMOVE_PLAYLIST",
 }
 
 export type Action =
@@ -44,6 +47,7 @@ export type Action =
     | { type: reducerType.SET_EDIT_PLAYLIST_MODAL; payload: boolean }
     | { type: reducerType.SET_CREATE_PLAYLIST_MODAL; payload: boolean }
     | { type: reducerType.SET_PROPERTIES_MODAL; payload: boolean }
+    | { type: reducerType.SET_EDIT_SONG_MODAL; payload: boolean }
     | { type: reducerType.SET_DELETE_MODAL; payload: boolean }
     | { type: reducerType.SET_RESIZE_HEADER; payload: boolean }
     | { type: reducerType.SET_SONG_LIST; payload: Song[] }
@@ -63,6 +67,8 @@ export type Action =
     | { type: reducerType.SET_SONG_QUEUE; payload: Song[] }
     | { type: reducerType.SET_SONG_HISTORY; payload: Song[] }
     | { type: reducerType.SET_KEY_INDEX_SONG_QUEUE; payload: {key: number, index: number, queueType: "SongQueue" | "SongHistory"} }
+    | { type: reducerType.ADD_PLAYLIST; payload: playlist }
+    | { type: reducerType.REMOVE_PLAYLIST; payload: number }
 
 
 
@@ -82,6 +88,7 @@ export interface AllTracksStateInterface{
     songMenuToOpen: Song | null,
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
 }
 
 export interface SearchSongInterface{
@@ -92,6 +99,7 @@ export interface SearchSongInterface{
     songMenuToOpen: Song | null,
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
 }
 
 export interface AlbumDetailsInterface{
@@ -103,6 +111,7 @@ export interface AlbumDetailsInterface{
     songMenuToOpen: Song | null,
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
     resizeHeader: boolean;
 }
 
@@ -158,6 +167,7 @@ export interface GenreViewInterface{
     songMenuToOpen: Song | null,
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
     resizeHeader: boolean;
 }
 
@@ -186,6 +196,7 @@ export interface PlaylistViewInterface{
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
     isDeleteSongModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
     resizeHeader: boolean;
 }
 
@@ -197,5 +208,6 @@ export interface UpcomingHistoryInterface{
     SongHistory: Song[],
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
     kindex_sq: {key: number, index: number, queueType: "SongQueue" | "SongHistory"},
 }

@@ -4,26 +4,21 @@ import "@styles/layouts/AppearanceSettings.scss";
 import { ArrowRefresh, CancelRight } from "@assets/icons";
 import { useSavedObjectStore, useWallpaperStore } from "@store/index";
 import { OSTYPEenum } from "@muziktypes/index";
+import { FunctionComponent } from "react";
+import { getThumbnailURL } from "@utils/index";
 
 const accentColurs: string[] = ["saucy", "salmon", "violet","gloss", "lipstick", "lime", "grass",
     "sunny", "ubuntu", "blueberry", "sky", "midnight", "blinding"]
 
 const opacityAmount: string[] = ["0", "2", "4", "6", "8", "10"]
 
-const AppearanceSettings = () => {
-    const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
-    const { wallpaper, setWallpaper, unsetWallpaper } = useWallpaperStore((state) => { return { wallpaper: state.wallpaper, setWallpaper: state.setWallpaper, unsetWallpaper: state.unsetWallpaper }; });
+type AppearanceSettingsProps = {
+    openModal: () => void;
+}
 
-    function uploadImg(e: any){
-        const image = e.target.files[0];
-        const reader = new FileReader();
-        reader.readAsDataURL(image);
-        
-        reader.addEventListener('load', () => setWallpaper({DisplayWallpaper: reader.result}));
-        let temp: SavedObject = local_store;
-        temp.BGColour = "";
-        setStore(temp);
-    }
+const AppearanceSettings: FunctionComponent<AppearanceSettingsProps> = (props: AppearanceSettingsProps) => {
+    const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
+    const { wallpaperUUID, unsetWallpaper } = useWallpaperStore((state) => { return { wallpaperUUID: state.wallpaperUUID, unsetWallpaper: state.unsetWallpaper }; });
 
     function changeToBgCCOL(obj: string){
         let temp: SavedObject = local_store;
@@ -64,14 +59,16 @@ const AppearanceSettings = () => {
 
     return (
         <div className="AppearanceSettings">
-            <h2>Appearance</h2>
+            <h2>Appearance Settings</h2>
             <div className="AppearanceSettings_container">
                 <h3>Background</h3>
                 <div className="background_select">
-                    <motion.label className={"button_select add_wallpaper " + (wallpaper && wallpaper.DisplayWallpaper ? "button_selected" : "")} whileHover={{scale: 1.03}} whileTap={{scale: 0.98}}>
-                        <input name="background-img" type="file" accept="image/png, image/jpeg" onChange={uploadImg}/>
-                        add wallpaper
-                    </motion.label>
+                    <motion.div className={"button_select add_wallpaper " + (wallpaperUUID ? "button_selected" : "")} 
+                    whileHover={{scale: 1.03}} 
+                    whileTap={{scale: 0.98}}
+                    onClick={() => { props.openModal() }}>
+                        {wallpaperUUID ? <img src={getThumbnailURL(wallpaperUUID)} alt="thumbnail-image" /> : <>add/change wallpaper</>}
+                    </motion.div>
                     <motion.div 
                         className={"button_select black_linear " + (local_store.BGColour === "black_linear" ? "button_selected" : "")}
                         whileHover={{scale: 1.03}} 

@@ -1,4 +1,4 @@
-import { Song, album, artist, genre, playlist } from '@muziktypes/index';
+import { Song, album, artist, genre, playlist, wallpaper } from '@muziktypes/index';
 import Dexie, { Table } from 'dexie';
 
 export class SongsDexie extends Dexie {
@@ -9,7 +9,7 @@ export class SongsDexie extends Dexie {
     constructor() {
         super('SongsDatabase');
         this.version(1).stores({
-            songs: 'id,title,name,artist,album,genre,year,duration,duration_seconds,path,cover,date_recorded,date_released,file_size,file_type,overall_bit_rate,audio_bit_rate,sample_rate,bit_depth,channels' // Primary key and indexed props
+            songs: 'id,uuid,title,name,artist,album,genre,year,duration,duration_seconds,path,cover_uuid,date_recorded,date_released,file_size,file_type,overall_bit_rate,audio_bit_rate,sample_rate,bit_depth,channels' // Primary key and indexed props
         });
     }
 }
@@ -22,7 +22,7 @@ export class AlbumsDexie extends Dexie {
     constructor() {
         super('AlbumsDatabase');
         this.version(1).stores({
-            albums: 'key,cover,title' // Primary key and indexed props
+            albums: 'key,uuid,cover,title' // Primary key and indexed props
         });
     }
 }
@@ -35,7 +35,7 @@ export class ArtistsDexie extends Dexie {
     constructor() {
         super('ArtistsDatabase');
         this.version(1).stores({
-            artists: 'key,cover,artist_name' // Primary key and indexed props
+            artists: 'key,uuid,cover,artist_name' // Primary key and indexed props
         });
     }
 }
@@ -48,7 +48,7 @@ export class GenresDexie extends Dexie {
     constructor() {
         super('GenresDatabase');
         this.version(1).stores({
-            genres: 'key,cover,title' // Primary key and indexed props
+            genres: 'key,uuid,cover,title' // Primary key and indexed props
         });
     }
 }
@@ -61,7 +61,20 @@ export class PlaylistsDexie extends Dexie {
     constructor() {
         super('PlaylistsDatabase');
         this.version(1).stores({
-            playlists: '++key,cover,title,dateCreated,dateEdited,tracksPaths' // Primary key and indexed props
+            playlists: '++key,uuid,cover,title,dateCreated,dateEdited,tracksPaths' // Primary key and indexed props
+        });
+    }
+}
+
+export class WallpaperDexie extends Dexie {
+    // 'wallpapers' are added by dexie when declaring the stores()
+    // We just tell the typing system this is the case
+    wallpapers!: Table<wallpaper>;
+
+    constructor() {
+        super('WallpapersDatabase');
+        this.version(1).stores({
+            wallpapers: '++key,uuid' // Primary key and indexed props
         });
     }
 }
@@ -71,3 +84,4 @@ export const local_albums_db = new AlbumsDexie();
 export const local_artists_db = new ArtistsDexie();
 export const local_genres_db = new GenresDexie();
 export const local_playlists_db = new PlaylistsDexie();
+export const local_wallpapers_db = new WallpaperDexie();

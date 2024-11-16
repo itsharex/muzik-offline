@@ -3,24 +3,34 @@ import { AppMusicPlayer, LeftSidebar, FSMusicPlayer, HeaderLinuxOS, HeaderMacOS,
 import { AllGenres, AllPlaylists, AllTracks, Settings, AlbumDetails, 
   AllAlbums, AllArtists, SearchPage, ArtistCatalogue, GenreView, PlaylistView } from "@pages/index";
 import { useEffect, useState } from "react";
-import { type } from '@tauri-apps/api/os';
-import { invoke } from "@tauri-apps/api";
+import { type } from '@tauri-apps/plugin-os';
+import { invoke } from "@tauri-apps/api/core";
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { HistoryNextFloating } from "@layouts/index";
-import { OSTYPEenum, toastType } from "@muziktypes/index";
+import { OSTYPEenum, Payload, toastType } from "@muziktypes/index";
 import { AnimatePresence } from "framer-motion";
-import { useWallpaperStore, useSavedObjectStore, useToastStore } from "@store/index";
+import { useWallpaperStore, useSavedObjectStore, useIsMaximisedStore, useIsFSStore, usePortStore, useFisrstRunStore, useDirStore, useToastStore } from "@store/index";
 import { SavedObject } from "@database/saved_object";
-import { isPermissionGranted, requestPermission } from '@tauri-apps/api/notification';
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { MiniPlayer } from "@App/index";
+import { listen } from "@tauri-apps/api/event";
+import { processOSMediaControlsEvent } from "@utils/OSeventControl";
+import { fetch_library, getWallpaperURL } from "@utils/index";
+import { local_songs_db } from "@database/database";
+import { startPlayingNewSong } from "@utils/playerControl";
 
 const App = () => {
   const [openMiniPlayer, setOpenMiniPlayer] = useState<boolean>(false);
   const [openSettings, setOpenSettings] = useState<boolean>(false);
   const [FSplayerState, setFSplayerState] = useState<boolean>(false);
   const [FloatingHNState, setFloatingHNState] = useState<boolean>(false);
+  const { isMaximised } = useIsMaximisedStore((state) => { return { isMaximised: state.isMaximised}; });
   const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
-  const { wallpaper } = useWallpaperStore((state) => { return { wallpaper: state.wallpaper,}; });
+  const { wallpaperUUID } = useWallpaperStore((state) => { return { wallpaperUUID: state.wallpaperUUID,}; });
+  const { appFS } = useIsFSStore((state) => { return { appFS: state.isFS}; });
+  const { setPort } = usePortStore((state) => { return { port: state.port, setPort: state.setPort}; });
+  const { firstRun, setFirstRun } = useFisrstRunStore((state) => { return { firstRun: state.firstRun, setFirstRun: state.setFirstRun}; });
+  const { dir, setDir } = useDirStore((state) => { return { dir: state.dir, setDir: state.setDir}; });
   const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
 
   function closeSetting(){if(openSettings === true)setOpenSettings(false);}
@@ -34,7 +44,7 @@ const App = () => {
   function toggleFloatingHNState(){setFloatingHNState(!FloatingHNState);}
 
   async function checkOSType(){
-    const osType = await type();
+    const osType = type();
     let temp: SavedObject = local_store;
     temp.OStype = osType.toString();
     if(osType === OSTYPEenum.Linux)temp.AppThemeBlur = false;
@@ -48,11 +58,7 @@ const App = () => {
 
   function connect_to_discord(){ 
     if(local_store.AppActivityDiscord === "Yes"){
-      invoke("allow_connection_and_connect_to_discord_rpc").then().catch((_) => {
-        setToast({
-          title: "Discord connection...", message: "Failed to establish connection with discord", type: toastType.error, timeout: 5000
-        });
-      }); 
+      invoke("allow_connection_and_connect_to_discord_rpc").then().catch(); 
     }
   }
 
@@ -76,10 +82,69 @@ const App = () => {
     await invoke("toggle_miniplayer_view", {openMiniPlayer: !MPV});
   }
 
+  async function listenForOSevents(){
+    const unlisten = await listen<Payload>('os-media-controls', (event) => processOSMediaControlsEvent(event.payload))
+    // later, when you want to stop listening
+    return unlisten
+  }
+
+  async function get_server_port(){
+    const port: any = await invoke("get_server_port");
+    setPort(port);
+  }
+
+  async function check_paths_for_new_music(){
+    let paths = dir.Dir;
+    if(firstRun){
+      const audio_dir: any = await invoke("get_audio_dir");
+      // append the audio directory to the directories array
+      if(paths.includes(audio_dir) === false){
+        setDir({Dir: [...dir.Dir, audio_dir]});
+        paths.push(audio_dir);
+      }
+      setFirstRun(false);
+    }
+    invoke("refresh_paths", { pathsAsJsonArray: JSON.stringify(paths), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
+    .then(async(response: any) => {
+      if(response === "No new songs detected")return;
+      const res = await fetch_library(false);
+      let message = "";
+
+      if(res.status === "error")message = res.message;
+      else message = "Successfully loaded all the songs in the paths specified. You may need to reload the page you are on to see your new songs";
+
+      setToast({title: "Loading songs...", message: message, type: toastType.success, timeout: 5000});
+
+      const permissionGranted = await isPermissionGranted();
+      if(permissionGranted)sendNotification({ title: 'Loading songs...', body: message });
+    });
+  }
+
+  async function check_if_paths_are_still_valid(){
+    invoke("detect_deleted_songs")
+    .then(async(response: any) => {// response is a json array of the uuids of the songs that were deleted
+      local_songs_db.songs.bulkDelete(response)
+    });
+  }
+
+  function request_song(){
+    listen<String>("loadSong", async(path) => {
+      const song = await local_songs_db.songs.where("path").equals(path.payload.toString()).first();
+      if(song)await startPlayingNewSong(song);
+    });
+  }
+
   useEffect(() => {
+    request_song();
     checkOSType();
     checkAndRequestNotificationPermission();
     connect_to_discord();
+    get_server_port();
+    check_paths_for_new_music();
+    check_if_paths_are_still_valid();
+    const listenForOSeventsfunc = listenForOSevents();
+
+    return () => { listenForOSeventsfunc.then((unlisten) => unlisten()); }
   }, [])
 
   return (
@@ -87,14 +152,19 @@ const App = () => {
     { !openMiniPlayer ?
       <Router>
         <div 
-          className={"app_container " + (local_store.OStype ===  OSTYPEenum.Linux || !local_store.AppThemeBlur ? " linux-config " : "")} 
+          className={
+            "app_container " + 
+            (local_store.OStype === OSTYPEenum.Windows && ((!appFS && !isMaximised) || local_store.AlwaysRoundedCornersWindows === "Yes") ? " windows-app-config " : "") +
+            (local_store.OStype === OSTYPEenum.Linux || !local_store.AppThemeBlur ? " linux-config " : "")
+            
+          } 
           data-theme={local_store.ThemeColour} 
           wallpaper-opacity={local_store.WallpaperOpacityAmount}
           onContextMenu={(e) => e.preventDefault()}>
-            <div className={"background_img " + (wallpaper && wallpaper.DisplayWallpaper ? "" : local_store.BGColour)}>
-              {wallpaper && wallpaper.DisplayWallpaper && (<img src={wallpaper.DisplayWallpaper} alt="wallpaper"/>)}
+            <div className={"background_img " + (wallpaperUUID ? "" : local_store.BGColour)}>
+              {wallpaperUUID && (<img src={getWallpaperURL(wallpaperUUID)} alt="wallpaper"/>)}
             </div>
-            <div className={"app_darkness_layer " + (wallpaper && wallpaper.DisplayWallpaper ? "image_layer" : "color_layer")}>
+            <div className={"app_darkness_layer " + (wallpaperUUID ? "image_layer" : "color_layer")}>
               {
                 local_store.OStype ===  OSTYPEenum.Windows ? 
                   <HeaderWindows toggleSettings={toggleSettings}/>

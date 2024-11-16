@@ -13,29 +13,53 @@
     -webkit-backdrop-filter: var(--var-bg-blur-150);
     box-shadow: $box-shadow-10-10-25;
     padding: 9px;
-    padding-right: 0px;
     top: 47px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 
-    /* Track */
-    ::-webkit-scrollbar-track { margin-top: 15px; margin-bottom: 0px; }
-
-    .Upcoming_view{
-        padding-right: 9px;
+    .Upcoming_view, .History_view{
         height: calc(100% - 44px);
         overflow-y: auto;
+        // fade out top 10% and bottom 10% and only focus on the middle
+        mask-image: linear-gradient(
+            180deg,
+            rgb(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 1) 15%,
+            rgba(0, 0, 0, 1) 85%,
+            rgb(0, 0, 0, 0) 100%
+        );
     }
 
-    .History_view{
-        padding-right: 9px;
+    ::-webkit-scrollbar{
+        display: none;
+    }
+
+    .top_view{
         height: calc(100% - 44px);
         overflow-y: auto;
+        mask-image: linear-gradient(
+            180deg,
+            rgb(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 1) 15%,
+            rgba(0, 0, 0, 1) 85%,
+            rgb(0, 0, 0, 0) 100%
+        );
+    }
+
+    .bottom_view{
+        height: calc(100% - 44px);
+        overflow-y: auto;
+        mask-image: linear-gradient(
+            180deg,
+            rgb(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 1) 15%,
+            rgba(0, 0, 0, 1) 85%,
+            rgb(0, 0, 0, 1) 100%
+        );
     }
 
     .HistoryUpcoming_tabs{
-        width: 225px;
         display: flex;
         justify-content: center;
 
@@ -44,7 +68,7 @@
             align-items: center;
             position: relative;
             background: $on-hover-song;
-            width: 112px;
+            width: 117px;
             height: 34px;
 
             .selected{

@@ -1,7 +1,7 @@
 @import "../constants/constants";
 
 .settings_section{
-    position: fixed;
+    position: absolute;
     min-width: 980px;
     width: 100%;
     height: calc(110vh - 40px);
@@ -50,8 +50,7 @@
     .settings_panel{
         margin-left: 15px;
         margin-top: 15px;
-        margin-right: 40px;
-        width: calc(100% - 252px);
         height: calc(100vh - 70px);
+        width: calc(100% - 157px);
     }
 }

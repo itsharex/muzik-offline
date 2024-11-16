@@ -10,7 +10,7 @@
 
     .header_content{
         display: flex;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
 
         .details{
             margin-left: 45px;
@@ -81,6 +81,7 @@
     }
 
     .main_content{
+        padding-top: 5px;
         overflow-y: auto;
         transition: height 0.3s ease; 
         min-width: 859px;

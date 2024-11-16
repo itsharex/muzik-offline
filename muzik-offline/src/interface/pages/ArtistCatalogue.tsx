@@ -84,7 +84,7 @@ const ArtistCatalogue = () => {
                     { !state.resizeHeader &&
                         <>
                             <h4>{state.artist_metadata.album_count} albums</h4>
-                            <h4>{state.artist_metadata.song_count} songs</h4>
+                            <h4>{state.artist_metadata.song_count} {state.artist_metadata.song_count === 1 ? "song" : "songs"}</h4>
                             <div className="action_buttons">
                                 <motion.div className="PlayIcon" whileHover={{scale: 1.02}} whileTap={{scale: 0.98}} 
                                 onClick={() => playSongsFromThisArtist(false, state.artist_metadata.artistName)}>

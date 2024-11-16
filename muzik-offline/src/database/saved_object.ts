@@ -19,6 +19,8 @@ export interface SavedObject{
     SongLengthORremaining: string,
     AudioLabPreset: string,
     SavedPresets: string[],
+    AlwaysRoundedCornersWindows: string,
+    AutoStartApp: string,
 }
 
 export const emptySavedObject: SavedObject = {
@@ -39,5 +41,7 @@ export const emptySavedObject: SavedObject = {
     SeekStepAmount: "10",
     SongLengthORremaining: "song length",
     AudioLabPreset: "flat",
-    SavedPresets: ["flat", "hip-hop"]
+    SavedPresets: ["flat", "hip-hop"],
+    AlwaysRoundedCornersWindows: "No",
+    AutoStartApp: "No",
 }

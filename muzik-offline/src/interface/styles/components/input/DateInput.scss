@@ -1,0 +1,30 @@
+@import "../../constants/constants";
+
+.DateInput-Container{
+    width: 220px;
+    height: 27px;
+    margin-top: 6.5px;
+    padding: 4px;
+    background: $btn-clickable;
+    border-radius: 13px;
+    font-size: 16px;
+    color: $white-900;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+
+    .DateInput{
+        width: 18px;
+        height: 27px;
+        border: none;
+        outline: none;
+        border-radius: 13px;
+        font-size: 16px;
+        color: $white-900;
+        background: none;
+    }
+
+    .DateInput-year{
+        width: 36px;
+    }
+}

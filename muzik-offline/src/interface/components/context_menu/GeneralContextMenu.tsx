@@ -4,7 +4,7 @@ import { AddToPlaylistButton, PlayButton,
     PlayLaterButton, PlayNextButton, ShowArtistButton, 
     ShowGenreButton, ShowPlaylistButton, 
     ShowAlbumButton, ShowInfoButton,
-    DeleteButton} from "@components/index";
+    DeleteButton, EditSongButton} from "@components/index";
 import "@styles/components/context_menu/GeneralContextMenu.scss";
 import { motion } from "framer-motion";
 
@@ -32,14 +32,14 @@ const GeneralContextMenu: FunctionComponent<GeneralContextMenuProps> = (props: G
         if(props.CMtype === contextMenuEnum.GenreCM){//4 items
             scmHeight = 210;
         }
-        else if(props.CMtype === contextMenuEnum.SongCM){//5 items
-            scmHeight = 250;
-        }
+        //else if(){//5 items
+        //    scmHeight = 250;
+        //}
         else if(props.CMtype === contextMenuEnum.ArtistCM || props.CMtype === contextMenuEnum.AlbumCM
-            || props.CMtype === contextMenuEnum.PlaylistSongsCM){//6 items
+            || props.CMtype === contextMenuEnum.SongCM){//6 items
             scmHeight = 280;
         }
-        else if(props.CMtype === contextMenuEnum.PlaylistCM){//7 items
+        else if(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.PlaylistSongsCM){//7 items
             scmHeight = 310;
         }
         if(props.overRideY)return yPos;
@@ -62,6 +62,8 @@ const GeneralContextMenu: FunctionComponent<GeneralContextMenuProps> = (props: G
             {(props.CMtype === contextMenuEnum.GenreCM) && <ShowGenreButton  title={props.title} chooseOption={props.chooseOption}/>}
             {(props.CMtype === contextMenuEnum.PlaylistCM) && <ShowPlaylistButton  title={props.title} chooseOption={props.chooseOption}/>}
             {(props.CMtype === contextMenuEnum.AlbumCM) && <ShowAlbumButton title={props.title} chooseOption={props.chooseOption}/>}
+            {(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.SongCM || props.CMtype === contextMenuEnum.PlaylistSongsCM) 
+                && <EditSongButton title={props.title} chooseOption={props.chooseOption}/>}
             {(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.SongCM || props.CMtype === contextMenuEnum.PlaylistSongsCM) 
                 && <ShowInfoButton chooseOption={props.chooseOption}/>}
             {(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.PlaylistSongsCM) 

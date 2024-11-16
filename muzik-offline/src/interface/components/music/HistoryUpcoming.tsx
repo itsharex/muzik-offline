@@ -1,13 +1,13 @@
-import { FunctionComponent, useEffect, useReducer } from "react";
+import { FunctionComponent, useEffect, useReducer, useRef, useState } from "react";
 import { motion } from 'framer-motion';
 import "@styles/components/music/HistoryUpcoming.scss";
 import { Song, contextMenuButtons, contextMenuEnum } from "@muziktypes/index";
-import { AddSongToPlaylistModal, GeneralContextMenu, PropertiesModal, SongCardResizableDraggable } from "@components/index";
+import { AddSongToPlaylistModal, EditPropertiesModal, GeneralContextMenu, PropertiesModal, SongCardResizableDraggable } from "@components/index";
 import { useNavigate } from "react-router-dom";
 import { local_albums_db, local_songs_db } from "@database/database";
 import { useUpcomingSongs, useHistorySongs, useSavedObjectStore, reducerType } from "@store/index";
 import { UpcomingHistoryState, upcomingHistoryReducer } from "@store/reducerStore";
-import { closeContextMenu, closePlaylistModal, closePropertiesModal } from "@utils/reducerUtils";
+import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal } from "@utils/reducerUtils";
 import { addThisSongToPlayNext, addThisSongToPlayLater, playThisSongFromQueue } from "@utils/playerControl";
 import { onDragEnd } from "@utils/index";
 
@@ -20,6 +20,10 @@ const HistoryUpcoming: FunctionComponent<HistoryUpcomingprops> = (props: History
   const {SongQueueKeys} = useUpcomingSongs((state) => { return { SongQueueKeys: state.queue}; });
   const {SongHistoryKeys} = useHistorySongs((state) => { return { SongHistoryKeys: state.queue}; });
   const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store}; });
+  const scrollRefUpcoming = useRef<HTMLDivElement | null>(null);
+  const scrollRefHistory = useRef<HTMLDivElement | null>(null);
+  const [upcomingPosition, setUpcomingPosition] = useState<"Top" | "Middle" | "Bottom">("Top");
+  const [historyPosition, setHistoryPosition] = useState<"Top" | "Middle" | "Bottom">("Top");
   
   const navigate = useNavigate();
 
@@ -44,6 +48,7 @@ const HistoryUpcoming: FunctionComponent<HistoryUpcomingprops> = (props: History
   function chooseOption(arg: contextMenuButtons){
     if(arg === contextMenuButtons.ShowInfo){ dispatch({ type: reducerType.SET_PROPERTIES_MODAL, payload: true}); }
     else if(arg === contextMenuButtons.AddToPlaylist){ dispatch({ type: reducerType.SET_PLAYLIST_MODAL, payload: true}); }
+    else if(arg === contextMenuButtons.EditSong){ dispatch({ type: reducerType.SET_EDIT_SONG_MODAL, payload: true}); }
     else if(arg === contextMenuButtons.PlayNext && state.songMenuToOpen){ 
         addThisSongToPlayNext([state.songMenuToOpen.id]);
         closeContextMenu(dispatch); 
@@ -90,32 +95,79 @@ const HistoryUpcoming: FunctionComponent<HistoryUpcomingprops> = (props: History
     dispatch({ type: reducerType.SET_SONG_HISTORY, payload: HSsongsOrdered as Song[] });
   }
 
-  useEffect(() => {setLists()}, [SongQueueKeys, SongHistoryKeys])
+  const handleScrollUpcoming = () => {
+    if (scrollRefUpcoming.current) {
+    const { scrollTop, scrollHeight, clientHeight } = scrollRefUpcoming.current;
+
+    if (scrollTop === 0) {setUpcomingPosition("Top");}
+    else if (Math.ceil(scrollTop) + clientHeight >= scrollHeight) {setUpcomingPosition("Bottom");}
+    else {setUpcomingPosition("Middle");}
+    }
+  };
+
+  const handleScrollHistory = () => {
+      if (scrollRefHistory.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRefHistory.current;
+
+      if (scrollTop === 0) {setHistoryPosition("Top");}
+      else if (Math.ceil(scrollTop) + clientHeight >= scrollHeight) {setHistoryPosition("Bottom");}
+      else {setHistoryPosition("Middle");}
+      }
+  };
+
+  useEffect(() => {
+      const currentUpcomingRef = scrollRefUpcoming.current;
+      const currentHistoryRef = scrollRefHistory.current;
+      if (currentUpcomingRef)currentUpcomingRef.addEventListener("scroll", handleScrollUpcoming);
+      if (currentHistoryRef)currentHistoryRef.addEventListener("scroll", handleScrollHistory);
+
+      setLists()
+      return () => {
+          if (currentUpcomingRef)currentUpcomingRef.removeEventListener("scroll", handleScrollUpcoming);
+          if (currentHistoryRef)currentHistoryRef.removeEventListener("scroll", handleScrollHistory);
+      };
+  }, [SongQueueKeys, SongHistoryKeys])
 
   return (
     <div className="HistoryUpcoming">
-      {
-        state.selectedView === "Upcoming_tab" ?
-          <div className="Upcoming_view">
-            <SongCardResizableDraggable 
-                SongQueue={state.SongQueue} 
-                queueType={"SongQueue"} 
-                onDragEnd={onDragEnd} 
-                setMenuOpenData={setMenuOpenData__SongQueue} 
-                playThisSong={playThisSongFromQueue} 
-                navigateTo={navigateTo} /> 
-          </div>
-        :
-          <div className="History_view">
-            <SongCardResizableDraggable 
-                SongQueue={state.SongHistory} 
-                queueType={"SongHistory"} 
-                onDragEnd={onDragEnd} 
-                setMenuOpenData={setMenuOpenData_SongHistory} 
-                playThisSong={playThisSongFromQueue} 
-                navigateTo={navigateTo} /> 
-          </div>
-      }
+      <div className="scrollbar-container">
+        {
+          state.selectedView === "Upcoming_tab" ?
+            <div 
+              ref={scrollRefUpcoming}
+              onScroll={handleScrollUpcoming}
+              className={
+                  upcomingPosition === "Top" ? "top_view" : 
+                  upcomingPosition === "Bottom" ? "bottom_view" :
+                  "Upcoming_view"
+              }>
+              <SongCardResizableDraggable 
+                  SongQueue={state.SongQueue} 
+                  queueType={"SongQueue"} 
+                  onDragEnd={onDragEnd} 
+                  setMenuOpenData={setMenuOpenData__SongQueue} 
+                  playThisSong={playThisSongFromQueue} 
+                  navigateTo={navigateTo} /> 
+            </div>
+          :
+            <div 
+              ref={scrollRefHistory}
+              onScroll={handleScrollHistory}
+              className={
+                  historyPosition === "Top" ? "top_view" : 
+                  historyPosition === "Bottom" ? "bottom_view" :
+                  "History_view"
+              }>
+              <SongCardResizableDraggable 
+                  SongQueue={state.SongHistory} 
+                  queueType={"SongHistory"} 
+                  onDragEnd={onDragEnd} 
+                  setMenuOpenData={setMenuOpenData_SongHistory} 
+                  playThisSong={playThisSongFromQueue} 
+                  navigateTo={navigateTo} /> 
+            </div>
+        }
+      </div>
       <div className="HistoryUpcoming_tabs">
         <motion.div className="Upcoming_tab" whileTap={{scale: 0.98}}
           onClick={() => dispatch({ type: reducerType.SET_SELECTED_VIEW, payload: "Upcoming_tab" })}>
@@ -144,6 +196,7 @@ const HistoryUpcoming: FunctionComponent<HistoryUpcomingprops> = (props: History
       }
 
       <PropertiesModal isOpen={state.isPropertiesModalOpen} song={state.songMenuToOpen!} closeModal={() => closePropertiesModal(dispatch)} />
+      <EditPropertiesModal isOpen={state.isEditingSongModalOpen} songID={state.songMenuToOpen ? state.songMenuToOpen.id : -1} closeModal={() => closeEditPropertiesModal(dispatch)} />
       <AddSongToPlaylistModal isOpen={state.isPlaylistModalOpen} songPath={state.songMenuToOpen ? state.songMenuToOpen.path : ""} closeModal={() => closePlaylistModal(dispatch)} />
     </div>
   )

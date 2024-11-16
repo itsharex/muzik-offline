@@ -1,11 +1,10 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { PlayerInterface, PlayingPositionInterface, QueueInterface, SavedDirectoriesInterface, SavedObjectInterface, SavedPresetsValues, searchInterface, toastInterface, viewableSideElInterface, wallpaperInterface } from './storeTypes';
+import { firstRunState, FSState, MaximisedState, PlayerInterface, PlayingPositionInterface, portState, QueueInterface, SavedDirectoriesInterface, SavedObjectInterface, searchInterface, toastInterface, viewableSideElInterface, wallpaperInterface, SavedPresetsValues } from './storeTypes';
 import { emptyDirectories } from '@database/directories';
 import { emptyPlayer } from '@database/player';
 import { emptySavedObject } from '@database/saved_object';
 import { viewableSideElements } from '@database/side_elements';
-import { emptyWallpaper } from '@database/wallpaper';
 import { alltracksReducer, AllTracksState } from './reducerStore';
 import { reducerType, AllTracksStateInterface, Action } from './reducerTypes';
 import { AudioLabPreset } from '@muziktypes/index';
@@ -32,6 +31,39 @@ export const FlatAudioLab: AudioLabPreset = {
     SixteenkHz: 50,
 }
 
+export const useFisrstRunStore = create<firstRunState>()(
+    devtools(
+        persist(
+            (set) => ({
+                firstRun: true,
+                setFirstRun: (nFR) => set((_state) => ({ firstRun: nFR })),
+            }),
+        {name: 'firstRun',}
+        )
+    )
+)
+
+export const usePortStore = create<portState>()(
+    (set) => ({
+        port: 0,
+        setPort: (nPort) => set((_state) => ({ port: nPort })),
+    }),
+)
+
+export const useIsMaximisedStore = create<MaximisedState>()(
+    (set) => ({
+        isMaximised: false,
+        setMaximised: (nM: boolean) => set((_state) => ({ isMaximised: nM })),
+    }),
+)
+
+export const useIsFSStore = create<FSState>()(
+    (set) => ({
+        isFS: false,
+        setFS: (nFS: boolean) => set((_state) => ({ isFS: nFS })),
+    }),
+)
+
 export const useToastStore = create<toastInterface>()(
     (set) => ({
         toastObject: null,
@@ -51,11 +83,11 @@ export const useWallpaperStore = create<wallpaperInterface>()(
     devtools(
         persist(
             (set) => ({
-                wallpaper: emptyWallpaper,
-                setWallpaper: (nW) => set((_state) => ({ wallpaper: nW })),
-                unsetWallpaper: () => set((_state) => ({ wallpaper: null})),
+                wallpaperUUID: "",
+                setWallpaper: (nW) => set((_state) => ({ wallpaperUUID: nW })),
+                unsetWallpaper: () => set((_state) => ({ wallpaperUUID: null})),
             }),
-        {name: 'SavedWallpaper-offline',}
+        {name: 'SavedWallpaperUUID-offline',}
         )
     )
 )

@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 import { FunctionComponent, useState, useEffect } from 'react';
 import "@styles/pages/Settings.scss";
-import { ChevronDown, ComponentIcon, InformationCircleContained, Layout, SettingsIcon, WaveForm } from "@icons/index";
-import { DirectoriesModal, SettingsNavigator } from '@components/index';
+import { ChevronDown, ComponentIcon, InformationCircleContained, Layout, SettingsIcon, WaveForm, FolderSearch, File } from "@icons/index";
+import { DeleteDiretoryModal, SettingsNavigator, WallpapersSelectionModal } from '@components/index';
 import { selectedSettingENUM } from 'types';
-import { AppearanceSettings, GeneralSettings, AdvancedSettings, AboutSettings, AudioLabSettings } from '@layouts/index';
+import { AppearanceSettings, GeneralSettings, AdvancedSettings, AboutSettings, AudioLabSettings, MusicFoldersSettings, ExportSettings } from '@layouts/index';
 import { useSavedObjectStore } from 'store';
 
 type SettingsProps = {
@@ -20,14 +20,17 @@ const variants={
 const Settings: FunctionComponent<SettingsProps> = (props: SettingsProps) => {
 
     const [selectedSetting, setSelectedSetting] = useState<selectedSettingENUM>(selectedSettingENUM.General);
-    const [CDisOpen, setCDModalState] = useState<boolean>(false);
     const {local_store,} = useSavedObjectStore((state) => { return { local_store: state.local_store}; });
+    const [currentPath, setCurrentPath] = useState<string | null>(null);
+    const [wallpapersModal, setWallpapersModal] = useState<boolean>(false);
 
     function convertToEnum(arg: string){
         if(arg === selectedSettingENUM.General)return selectedSettingENUM.General;
         else if(arg === selectedSettingENUM.Appearance)return selectedSettingENUM.Appearance;
         else if(arg === selectedSettingENUM.AudioLab)return selectedSettingENUM.AudioLab;
+        else if(arg === selectedSettingENUM.MusicFolders)return selectedSettingENUM.MusicFolders;
         else if(arg === selectedSettingENUM.Security)return selectedSettingENUM.Security;
+        else if(arg === selectedSettingENUM.ExportSongs)return selectedSettingENUM.ExportSongs;
         else if(arg === selectedSettingENUM.Advanced)return selectedSettingENUM.Advanced;
         else if(arg === selectedSettingENUM.About)return selectedSettingENUM.About;
         else return selectedSettingENUM.General;
@@ -56,7 +59,9 @@ const Settings: FunctionComponent<SettingsProps> = (props: SettingsProps) => {
                         <SettingsNavigator icon={SettingsIcon} title={selectedSettingENUM.General} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
                         <SettingsNavigator icon={Layout} title={selectedSettingENUM.Appearance} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
                         <SettingsNavigator icon={WaveForm} title={selectedSettingENUM.AudioLab} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
+                        <SettingsNavigator icon={FolderSearch} title={selectedSettingENUM.MusicFolders} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
                         {/*<SettingsNavigator icon={Lock} title={selectedSettingENUM.Security} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>*/}
+                        <SettingsNavigator icon={File} title={selectedSettingENUM.ExportSongs} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
                         <SettingsNavigator icon={ComponentIcon} title={selectedSettingENUM.Advanced} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
                         <SettingsNavigator icon={InformationCircleContained} title={selectedSettingENUM.About} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
                         </div>
@@ -65,25 +70,31 @@ const Settings: FunctionComponent<SettingsProps> = (props: SettingsProps) => {
                                     (() => {
                                         switch(selectedSetting){
                                             case selectedSettingENUM.General:
-                                                return <GeneralSettings openDirectoryModal={() => setCDModalState(true)}/>
+                                                return <GeneralSettings/>
                                             case selectedSettingENUM.Appearance:
                                                 return <AppearanceSettings />
                                             case selectedSettingENUM.AudioLab:
                                                 return <AudioLabSettings />
+                                                return <AppearanceSettings openModal={() => setWallpapersModal(true)}/>
+                                            case selectedSettingENUM.MusicFolders:
+                                                return <MusicFoldersSettings openConfirmModal={setCurrentPath}/>
                                             //case selectedSettingENUM.Security:
                                             //    return <SecuritySettings />
+                                            case selectedSettingENUM.ExportSongs:
+                                                return <ExportSettings />
                                             case selectedSettingENUM.Advanced:
                                                 return <AdvancedSettings />
                                             case selectedSettingENUM.About:
                                                 return <AboutSettings />
                                             default:
-                                                return <GeneralSettings openDirectoryModal={() => setCDModalState(true)}/>
+                                                return <GeneralSettings/>
                                         }
                                     })()
                             }
                         </div>
             </motion.div>
-            <DirectoriesModal isOpen={CDisOpen} closeModal={() => setCDModalState(false)}/>
+            <DeleteDiretoryModal path={currentPath ?? ""} isOpen={currentPath !== null} closeModal={() => setCurrentPath(null)}/>
+            <WallpapersSelectionModal isOpen={wallpapersModal} closeModal={() => setWallpapersModal(false)}/>
         </>
     )
 }
