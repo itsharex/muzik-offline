@@ -22,6 +22,7 @@
         transform:rotate(270deg);
 
         input[type="range"] {
+            appearance: none;
             -webkit-appearance: none;
             width: calc(100vh - 371px);
             height: 10px;
@@ -37,7 +38,7 @@
             height: 14px;
             width: 14px;
             border-radius: 50%;
-            cursor: default;
+            cursor: grab;
             box-shadow: 0 0 2px 0 #555;
             transition: transform 0.2s ease-in-out;
             background: $app-theme-col;
@@ -49,7 +50,7 @@
             height: 14px;
             width: 14px;
             border-radius: 50%;
-            cursor: default;
+            cursor: grab;
             box-shadow: 0 0 2px 0 #555;
             transition: transform 0.2s ease-in-out;
             background: $app-theme-col;
