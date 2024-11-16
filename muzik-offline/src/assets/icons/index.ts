@@ -51,6 +51,8 @@ import ListIcon from './General/ListIcon';
 import AlertTriangle from './General/AlertTriangle';
 import Trash from './General/Trash';
 import FolderSearch from './General/FolderSearch';
+import File from './General/File';
+import Check from './General/Check';
 
 export {
     Next_page, Prev_page, Search, 
@@ -66,5 +68,5 @@ export {
     NullArtistCoverOne, NullArtistCoverTwo, NullArtistCoverThree, NullArtistCoverFour,
     CheckGreen, CrossRed, InformationCircleContainedOrange, InformationCircleContainedBlue,
     EditImage, Edit, Overlap, Minimize,
-    ListIcon, AlertTriangle, Trash, FolderSearch
+    ListIcon, AlertTriangle, Trash, FolderSearch, File , Check
 }

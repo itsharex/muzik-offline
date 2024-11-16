@@ -3,6 +3,7 @@ export enum selectedSettingENUM {
     Appearance = "Appearance", 
     MusicFolders = "Music Folders",
     Security = "Security",
+    ExportSongs = "Export Songs",
     Advanced = "Advanced",
     About = "About"
 }
@@ -16,7 +17,8 @@ export enum selectedGeneralSettingEnum{
     UpcomingHistoryLimit = "UpcomingHistoryLimit",
     SeekStepAmount = "SeekStepAmount",
     SongLengthORremaining = "SongLengthORremaining",
-    AlwaysRoundedCornersWindows = "AlwaysRoundedCornersWindows"
+    AlwaysRoundedCornersWindows = "AlwaysRoundedCornersWindows",
+    AutoStartApp = "AutoStartApp",
 }
 
 export enum OSTYPEenum{

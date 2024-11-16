@@ -1,10 +1,13 @@
-use std::{sync::{Arc, Mutex}, time::Duration};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use crate::{
+    app::window,
     components::{audio_manager::BackendStateManager, event_payload::Payload},
     database::{db_api::get_song_from_tree, db_manager::DbManager},
     utils::general_utils::get_song_cover_as_bytes,
-    app::window,
 };
 
 use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, MediaPlayback, PlatformConfig};
@@ -18,7 +21,7 @@ pub fn config_mca() -> Option<MediaControls> {
     // map(|handle| handle as *mut std::os::raw::c_void)
     #[cfg(target_os = "windows")]
     let hwnd = {
-        let window = match window::windows::Window::new(){
+        let window = match window::windows::Window::new() {
             Ok(window) => window,
             Err(err) => {
                 println!("Failed to create dummy window: {:?}", err);
@@ -209,7 +212,12 @@ pub fn event_handler(app: &AppHandle, event: &MediaControlEvent) {
 }
 
 #[tauri::command]
-pub fn update_metadata(audio_manager: State<'_, Arc<Mutex<BackendStateManager>>>, db_manager: State<'_, Arc<Mutex<DbManager>>>, uuid: String, key: i32) {
+pub fn update_metadata(
+    audio_manager: State<'_, Arc<Mutex<BackendStateManager>>>,
+    db_manager: State<'_, Arc<Mutex<DbManager>>>,
+    uuid: String,
+    key: i32,
+) {
     let song = match get_song_from_tree(db_manager.clone(), &uuid) {
         Some(song) => song,
         None => return,

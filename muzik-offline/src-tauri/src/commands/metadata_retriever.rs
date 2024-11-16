@@ -1,10 +1,13 @@
 use crate::components::song::Song;
-use crate::database::db_api::{clear_all_trees, insert_into_album_tree, insert_into_artist_tree, insert_into_covers_tree, insert_into_genre_tree, insert_song_into_tree, song_exists_in_tree};
+use crate::database::db_api::{
+    clear_all_trees, insert_into_album_tree, insert_into_artist_tree, insert_into_covers_tree,
+    insert_into_genre_tree, insert_song_into_tree, song_exists_in_tree,
+};
 use crate::database::db_manager::DbManager;
+use crate::utils::general_utils::is_media_file;
 use crate::utils::general_utils::{
     duration_to_string, extract_file_name, resize_and_compress_image,
 };
-use crate::utils::general_utils::is_media_file;
 use id3::TagLike;
 use lofty::Accessor;
 use lofty::TaggedFileExt;
@@ -22,7 +25,7 @@ pub async fn get_all_songs(
     compress_image_option: bool,
 ) -> Result<String, String> {
     clear_all_trees(db_manager.clone());
-    
+
     let paths_as_vec = decode_directories(&paths_as_json_array);
 
     let mut song_id: i32 = 0;
@@ -92,17 +95,23 @@ pub async fn get_songs_in_path(
                             }
                         }
 
-                        if let Ok(song_data) =
-                            id3_read_from_path(db_manager.clone(), full_path, song_id, compress_image_option)
-                        {
+                        if let Ok(song_data) = id3_read_from_path(
+                            db_manager.clone(),
+                            full_path,
+                            song_id,
+                            compress_image_option,
+                        ) {
                             insert_song_into_tree(db_manager.clone(), &song_data);
                             insert_into_album_tree(db_manager.clone(), &song_data);
                             insert_into_artist_tree(db_manager.clone(), &song_data);
                             insert_into_genre_tree(db_manager.clone(), &song_data);
                             new_songs_detected += 1;
-                        } else if let Ok(song_data) =
-                            lofty_read_from_path(db_manager.clone(), full_path, song_id, compress_image_option)
-                        {
+                        } else if let Ok(song_data) = lofty_read_from_path(
+                            db_manager.clone(),
+                            full_path,
+                            song_id,
+                            compress_image_option,
+                        ) {
                             insert_song_into_tree(db_manager.clone(), &song_data);
                             insert_into_album_tree(db_manager.clone(), &song_data);
                             insert_into_artist_tree(db_manager.clone(), &song_data);
@@ -164,7 +173,13 @@ fn lofty_read_from_path(
             set_year_lofty(tag, &mut song_meta_data);
             set_duration_bit_rate_sample_rate_bit_depth_channels(&path, &mut song_meta_data);
             set_path(&path, &mut song_meta_data);
-            set_cover_lofty(db_manager, tag, &mut song_meta_data, compress_image_option, &path);
+            set_cover_lofty(
+                db_manager,
+                tag,
+                &mut song_meta_data,
+                compress_image_option,
+                &path,
+            );
             set_date_recorded_lofty(tag, &mut song_meta_data);
             set_date_released_lofty(tag, &mut song_meta_data);
             set_file_size(&path, &mut song_meta_data);
@@ -239,7 +254,13 @@ fn id3_read_from_path(
     set_year_id3(&tag, &mut song_meta_data);
     set_duration_bit_rate_sample_rate_bit_depth_channels(&path, &mut song_meta_data);
     set_path(&path, &mut song_meta_data);
-    set_cover_id3(db_manager, &tag, &mut song_meta_data, compress_image_option, &path);
+    set_cover_id3(
+        db_manager,
+        &tag,
+        &mut song_meta_data,
+        compress_image_option,
+        &path,
+    );
     set_date_recorded_id3(&tag, &mut song_meta_data);
     set_date_released_id3(&tag, &mut song_meta_data);
     set_file_size(&path, &mut song_meta_data);
@@ -386,7 +407,13 @@ fn set_path(path: &str, song_meta_data: &mut Song) {
     song_meta_data.path = path.to_owned();
 }
 
-fn set_cover_id3(db_manager: State<'_, Arc<Mutex<DbManager>>>, tag: &id3::Tag, song_meta_data: &mut Song, compress_image_option: &bool, path: &str) {
+fn set_cover_id3(
+    db_manager: State<'_, Arc<Mutex<DbManager>>>,
+    tag: &id3::Tag,
+    song_meta_data: &mut Song,
+    compress_image_option: &bool,
+    path: &str,
+) {
     //COVER
     if let Some(cover) = tag.pictures().next() {
         let picture_as_num = cover.data.to_owned();
@@ -397,13 +424,21 @@ fn set_cover_id3(db_manager: State<'_, Arc<Mutex<DbManager>>>, tag: &id3::Tag, s
                 //compression code goes here
                 match resize_and_compress_image(&picture_as_num, &250) {
                     Some(compressed_image) => {
-                        song_meta_data.cover_uuid = match insert_into_covers_tree(db_manager.clone(), compressed_image, &path.to_owned()) {
+                        song_meta_data.cover_uuid = match insert_into_covers_tree(
+                            db_manager.clone(),
+                            compressed_image,
+                            &path.to_owned(),
+                        ) {
                             uuid if uuid == uuid::Uuid::nil() => None,
                             uuid => Some(uuid.to_string()),
                         }
                     }
                     None => {
-                        song_meta_data.cover_uuid = match insert_into_covers_tree(db_manager.clone(), picture_as_num, &path.to_owned()) {
+                        song_meta_data.cover_uuid = match insert_into_covers_tree(
+                            db_manager.clone(),
+                            picture_as_num,
+                            &path.to_owned(),
+                        ) {
                             uuid if uuid == uuid::Uuid::nil() => None,
                             uuid => Some(uuid.to_string()),
                         }
@@ -411,7 +446,11 @@ fn set_cover_id3(db_manager: State<'_, Arc<Mutex<DbManager>>>, tag: &id3::Tag, s
                 }
             }
             false => {
-                song_meta_data.cover_uuid = match insert_into_covers_tree(db_manager.clone(), picture_as_num, &path.to_owned()) {
+                song_meta_data.cover_uuid = match insert_into_covers_tree(
+                    db_manager.clone(),
+                    picture_as_num,
+                    &path.to_owned(),
+                ) {
                     uuid if uuid == uuid::Uuid::nil() => None,
                     uuid => Some(uuid.to_string()),
                 }
@@ -422,7 +461,13 @@ fn set_cover_id3(db_manager: State<'_, Arc<Mutex<DbManager>>>, tag: &id3::Tag, s
     }
 }
 
-fn set_cover_lofty(db_manager: State<'_, Arc<Mutex<DbManager>>>, tag: &lofty::Tag, song_meta_data: &mut Song, compress_image_option: &bool, path: &str) {
+fn set_cover_lofty(
+    db_manager: State<'_, Arc<Mutex<DbManager>>>,
+    tag: &lofty::Tag,
+    song_meta_data: &mut Song,
+    compress_image_option: &bool,
+    path: &str,
+) {
     //COVER
     let pictures = tag.pictures();
 
@@ -438,13 +483,21 @@ fn set_cover_lofty(db_manager: State<'_, Arc<Mutex<DbManager>>>, tag: &lofty::Ta
                     //compression code goes here
                     match resize_and_compress_image(&picture_as_num, &250) {
                         Some(compressed_image) => {
-                            song_meta_data.cover_uuid = match insert_into_covers_tree(db_manager.clone(), compressed_image, &path.to_owned()) {
+                            song_meta_data.cover_uuid = match insert_into_covers_tree(
+                                db_manager.clone(),
+                                compressed_image,
+                                &path.to_owned(),
+                            ) {
                                 uuid if uuid == uuid::Uuid::nil() => None,
                                 uuid => Some(uuid.to_string()),
                             }
                         }
                         None => {
-                            song_meta_data.cover_uuid = match insert_into_covers_tree(db_manager.clone(), picture_as_num, &path.to_owned()) {
+                            song_meta_data.cover_uuid = match insert_into_covers_tree(
+                                db_manager.clone(),
+                                picture_as_num,
+                                &path.to_owned(),
+                            ) {
                                 uuid if uuid == uuid::Uuid::nil() => None,
                                 uuid => Some(uuid.to_string()),
                             }
@@ -452,7 +505,11 @@ fn set_cover_lofty(db_manager: State<'_, Arc<Mutex<DbManager>>>, tag: &lofty::Ta
                     }
                 }
                 false => {
-                    song_meta_data.cover_uuid = match insert_into_covers_tree(db_manager.clone(), picture_as_num, &path.to_owned()) {
+                    song_meta_data.cover_uuid = match insert_into_covers_tree(
+                        db_manager.clone(),
+                        picture_as_num,
+                        &path.to_owned(),
+                    ) {
                         uuid if uuid == uuid::Uuid::nil() => None,
                         uuid => Some(uuid.to_string()),
                     }

@@ -1,0 +1,19 @@
+@import "../../constants/constants";
+
+.checked, .not-checked{
+    width: 15px;
+    height: 15px;
+    border-radius: 6px;
+    background: $flags-blur;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.checked{
+    background: $app-theme-col;
+}
+
+.not-checked:hover{
+    background: $btn-clickable;
+}

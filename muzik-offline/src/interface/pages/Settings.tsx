@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 import { FunctionComponent, useState, useEffect } from 'react';
 import "@styles/pages/Settings.scss";
-import { ChevronDown, ComponentIcon, InformationCircleContained, Layout, SettingsIcon, FolderSearch } from "@icons/index";
+import { ChevronDown, ComponentIcon, InformationCircleContained, Layout, SettingsIcon, FolderSearch, File } from "@icons/index";
 import { DeleteDiretoryModal, SettingsNavigator, WallpapersSelectionModal } from '@components/index';
 import { selectedSettingENUM } from 'types';
-import { AppearanceSettings, GeneralSettings, AdvancedSettings, AboutSettings, MusicFoldersSettings } from '@layouts/index';
+import { AppearanceSettings, GeneralSettings, AdvancedSettings, AboutSettings, MusicFoldersSettings, ExportSettings } from '@layouts/index';
 import { useSavedObjectStore } from 'store';
 
 type SettingsProps = {
@@ -29,6 +29,7 @@ const Settings: FunctionComponent<SettingsProps> = (props: SettingsProps) => {
         else if(arg === selectedSettingENUM.Appearance)return selectedSettingENUM.Appearance;
         else if(arg === selectedSettingENUM.MusicFolders)return selectedSettingENUM.MusicFolders;
         else if(arg === selectedSettingENUM.Security)return selectedSettingENUM.Security;
+        else if(arg === selectedSettingENUM.ExportSongs)return selectedSettingENUM.ExportSongs;
         else if(arg === selectedSettingENUM.Advanced)return selectedSettingENUM.Advanced;
         else if(arg === selectedSettingENUM.About)return selectedSettingENUM.About;
         else return selectedSettingENUM.General;
@@ -56,8 +57,9 @@ const Settings: FunctionComponent<SettingsProps> = (props: SettingsProps) => {
                         </div>
                         <SettingsNavigator icon={SettingsIcon} title={selectedSettingENUM.General} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
                         <SettingsNavigator icon={Layout} title={selectedSettingENUM.Appearance} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
-                        {/*<SettingsNavigator icon={Lock} title={selectedSettingENUM.Security} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>*/}
                         <SettingsNavigator icon={FolderSearch} title={selectedSettingENUM.MusicFolders} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
+                        {/*<SettingsNavigator icon={Lock} title={selectedSettingENUM.Security} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>*/}
+                        <SettingsNavigator icon={File} title={selectedSettingENUM.ExportSongs} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
                         <SettingsNavigator icon={ComponentIcon} title={selectedSettingENUM.Advanced} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
                         <SettingsNavigator icon={InformationCircleContained} title={selectedSettingENUM.About} selected_setting={selectedSetting} setSelectedSettingF={setSelectedSettingF}/>
                         </div>
@@ -69,10 +71,12 @@ const Settings: FunctionComponent<SettingsProps> = (props: SettingsProps) => {
                                                 return <GeneralSettings/>
                                             case selectedSettingENUM.Appearance:
                                                 return <AppearanceSettings openModal={() => setWallpapersModal(true)}/>
-                                            //case selectedSettingENUM.Security:
-                                            //    return <SecuritySettings />
                                             case selectedSettingENUM.MusicFolders:
                                                 return <MusicFoldersSettings openConfirmModal={setCurrentPath}/>
+                                            //case selectedSettingENUM.Security:
+                                            //    return <SecuritySettings />
+                                            case selectedSettingENUM.ExportSongs:
+                                                return <ExportSettings />
                                             case selectedSettingENUM.Advanced:
                                                 return <AdvancedSettings />
                                             case selectedSettingENUM.About:

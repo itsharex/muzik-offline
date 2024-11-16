@@ -20,26 +20,34 @@ pub fn edit_song_metadata(
     song_path: String,
     song_metadata: String,
     has_changed_cover: bool,
-    cover: String
+    cover: String,
 ) -> Result<String, String> {
     //convert song_metadata to Song using serde_json
     match serde_json::from_str::<Song>(&song_metadata) {
         Ok(mut song) => {
-            if let Ok(cov_as_vec) = edit_metadata_id3(&song_path, &song, &has_changed_cover, &cover) {
+            if let Ok(cov_as_vec) = edit_metadata_id3(&song_path, &song, &has_changed_cover, &cover)
+            {
                 if has_changed_cover == true {
-                    song.cover_uuid = Some(insert_into_covers_tree(db_manager.clone(), cov_as_vec, &song.path).to_string());
+                    song.cover_uuid = Some(
+                        insert_into_covers_tree(db_manager.clone(), cov_as_vec, &song.path)
+                            .to_string(),
+                    );
                 }
                 insert_song_into_tree(db_manager.clone(), &song);
                 insert_into_album_tree(db_manager.clone(), &song);
                 insert_into_artist_tree(db_manager.clone(), &song);
                 insert_into_genre_tree(db_manager.clone(), &song);
-                Ok(song.cover_uuid.unwrap_or("Error acquiring cover uuid".to_string()))
+                Ok(song
+                    .cover_uuid
+                    .unwrap_or("Error acquiring cover uuid".to_string()))
             } else if let Ok(()) = edit_metadata_lofty(&song_path, &song) {
                 insert_song_into_tree(db_manager.clone(), &song);
                 insert_into_album_tree(db_manager.clone(), &song);
                 insert_into_artist_tree(db_manager.clone(), &song);
                 insert_into_genre_tree(db_manager.clone(), &song);
-                Ok(song.cover_uuid.unwrap_or("Error acquiring cover uuid".to_string()))
+                Ok(song
+                    .cover_uuid
+                    .unwrap_or("Error acquiring cover uuid".to_string()))
             } else {
                 Err(format!("Error editing metadata"))
             }
@@ -74,7 +82,7 @@ fn edit_metadata_id3(
     song_path: &String,
     song: &Song,
     has_changed_cover: &bool,
-    cover: &String
+    cover: &String,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let mut tag = id3::Tag::read_from_path(song_path)?;
     let mut cov_as_vec = Vec::new();

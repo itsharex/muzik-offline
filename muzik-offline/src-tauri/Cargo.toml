@@ -58,6 +58,9 @@ features = [
     "Win32_Graphics_Gdi",
 ]
 
+[target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
+tauri-plugin-autostart = "2"
+
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!

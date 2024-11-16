@@ -5,12 +5,19 @@
 use std::sync::{Arc, Mutex};
 use tauri::State;
 
-use crate::database::{db_api::{delete_song_from_tree, get_song_paths}, db_manager::DbManager};
+use crate::database::{
+    db_api::{delete_song_from_tree, get_song_paths},
+    db_manager::DbManager,
+};
 
 use super::metadata_retriever::{decode_directories, get_songs_in_path};
 
 #[tauri::command]
-pub async fn refresh_paths(db_manager: State<'_, Arc<Mutex<DbManager>>>, paths_as_json_array: String, compress_image_option: bool) -> Result<String, String> {   
+pub async fn refresh_paths(
+    db_manager: State<'_, Arc<Mutex<DbManager>>>,
+    paths_as_json_array: String,
+    compress_image_option: bool,
+) -> Result<String, String> {
     let paths_as_vec = decode_directories(&paths_as_json_array);
 
     let mut song_id: i32 = 0;
@@ -33,7 +40,9 @@ pub async fn refresh_paths(db_manager: State<'_, Arc<Mutex<DbManager>>>, paths_a
 }
 
 #[tauri::command]
-pub fn detect_deleted_songs(db_manager: State<'_, Arc<Mutex<DbManager>>>) -> Result<String, String> {
+pub fn detect_deleted_songs(
+    db_manager: State<'_, Arc<Mutex<DbManager>>>,
+) -> Result<String, String> {
     let paths_as_vec = get_song_paths(db_manager.clone());
     let mut delete_uuids = Vec::new();
 
@@ -51,11 +60,13 @@ pub fn detect_deleted_songs(db_manager: State<'_, Arc<Mutex<DbManager>>>) -> Res
 
     match delete_uuids.len() {
         0 => {
-            let empty_vec_as_json = serde_json::to_string(&delete_uuids).unwrap_or("Error serializing deleted songs".to_string());
+            let empty_vec_as_json = serde_json::to_string(&delete_uuids)
+                .unwrap_or("Error serializing deleted songs".to_string());
             Ok(empty_vec_as_json)
-        },
+        }
         _ => {
-            let delete_uuids_as_json = serde_json::to_string(&delete_uuids).unwrap_or("Error serializing deleted songs".to_string());
+            let delete_uuids_as_json = serde_json::to_string(&delete_uuids)
+                .unwrap_or("Error serializing deleted songs".to_string());
             Ok(delete_uuids_as_json)
         }
     }

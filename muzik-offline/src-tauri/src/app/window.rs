@@ -9,7 +9,8 @@ pub mod windows {
     use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
     use windows::Win32::System::LibraryLoader::GetModuleHandleW;
     use windows::Win32::UI::WindowsAndMessaging::{
-        CreateWindowExW, DefWindowProcW, DestroyWindow, RegisterClassExW, WINDOW_EX_STYLE, WINDOW_STYLE, WNDCLASSEXW,
+        CreateWindowExW, DefWindowProcW, DestroyWindow, RegisterClassExW, WINDOW_EX_STYLE,
+        WINDOW_STYLE, WNDCLASSEXW,
     };
 
     pub struct Window {

@@ -1,7 +1,7 @@
 use dirs::home_dir;
 use sled::{Db, Tree};
-use std::sync::RwLock;
 use std::path::PathBuf;
+use std::sync::RwLock;
 
 pub struct DbManager {
     pub song_tree: RwLock<Tree>,

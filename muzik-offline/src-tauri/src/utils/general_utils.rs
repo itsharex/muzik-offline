@@ -1,10 +1,10 @@
 use base64::{engine::general_purpose, Engine as _};
 use image::imageops::FilterType;
 use rayon::prelude::*;
-use tauri::State;
 use std::net::TcpListener;
 use std::sync::{Arc, Mutex};
 use std::{io::Cursor, path::Path};
+use tauri::State;
 
 use crate::components::song::Song;
 use crate::constants::null_cover_four::NULL_COVER_FOUR;
@@ -166,18 +166,15 @@ pub fn check_with_lofty(path: &Path) -> Result<bool, Box<dyn std::error::Error>>
     Ok(false)
 }
 
-pub fn get_song_cover_as_bytes(db_manager: State<'_, Arc<Mutex<DbManager>>>, song: &Song, key: i32) -> Vec<u8> {
+pub fn get_song_cover_as_bytes(
+    db_manager: State<'_, Arc<Mutex<DbManager>>>,
+    song: &Song,
+    key: i32,
+) -> Vec<u8> {
     match &song.cover_uuid {
-        Some(cover_uuid) => 
-        {
-            match db_manager.lock() {
-                Ok(db_manager) => {
-                    return get_image_from_tree(db_manager, cover_uuid.as_str())
-                },
-                Err(_) => {
-                    return Vec::new()
-                }
-            }
+        Some(cover_uuid) => match db_manager.lock() {
+            Ok(db_manager) => return get_image_from_tree(db_manager, cover_uuid.as_str()),
+            Err(_) => return Vec::new(),
         },
         None => match key {
             key if key % 4 == 0 => match decode_image_in_parallel(&NULL_COVER_ONE.to_owned()) {

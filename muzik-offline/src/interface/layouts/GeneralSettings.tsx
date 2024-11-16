@@ -53,8 +53,7 @@ const GeneralSettings = () => {
     }
 
     function setStoreValue(arg: string, type: string){
-        if(type === "AppActivityDiscord"){
-            if(arg === "Yes" && local_store.AppActivityDiscord === "No"){//connect
+        if(type === "AppActivityDiscord" && arg === "Yes" && local_store.AppActivityDiscord === "No"){//connect
                 handleDiscordConnectionChanges("Yes");
                 invoke("allow_connection_and_connect_to_discord_rpc").then().catch(() => {
                     setToast({
@@ -64,8 +63,7 @@ const GeneralSettings = () => {
                     });
                     handleDiscordConnectionChanges("No");
                 });
-            }
-            else if(arg === "No" && local_store.AppActivityDiscord === "Yes"){//disconnect
+        } else if(type === "AppActivityDiscord" && arg === "No" && local_store.AppActivityDiscord === "Yes"){//disconnect
                 handleDiscordConnectionChanges("No");
                 invoke("disallow_connection_and_close_discord_rpc").then().catch(() => {
                     setToast({
@@ -75,9 +73,7 @@ const GeneralSettings = () => {
                     });
                     handleDiscordConnectionChanges("Yes");
                 });
-            }
-        }
-        else{
+        } else{
             let temp: SavedObject = local_store;
             temp[type as keyof SavedObject] = arg as never;
             setStore(temp);

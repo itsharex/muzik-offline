@@ -69,10 +69,7 @@ const MusicFoldersSettings: FunctionComponent<MusicFoldersSettingsProps> = (prop
     useEffect(() => {
         // when component unmounts
         return () => {
-            console.log("unmounting");
-            console.log(oldDir, dir.Dir);
             if(areArraysDifferent(oldDir, dir.Dir)){
-                console.log("sending out toast");
                 setToast({title: "Loading songs...", message: "We are searching for new songs", type: toastType.warning, timeout: 5000});
                 reloadSongs();
             }
