@@ -32,7 +32,14 @@
       }
     ],
     "longDescription": "A desktop music player for listening to music offline that is downloaded onto your computer in the form of mp3, wav, ogg, flac files etc.",
-    "shortDescription": "A desktop music player for listening to music offline."
+    "shortDescription": "A desktop music player for listening to music offline.",
+    "linux": {
+      "deb": {
+        "depends": [
+          "libasound2-dev"
+        ]
+      }
+    }
   },
   "productName": "muzik-offline",
   "mainBinaryName": "muzik-offline",
