@@ -2,7 +2,7 @@ import { contextMenuButtons, contextMenuEnum } from "@muziktypes/index";
 import { motion } from "framer-motion";
 import { useRef, useEffect, useReducer } from "react";
 import { ChevronDown, Shuffle } from "@assets/icons";
-import { AddSongToPlaylistModal, DropDownMenuSmall, EditPropertiesModal, GeneralContextMenu, LoaderAnimated, PropertiesModal, RectangleSongBox } from "@components/index";
+import { AddSongToPlaylistModal, DropDownMenuSmall, EditPropertiesModal, GeneralContextMenu, PropertiesModal, RectangleSongBox } from "@components/index";
 import { ViewportList } from 'react-viewport-list';
 import { local_albums_db, local_songs_db } from "@database/database";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,8 @@ import { AllTracksState, alltracksReducer, reducerType } from "store";
 import { addThisSongToPlayLater, addThisSongToPlayNext, playThisListNow, startPlayingNewSong } from "utils/playerControl";
 import "@styles/pages/AllTracks.scss";
 import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectSortOption, selectThisSong, setOpenedDDM, setSongList } from "utils/reducerUtils";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const AllTracks = () => {
     const [state , dispatch] = useReducer(alltracksReducer, AllTracksState);
@@ -150,7 +152,17 @@ const AllTracks = () => {
                         and click on "click here to change directories". <br/>
                     </h1>
                 )}
-                { state.isloading && <LoaderAnimated /> }
+                { state.isloading && 
+                    <SkeletonTheme baseColor="#b6b6b633" highlightColor="#00000005" width={"calc(100%-5px)"} height={50} borderRadius={20} duration={2}>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1}/>
+                    </SkeletonTheme> }
                 <ViewportList viewportRef={alltracksRef} items={state.SongList} ref={listRef}>
                     {(song, index) => (
                         <RectangleSongBox 
