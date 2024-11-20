@@ -243,3 +243,24 @@ export function areArraysDifferent(array1: string[], array2: string[]) {
     // Check if any item is not present in both arrays
     return array1.some(item => !array2.includes(item));
 }
+
+export function getSongFieldsArray(selectedFields: Set<string>): string[] {
+    const fields: string[] = [];
+    if(selectedFields.has("title"))fields.push("title");
+    if(selectedFields.has("artist"))fields.push("artist");
+    if(selectedFields.has("album"))fields.push("album");
+    if(selectedFields.has("genre"))fields.push("genre");
+    if(selectedFields.has("year"))fields.push("year");
+    if(selectedFields.has("duration"))fields.push("duration");
+    if(selectedFields.has("path"))fields.push("path");
+    if(selectedFields.has("date_recorded"))fields.push("date_recorded");
+    if(selectedFields.has("date_released"))fields.push("date_released");
+    if(selectedFields.has("file_size"))fields.push("file_size");
+    if(selectedFields.has("file_type"))fields.push("file_type");
+    if(selectedFields.has("overall_bit_rate"))fields.push("overall_bit_rate");
+    if(selectedFields.has("audio_bit_rate"))fields.push("audio_bit_rate");
+    if(selectedFields.has("sample_rate"))fields.push("sample_rate");
+    if(selectedFields.has("bit_depth"))fields.push("bit_depth");
+    if(selectedFields.has("channels"))fields.push("channels");
+    return fields;
+}

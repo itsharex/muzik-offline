@@ -118,6 +118,7 @@ const AdvancedSettings = () => {
                         </div>
                     </div>)
                 }
+                {/*
                 <div className="setting">
                     <h3>Create a backup of your library(may take some time)</h3>
                     <div className="setting_dropdown">
@@ -133,7 +134,7 @@ const AdvancedSettings = () => {
                             <h4>Import backup</h4>
                         </motion.div>
                     </div>
-                </div>
+                </div>*/}
             </div>
         </div>
     )

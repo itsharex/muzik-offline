@@ -261,3 +261,11 @@ pub fn get_cover_url_for_discord(
         // future impl
     }
 }
+
+pub fn convert_single_to_double_backward_slash_on_path(path: &String) -> String {
+    #[cfg(target_os = "windows")]
+    return path.replace("\\", "\\\\");
+
+    #[cfg(not(target_os = "windows"))]
+    return path.to_string();
+}
