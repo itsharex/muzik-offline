@@ -17,7 +17,7 @@ type MusicFoldersSettingsProps = {
 
 const MusicFoldersSettings: FunctionComponent<MusicFoldersSettingsProps> = (props: MusicFoldersSettingsProps) => {
     const { dir, setDir } = useDirStore((state) => { return { dir: state.dir, setDir: state.setDir}; });
-    const [oldDir] = useState<string[]>(dir.Dir);
+    const [oldDir] = useState<Set<string>>(dir.Dir);
     const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store}; });
     const [directory, setDirectory] = useState<string>("");
@@ -56,19 +56,24 @@ const MusicFoldersSettings: FunctionComponent<MusicFoldersSettingsProps> = (prop
             multiple: false,
             defaultPath: await appConfigDir(),
         });
-        if(selected) setDir({Dir: dir.Dir.concat(selected)});
+        if(selected){
+            const newDir = dir.Dir;
+            newDir.add(selected);
+            setDir({Dir: newDir});
+        }
     };
 
     function addNewDir(){
         if(directory === "")return;
-        setDir({Dir: dir.Dir.concat(directory)});
+        const newDir = dir.Dir.add(directory);
+        setDir({Dir: newDir});
         setDirectory("");
     }
 
     useEffect(() => {
         // when component unmounts
         return () => {
-            if(areArraysDifferent(oldDir, dir.Dir)){
+            if(areArraysDifferent(Array.from(oldDir), Array.from(dir.Dir))){
                 setToast({title: "Loading songs...", message: "We are searching for new songs", type: toastType.warning, timeout: 5000});
                 reloadSongs();
             }
@@ -92,7 +97,7 @@ const MusicFoldersSettings: FunctionComponent<MusicFoldersSettingsProps> = (prop
             </div>
             <div className="MusicFoldersSettings_container">
                 {
-                    dir.Dir.map((value, index) => 
+                    Array.from(dir.Dir).map((value, index) => 
                         <div className="path" key={index}>
                             <h3>{value}</h3>
                             <div className="icon" onClick={() => props.openConfirmModal(value)}>

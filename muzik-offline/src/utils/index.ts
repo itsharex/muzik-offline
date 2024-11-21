@@ -253,7 +253,7 @@ export async function reloadLibrary(paths: string[]){
     //check paths only contain directories
     let dirs = useDirStore.getState().dir.Dir;
 
-    if(isInArray(paths, dirs)){
+    if(isInArray(paths, Array.from(dirs))){
         useToastStore.getState().setToast({title: "Cannot load songs...", message: "You are trying to reload a path that is already loaded", type: toastType.error, timeout: 5000});
         return;
     }
@@ -261,12 +261,12 @@ export async function reloadLibrary(paths: string[]){
     useToastStore.getState().setToast({title: "Loading songs...", message: "We are searching for new songs", type: toastType.info, timeout: 5000});
 
     // add new paths to the existing paths
-    dirs = dirs.concat(paths);
+    dirs = new Set([...dirs, ...paths]);
     const local_store = useSavedObjectStore.getState().local_store;
 
     invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(dirs), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
     .then(async() => {
-        useDirStore.getState().setDir({Dir: dirs.concat(paths)});
+        useDirStore.getState().setDir({Dir: dirs});
         await local_songs_db.songs.clear();
         await local_albums_db.albums.clear();
         await local_artists_db.artists.clear();
