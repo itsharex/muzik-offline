@@ -22,14 +22,13 @@ const MusicFoldersSettings: FunctionComponent<MusicFoldersSettingsProps> = (prop
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store}; });
     const [directory, setDirectory] = useState<string>("");
 
-    async function reloadSongs(){
-        await local_songs_db.songs.clear();
-        await local_albums_db.albums.clear();
-        await local_artists_db.artists.clear();
-        await local_genres_db.genres.clear();
-
+    function reloadSongs(){
         invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(dir.Dir), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
-            .then(async() => {
+        .then(async() => {
+                await local_songs_db.songs.clear();
+                await local_albums_db.albums.clear();
+                await local_artists_db.artists.clear();
+                await local_genres_db.genres.clear();
                 const res = await fetch_library(true);
                 let message = "";
 

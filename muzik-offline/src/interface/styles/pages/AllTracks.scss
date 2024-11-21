@@ -116,7 +116,6 @@
         }
 
         .drag-drop-border{
-            width: calc(100% - 5px);
             height: calc(100% - 87px);
             display: flex;
             flex-direction: column;
@@ -210,6 +209,10 @@
         .AllTracks_container{
             min-width: 759px;
             width: calc(100vw - var(--var-right-side-bar-width-smallest));
+
+            .drag-drop-border{
+                width: calc(100% - 5px);
+            }
         }
     }
 }

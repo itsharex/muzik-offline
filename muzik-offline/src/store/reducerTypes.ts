@@ -72,7 +72,6 @@ export type Action =
     | { type: reducerType.ADD_PLAYLIST; payload: playlist }
     | { type: reducerType.REMOVE_PLAYLIST; payload: number }
     | { type: reducerType.SET_IN_DRAG_DROP_REGION; payload: boolean }
-    | { type: reducerType.SET_IS_DRAGGING_ITEM; payload: boolean }
 
 
 
@@ -94,7 +93,6 @@ export interface AllTracksStateInterface{
     isPropertiesModalOpen: boolean,
     isEditingSongModalOpen: boolean,
     inDragDropRegion: boolean,
-    isDraggingItem: boolean,
 }
 
 export interface SearchSongInterface{
@@ -130,6 +128,7 @@ export interface AllAlbumsInterface{
     albumList: album[],
     albumMenuToOpen: album | null,
     isPlaylistModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface AllArtistsInterface{
@@ -141,6 +140,7 @@ export interface AllArtistsInterface{
     artistList: artist[],
     artistMenuToOpen: artist | null,
     isPlaylistModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface ArtistCatalogueInterface{
@@ -162,6 +162,7 @@ export interface AllGenresInterface{
     genreList: genre[],
     genreMenuToOpen: genre | null,
     isPlaylistModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface GenreViewInterface{

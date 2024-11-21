@@ -9,9 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { AllTracksState, alltracksReducer, reducerType } from "store";
 import { addThisSongToPlayLater, addThisSongToPlayNext, playThisListNow, startPlayingNewSong } from "utils/playerControl";
 import "@styles/pages/AllTracks.scss";
-import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectSortOption, selectThisSong, setOpenedDDM, setSongList } from "utils/reducerUtils";
-import { listen } from "@tauri-apps/api/event";
-import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, openFileDialogDND, processArrowKeysInput, processDragEvents, selectSortOption, selectThisSong, setOpenedDDM, setSongList } from "utils/reducerUtils";
 
 const AllTracks = () => {
     const [state , dispatch] = useReducer(alltracksReducer, AllTracksState);
@@ -68,10 +66,10 @@ const AllTracks = () => {
     function setList(){
         dispatch({ type: reducerType.SET_LOADING, payload: true});
         dispatch({ type: reducerType.SET_LOADING, payload: false});
-        /*local_songs_db.songs.orderBy(state.sort.by).toArray().then((list) =>{
+        local_songs_db.songs.orderBy(state.sort.by).toArray().then((list) =>{
             if(state.sort.aToz === "Descending")list = list.reverse();//sort in descending order
             setSongList(list, dispatch);
-        });*/
+        });
     }
 
     function keyBoardShortCuts(ev: any){
@@ -89,26 +87,8 @@ const AllTracks = () => {
         }
     }
 
-    async function listenToDragDrop(){
-        const unlisten = await getCurrentWebview().onDragDropEvent(async(event) => {
-            if (event.payload.type === 'over' && state.inDragDropRegion) {
-                dispatch({ type: reducerType.SET_IS_DRAGGING_ITEM, payload: true});
-            } else if (event.payload.type === 'over' && !state.inDragDropRegion && state.isDraggingItem) {
-                dispatch({ type: reducerType.SET_IS_DRAGGING_ITEM, payload: false});
-            } else if (event.payload.type === 'drop' && state.inDragDropRegion && state.isDraggingItem) {
-                dispatch({ type: reducerType.SET_IS_DRAGGING_ITEM, payload: false});
-                console.log('User dropped', event.payload.paths);
-            } else if(event.payload.type === 'over'){
-                await getCurrentWebview().setFocus();
-            }
-            console.log('Event:', event.payload, 'Region:', state.inDragDropRegion, 'Dragging:', state.isDraggingItem);
-        });
-
-        return unlisten;
-    }
-
     useEffect(() => {
-        listenToDragDrop();
+        processDragEvents(dispatch);
         document.addEventListener("keydown", keyBoardShortCuts);
         return () => document.removeEventListener("keydown", keyBoardShortCuts);
     }, [state])
@@ -165,13 +145,11 @@ const AllTracks = () => {
             </div>
             <div className="AllTracks_container" ref={alltracksRef}>
                 {state.SongList.length === 0 && state.isloading === false && (
-                    <div className={"drag-drop-border" + (state.isDraggingItem ? " drag-drop-border-hover" : "")}
-                        onMouseEnter={() => dispatch({ type: reducerType.SET_IN_DRAG_DROP_REGION, payload: true})}
-                        onMouseLeave={() => dispatch({ type: reducerType.SET_IN_DRAG_DROP_REGION, payload: false})}>
+                    <div className={"drag-drop-border" + (state.inDragDropRegion ? " drag-drop-border-hover" : "")}>
                         <FolderPlus />
-                        <h1>Drag and drop your music folder here</h1>
+                        { state.inDragDropRegion ? <h1>Drop it here!</h1> : <h1>Drag and drop your music folder here</h1> }
                         <p>or</p>
-                        <motion.div className="add-folder-btn" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={() => {}}>
+                        <motion.div className="add-folder-btn" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={openFileDialogDND}>
                             <h2>Browse folders</h2>
                         </motion.div>
                     </div>
