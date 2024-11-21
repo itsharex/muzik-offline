@@ -56,21 +56,21 @@ pub async fn export_songs_as_json(app: tauri::AppHandle, db_manager: State<'_, A
     let json_songs = export_songs.iter().map(|song| extract_song(song, &fields_to_include)).collect::<Vec<String>>().join(",\n");
 
     let json = format!(r#"{{
-        "num_titles": {},
-        "num_unique_artists": {},
-        "num_unique_albums": {},
-        "num_unique_genres": {},
-        "oldest_song_by_year": "{}",
-        "youngest_song_by_year": "{}",
-        "longest_song_by_length": "{}",
-        "shortest_song_by_length": "{}",
-        "largest_song_by_size": "{}",
-        "smallest_song_by_size": "{}",
-        "file_types": {},
-        "songs": [
-            {}
-        ]
-    }}"#, num_titles, num_unique_artists, num_unique_albums, num_unique_genres, 
+    "num_titles": {},
+    "num_unique_artists": {},
+    "num_unique_albums": {},
+    "num_unique_genres": {},
+    "oldest_song_by_year": "{}",
+    "youngest_song_by_year": "{}",
+    "longest_song_by_length": "{}",
+    "shortest_song_by_length": "{}",
+    "largest_song_by_size": "{}",
+    "smallest_song_by_size": "{}",
+    "file_types": {},
+    "songs": [
+{}
+    ]
+}}"#, num_titles, num_unique_artists, num_unique_albums, num_unique_genres, 
         oldest_song.unwrap_or("".to_string()), youngest_song.unwrap_or("".to_string()),
         longest_song.unwrap_or("".to_string()), shortest_song.unwrap_or("".to_string()),
         largest_file.unwrap_or("".to_string()), smallest_file.unwrap_or("".to_string()),
@@ -94,33 +94,30 @@ pub async fn export_songs_as_json(app: tauri::AppHandle, db_manager: State<'_, A
 }
 
 fn extract_song(song: &ExportSong, fields_to_include: &Vec<String>) -> String{
-    let mut json = "{\n".to_string();
+    let mut json = "\t\t{\n".to_string();
     for field in fields_to_include{
         match field.as_str(){
-            "title" => json.push_str(&format!(r#""title": "{}","#, song.title)),
-            "artist" => json.push_str(&format!(r#""artist": "{}","#, song.artist)),
-            "album" => json.push_str(&format!(r#""album": "{}","#, song.album)),
-            "genre" => json.push_str(&format!(r#""genre": "{}","#, song.genre)),
-            "year" => json.push_str(&format!(r#""year": {},"#, song.year)),
-            "duration" => json.push_str(&format!(r#""duration": "{}","#, song.duration)),
-            "path" => json.push_str(&format!(r#""path": "{}","#, convert_single_to_double_backward_slash_on_path(&song.path))),
-            "date_recorded" => json.push_str(&format!(r#""date_recorded": "{}","#, song.date_recorded)),
-            "date_released" => json.push_str(&format!(r#""date_released": "{}","#, song.date_released)),
-            "file_size" => json.push_str(&format!(r#""file_size": {},"#, song.file_size)),
-            "file_type" => json.push_str(&format!(r#""file_type": "{}","#, song.file_type)),
-            "overall_bit_rate" => json.push_str(&format!(r#""overall_bit_rate": {},"#, song.overall_bit_rate)),
-            "audio_bit_rate" => json.push_str(&format!(r#""audio_bit_rate": {},"#, song.audio_bit_rate)),
-            "sample_rate" => json.push_str(&format!(r#""sample_rate": {},"#, song.sample_rate)),
-            "bit_depth" => json.push_str(&format!(r#""bit_depth": {},"#, song.bit_depth)),
-            "channels" => json.push_str(&format!(r#""channels": {},"#, song.channels)),
+            "title" => json.push_str(&format!("\t\t\t\"title\": \"{}\",\n", song.title)),
+            "artist" => json.push_str(&format!("\t\t\t\"artist\": \"{}\",\n", song.artist)),
+            "album" => json.push_str(&format!("\t\t\t\"album\": \"{}\",\n", song.album)),
+            "genre" => json.push_str(&format!("\t\t\t\"genre\": \"{}\",\n", song.genre)),
+            "year" => json.push_str(&format!("\t\t\t\"year\": {},\n", song.year)),
+            "duration" => json.push_str(&format!("\t\t\t\"duration\": \"{}\",\n", song.duration)),
+            "path" => json.push_str(&format!("\t\t\t\"path\": \"{}\",\n", convert_single_to_double_backward_slash_on_path(&song.path))),
+            "date_recorded" => json.push_str(&format!("\t\t\t\"date_recorded\": \"{}\",\n", song.date_recorded)),
+            "date_released" => json.push_str(&format!("\t\t\t\"date_released\": \"{}\",\n", song.date_released)),
+            "file_size" => json.push_str(&format!("\t\t\t\"file_size\": {},\n", song.file_size)),
+            "file_type" => json.push_str(&format!("\t\t\t\"file_type\": \"{}\",\n", song.file_type)),
+            "overall_bit_rate" => json.push_str(&format!("\t\t\t\"overall_bit_rate\": {},\n", song.overall_bit_rate)),
+            "audio_bit_rate" => json.push_str(&format!("\t\t\t\"audio_bit_rate\": {},\n", song.audio_bit_rate)),
+            "sample_rate" => json.push_str(&format!("\t\t\t\"sample_rate\": {},\n", song.sample_rate)),
+            "bit_depth" => json.push_str(&format!("\t\t\t\"bit_depth\": {},\n", song.bit_depth)),
+            "channels" => json.push_str(&format!("\t\t\t\"channels\": {},\n", song.channels)),
             _ => {}
-        }
-        // add new line if not the last field
-        if field != fields_to_include.last().unwrap(){
-            json.push('\n');
         }
     }
     json.pop();
-    json.push_str("\n}");
+    json.pop();
+    json.push_str("\n\t\t}");
     json
 }

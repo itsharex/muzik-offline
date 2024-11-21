@@ -55,39 +55,32 @@ pub async fn export_songs_as_html(app: tauri::AppHandle, db_manager: State<'_, A
 
     let songs_html = export_songs.iter().map(|song| extract_fields_for_song(&song, &fields_to_include)).collect::<String>();
 
-    let html = format!("
-        <!DOCTYPE html>\n
-        <html lang=\"en\">\n
-        <head>\n
-            <meta charset=\"UTF-8\">\n
-            <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n
-            <style>\n
-                {}\n
-            </style>\n
-            <title>Muzik-offline</title>\n
-        </head>\n
-        <body>\n
-            <h1>Muzik-offline</h1>\n
-            <h2>Number of title: {}</h2>\n
-            <h2>Number of unique artists: {}</h2>\n
-            <h2>Number of unique albums: {}</h2>\n
-            <h2>Number of unique genres: {}</h2>\n
-            <h2>Oldest song: {}</h2>\n
-            <h2>Youngest song: {}</h2>\n
-            <h2>Longest song: {}</h2>\n
-            <h2>Shortest song: {}</h2>\n
-            <h2>Largest file: {}</h2>\n
-            <h2>Smallest file: {}</h2>\n
-            <h2>File types: {}</h2>\n
-            <table>\n
-                <tr>\n
-                    {}\n
-                </tr>\n
-                {}\n
-            </table>\n
-            </body>\n
-        </html>\n
-        ", 
+    let html = format!("<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <style>{}</style>
+    <title>Muzik-offline</title>
+</head>
+<body>
+    <h1>Muzik-offline</h1>
+    <h2>Number of title: {}</h2>
+    <h2>Number of unique artists: {}</h2>
+    <h2>Number of unique albums: {}</h2>
+    <h2>Number of unique genres: {}</h2>
+    <h2>Oldest song: {}</h2>
+    <h2>Youngest song: {}</h2>
+    <h2>Longest song: {}</h2>
+    <h2>Shortest song: {}</h2>
+    <h2>Largest file: {}</h2>
+    <h2>Smallest file: {}</h2>
+    <h2>File types: {}</h2>
+    <table>
+        <tr>{}</tr>
+{}</table>
+</body>
+</html>", 
         create_css_styles(),
         num_titles, num_unique_artists, num_unique_albums, num_unique_genres, 
         oldest_song.unwrap_or("".to_string()), youngest_song.unwrap_or("".to_string()),
@@ -145,54 +138,57 @@ fn create_css_styles() -> String{
 
 fn extract_fields_for_header(fields_to_include: &Vec<String>) -> String {
     let mut header = String::new();
+    header.push('\n');
     for field in fields_to_include.iter(){
         match field.as_str(){
-            "title" => header.push_str("<th>Title</th>\n"),
-            "artist" => header.push_str("<th>Artist</th>\n"),
-            "album" => header.push_str("<th>Album</th>\n"),
-            "genre" => header.push_str("<th>Genre</th>\n"),
-            "year" => header.push_str("<th>Year</th>\n"),
-            "duration" => header.push_str("<th>Duration</th>\n"),
-            "path" => header.push_str("<th>Path</th>\n"),
-            "date Recorded" => header.push_str("<th>Date Recorded</th>\n"),
-            "date Released" => header.push_str("<th>Date Released</th>\n"),
-            "file Size" => header.push_str("<th>File Size</th>\n"),
-            "file Type" => header.push_str("<th>File Type</th>\n"),
-            "overall Bit Rate" => header.push_str("<th>Overall Bit Rate</th>\n"),
-            "audio Bit Rate" => header.push_str("<th>Audio Bit Rate</th>\n"),
-            "sample Rate" => header.push_str("<th>Sample Rate</th>\n"),
-            "bit Depth" => header.push_str("<th>Bit Depth</th>\n"),
-            "channels" => header.push_str("<th>Channels</th>\n"),
+            "title" => header.push_str("\t\t\t<th>Title</th>\n"),
+            "artist" => header.push_str("\t\t\t<th>Artist</th>\n"),
+            "album" => header.push_str("\t\t\t<th>Album</th>\n"),
+            "genre" => header.push_str("\t\t\t<th>Genre</th>\n"),
+            "year" => header.push_str("\t\t\t<th>Year</th>\n"),
+            "duration" => header.push_str("\t\t\t<th>Duration</th>\n"),
+            "path" => header.push_str("\t\t\t<th>Path</th>\n"),
+            "date_recorded" => header.push_str("\t\t\t<th>Date Recorded</th>\n"),
+            "date_released" => header.push_str("\t\t\t<th>Date Released</th>\n"),
+            "file_size" => header.push_str("\t\t\t<th>File Size</th>\n"),
+            "file_type" => header.push_str("\t\t\t<th>File Type</th>\n"),
+            "overall_bit_rate" => header.push_str("\t\t\t<th>Overall Bit Rate</th>\n"),
+            "audio_bit_rate" => header.push_str("\t\t\t<th>Audio Bit Rate</th>\n"),
+            "sample_rate" => header.push_str("\t\t\t<th>Sample Rate</th>\n"),
+            "bit_depth" => header.push_str("\t\t\t<th>Bit Depth</th>\n"),
+            "channels" => header.push_str("\t\t\t<th>Channels</th>\n"),
             _ => ()
         }
     }
+    header.push('\t');
+    header.push('\t');
     header
 }
 
 fn extract_fields_for_song(song: &ExportSong, fields_to_include: &Vec<String>) -> String{
     let mut song_str = String::new();
-    song_str.push_str("<tr>\n");
+    song_str.push_str("\t\t<tr>\n");
     for field in fields_to_include.iter(){
         match field.as_str(){
-            "title" => song_str.push_str(&format!("<td>{}</td>\n", song.title)),
-            "artist" => song_str.push_str(&format!("<td>{}</td>\n", song.artist)),
-            "album" => song_str.push_str(&format!("<td>{}</td>\n", song.album)),
-            "genre" => song_str.push_str(&format!("<td>{}</td>\n", song.genre)),
-            "year" => song_str.push_str(&format!("<td>{}</td>\n", song.year)),
-            "duration" => song_str.push_str(&format!("<td>{}</td>\n", song.duration)),
-            "path" => song_str.push_str(&format!("<td>{}</td>\n", convert_single_to_double_backward_slash_on_path(&song.path))),
-            "date Recorded" => song_str.push_str(&format!("<td>{}</td>\n", song.date_recorded)),
-            "date Released" => song_str.push_str(&format!("<td>{}</td>\n", song.date_released)),
-            "file Size" => song_str.push_str(&format!("<td>{}</td>\n", song.file_size)),
-            "file Type" => song_str.push_str(&format!("<td>{}</td>\n", song.file_type)),
-            "overall Bit Rate" => song_str.push_str(&format!("<td>{}</td>\n", song.overall_bit_rate)),
-            "audio Bit Rate" => song_str.push_str(&format!("<td>{}</td>\n", song.audio_bit_rate)),
-            "sample Rate" => song_str.push_str(&format!("<td>{}</td>\n", song.sample_rate)),
-            "bit Depth" => song_str.push_str(&format!("<td>{}</td>\n", song.bit_depth)),
-            "channels" => song_str.push_str(&format!("<td>{}</td>\n", song.channels)),
+            "title" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.title)),
+            "artist" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.artist)),
+            "album" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.album)),
+            "genre" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.genre)),
+            "year" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.year)),
+            "duration" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.duration)),
+            "path" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", convert_single_to_double_backward_slash_on_path(&song.path))),
+            "date_recorded" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.date_recorded)),
+            "date_released" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.date_released)),
+            "file_size" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.file_size)),
+            "file_type" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.file_type)),
+            "overall_bit_rate" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.overall_bit_rate)),
+            "audio_bit_rate" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.audio_bit_rate)),
+            "sample_rate" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.sample_rate)),
+            "bit_depth" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.bit_depth)),
+            "channels" => song_str.push_str(&format!("\t\t\t<td>{}</td>\n", song.channels)),
             _ => ()
         }
     }
-    song_str.push_str("</tr>\n");
+    song_str.push_str("\t\t</tr>\n");
     song_str
 }

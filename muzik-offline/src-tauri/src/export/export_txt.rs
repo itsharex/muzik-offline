@@ -1,4 +1,5 @@
 use std::{collections::HashSet, sync::{Arc, Mutex}};
+use tabled::{builder::Builder, settings::Style};
 
 use tauri::State;
 use tauri_plugin_dialog::DialogExt;
@@ -53,31 +54,38 @@ pub async fn export_songs_as_txt(app: tauri::AppHandle, db_manager: State<'_, Ar
         }
     }).collect();
 
-    let songs_txt = export_songs.iter().map(|song| extract_fields_for_song(&song, &fields_to_include)).collect::<String>();
+    let mut builder = Builder::new();
 
-    let txt = format!("
-        Number of Titles: {}\n
-        Number of Unique Artists: {}\n
-        Number of Unique Albums: {}\n
-        Number of Unique Genres: {}\n
-        Oldest Song: {}\n
-        Youngest Song: {}\n
-        Longest Song: {}\n
-        Shortest Song: {}\n
-        Largest File: {}\n
-        Smallest File: {}\n
-        File Types: {}\n
-        Songs:\n
-        {}\n
-        {}\n
-        {}\n
-        ",
+    let header_array = create_header(&fields_to_include);
+    builder.push_record(header_array);
+    
+    let songs_array = export_songs.iter().map(|song| extract_fields_for_song(&song, &fields_to_include)).collect::<Vec<Vec<String>>>();
+    
+    for song in songs_array.iter(){
+        builder.push_record(song);
+    }
+    
+    let table = builder.build().with(Style::modern_rounded()).to_string();
+
+    let txt = format!("Number of Titles: {}
+Number of Unique Artists: {}
+Number of Unique Albums: {}
+Number of Unique Genres: {}
+Oldest Song: {}
+Youngest Song: {}
+Longest Song: {}
+Shortest Song: {}
+Largest File: {}
+Smallest File: {}
+File Types: {}
+Songs:
+{}",
         num_titles, num_unique_artists, num_unique_albums, num_unique_genres, 
         oldest_song.unwrap_or("".to_string()), youngest_song.unwrap_or("".to_string()),
         longest_song.unwrap_or("".to_string()), shortest_song.unwrap_or("".to_string()),
         largest_file.unwrap_or("".to_string()), smallest_file.unwrap_or("".to_string()),
         serde_json::to_string(&file_types).unwrap_or("".to_string()),  
-        create_divider(fields_to_include.len()), create_header(&fields_to_include), songs_txt
+        table,
     );
 
     // then prompt user to save the file with dialog
@@ -97,81 +105,55 @@ pub async fn export_songs_as_txt(app: tauri::AppHandle, db_manager: State<'_, Ar
     }
 }
 
-fn create_divider(size: usize) -> String {
-    let mut divider = String::new();
-    for _ in 0..size {
-        divider.push_str("+-----------------");
-    }
-    divider.push_str("+");
-    divider
-}
-
-fn create_header(fields_to_include: &Vec<String>) -> String {
-    let mut header = String::new();
+fn create_header(fields_to_include: &Vec<String>) -> Vec<String> {
+    let mut header = Vec::new();
     for field in fields_to_include.iter(){
         match field.as_str(){
-            "title" => header.push_str("| Title           "),
-            "artist" => header.push_str("| Artist          "),
-            "album" => header.push_str("| Album           "),
-            "genre" => header.push_str("| Genre           "),
-            "year" => header.push_str("| Year            "),
-            "duration" => header.push_str("| Duration        "),
-            "path" => header.push_str("| Path            "),
-            "date_recorded" => header.push_str("| Date Recorded   "),
-            "date_released" => header.push_str("| Date Released   "),
-            "file_size" => header.push_str("| File Size       "),
-            "file_type" => header.push_str("| File Type       "),
-            "overall_bit_rate" => header.push_str("| Overall Bit Rate"),
-            "audio_bit_rate" => header.push_str("| Audio Bit Rate  "),
-            "sample_rate" => header.push_str("| Sample Rate     "),
-            "bit_depth" => header.push_str("| Bit Depth       "),
-            "channels" => header.push_str("| Channels        "),
+            "title" => header.push(format!("Title")),
+            "artist" => header.push(format!("Artist")),
+            "album" => header.push(format!("Album")),
+            "genre" => header.push(format!("Genre")),
+            "year" => header.push(format!("Year")),
+            "duration" => header.push(format!("Duration")),
+            "path" => header.push(format!("Path")),
+            "date_recorded" => header.push(format!("Date Recorded")),
+            "date_released" => header.push(format!("Date Released")),
+            "file_size" => header.push(format!("File Size")),
+            "file_type" => header.push(format!("File Type")),
+            "overall_bit_rate" => header.push(format!("Overall Bit Rate")),
+            "audio_bit_rate" => header.push(format!("Audio Bit Rate")),
+            "sample_rate" => header.push(format!("Sample Rate")),
+            "bit_depth" => header.push(format!("Bit Depth")),
+            "channels" => header.push(format!("Channels")),
             _ => ()
         }
     }
-    header.push_str("|");
     header
 }
 
-fn fit_or_truncate(s: &str) -> String {
-    if s.len() > 17 {
-        s.chars().take(14).collect::<String>() + "..."
-    } else {
-        // add spaces to make it 17 characters
-        let mut s = s.to_string();
-        for _ in 0..(17 - s.len()) {
-            s.push(' ');
-        }
-        s
-    }
-}
-
-fn extract_fields_for_song(song: &ExportSong, fields_to_include: &Vec<String>) -> String{
-    let mut song_str = String::new();
-    song_str.push_str(&create_divider(fields_to_include.len()));
+fn extract_fields_for_song(song: &ExportSong, fields_to_include: &Vec<String>) -> Vec<String>{
+    let mut song_array = Vec::new();
     for field in fields_to_include.iter(){
         match field.as_str(){
-            "title" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.title))),
-            "artist" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.artist))),
-            "album" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.album))),
-            "genre" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.genre))),
-            "year" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.year.to_string()))),
-            "duration" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.duration))),
-            "path" => song_str.push_str(&format!("|{}", fit_or_truncate(&convert_single_to_double_backward_slash_on_path(&song.path)))),
-            "date_recorded" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.date_recorded))),
-            "date_released" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.date_released))),
-            "file_size" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.file_size.to_string()))),
-            "file_type" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.file_type))),
-            "overall_bit_rate" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.overall_bit_rate.to_string()))),
-            "audio_bit_rate" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.audio_bit_rate.to_string()))),
-            "sample_rate" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.sample_rate.to_string()))),
-            "bit_depth" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.bit_depth.to_string()))),
-            "channels" => song_str.push_str(&format!("|{}", fit_or_truncate(&song.channels.to_string()))),
+            "title" => song_array.push(format!("{}", &song.title)),
+            "artist" => song_array.push(format!("{}", &song.artist)),
+            "album" => song_array.push(format!("{}", &song.album)),
+            "genre" => song_array.push(format!("{}", &song.genre)),
+            "year" => song_array.push(format!("{}", &song.year.to_string())),
+            "duration" => song_array.push(format!("{}", &song.duration)),
+            "path" => song_array.push(format!("{}", &convert_single_to_double_backward_slash_on_path(&song.path))),
+            "date_recorded" => song_array.push(format!("{}", &song.date_recorded)),
+            "date_released" => song_array.push(format!("{}", &song.date_released)),
+            "file_size" => song_array.push(format!("{}", &song.file_size.to_string())),
+            "file_type" => song_array.push(format!("{}", &song.file_type)),
+            "overall_bit_rate" => song_array.push(format!("{}", &song.overall_bit_rate.to_string())),
+            "audio_bit_rate" => song_array.push(format!("{}", &song.audio_bit_rate.to_string())),
+            "sample_rate" => song_array.push(format!("{}", &song.sample_rate.to_string())),
+            "bit_depth" => song_array.push(format!("{}", &song.bit_depth.to_string())),
+            "channels" => song_array.push(format!("{}", &song.channels.to_string())),
             _ => ()
         }
     }
-    song_str.push_str("|");
-    song_str.push_str(&create_divider(fields_to_include.len()));
 
-    song_str
+    song_array
 }
