@@ -1,7 +1,7 @@
 import { contextMenuButtons, contextMenuEnum } from "@muziktypes/index";
 import { motion } from "framer-motion";
 import { useRef, useEffect, useReducer } from "react";
-import { ChevronDown, Shuffle } from "@assets/icons";
+import { ChevronDown, FolderPlus, Shuffle } from "@assets/icons";
 import { AddSongToPlaylistModal, DropDownMenuSmall, EditPropertiesModal, GeneralContextMenu, LoaderAnimated, PropertiesModal, RectangleSongBox } from "@components/index";
 import { ViewportList } from 'react-viewport-list';
 import { local_albums_db, local_songs_db } from "@database/database";
@@ -10,6 +10,8 @@ import { AllTracksState, alltracksReducer, reducerType } from "store";
 import { addThisSongToPlayLater, addThisSongToPlayNext, playThisListNow, startPlayingNewSong } from "utils/playerControl";
 import "@styles/pages/AllTracks.scss";
 import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectSortOption, selectThisSong, setOpenedDDM, setSongList } from "utils/reducerUtils";
+import { listen } from "@tauri-apps/api/event";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 
 const AllTracks = () => {
     const [state , dispatch] = useReducer(alltracksReducer, AllTracksState);
@@ -65,11 +67,11 @@ const AllTracks = () => {
 
     function setList(){
         dispatch({ type: reducerType.SET_LOADING, payload: true});
-        local_songs_db.songs.orderBy(state.sort.by).toArray().then((list) =>{
-            dispatch({ type: reducerType.SET_LOADING, payload: false});
+        dispatch({ type: reducerType.SET_LOADING, payload: false});
+        /*local_songs_db.songs.orderBy(state.sort.by).toArray().then((list) =>{
             if(state.sort.aToz === "Descending")list = list.reverse();//sort in descending order
             setSongList(list, dispatch);
-        });
+        });*/
     }
 
     function keyBoardShortCuts(ev: any){
@@ -87,9 +89,28 @@ const AllTracks = () => {
         }
     }
 
+    async function listenToDragDrop(){
+        const unlisten = await getCurrentWebview().onDragDropEvent(async(event) => {
+            if (event.payload.type === 'over' && state.inDragDropRegion) {
+                dispatch({ type: reducerType.SET_IS_DRAGGING_ITEM, payload: true});
+            } else if (event.payload.type === 'over' && !state.inDragDropRegion && state.isDraggingItem) {
+                dispatch({ type: reducerType.SET_IS_DRAGGING_ITEM, payload: false});
+            } else if (event.payload.type === 'drop' && state.inDragDropRegion && state.isDraggingItem) {
+                dispatch({ type: reducerType.SET_IS_DRAGGING_ITEM, payload: false});
+                console.log('User dropped', event.payload.paths);
+            } else if(event.payload.type === 'over'){
+                await getCurrentWebview().setFocus();
+            }
+            console.log('Event:', event.payload, 'Region:', state.inDragDropRegion, 'Dragging:', state.isDraggingItem);
+        });
+
+        return unlisten;
+    }
+
     useEffect(() => {
+        listenToDragDrop();
         document.addEventListener("keydown", keyBoardShortCuts);
-        return () => document.removeEventListener("keydown", keyBoardShortCuts);  
+        return () => document.removeEventListener("keydown", keyBoardShortCuts);
     }, [state])
 
     useEffect(() => { setList(); }, [state.sort])
@@ -144,11 +165,16 @@ const AllTracks = () => {
             </div>
             <div className="AllTracks_container" ref={alltracksRef}>
                 {state.SongList.length === 0 && state.isloading === false && (
-                    <h1>
-                        it seems like you may not have added any songs yet.<br/>
-                        To add songs, click on the settings button above, scroll down <br/>
-                        and click on "click here to change directories". <br/>
-                    </h1>
+                    <div className={"drag-drop-border" + (state.isDraggingItem ? " drag-drop-border-hover" : "")}
+                        onMouseEnter={() => dispatch({ type: reducerType.SET_IN_DRAG_DROP_REGION, payload: true})}
+                        onMouseLeave={() => dispatch({ type: reducerType.SET_IN_DRAG_DROP_REGION, payload: false})}>
+                        <FolderPlus />
+                        <h1>Drag and drop your music folder here</h1>
+                        <p>or</p>
+                        <motion.div className="add-folder-btn" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={() => {}}>
+                            <h2>Browse folders</h2>
+                        </motion.div>
+                    </div>
                 )}
                 { state.isloading && <LoaderAnimated /> }
                 <ViewportList viewportRef={alltracksRef} items={state.SongList} ref={listRef}>
