@@ -9,6 +9,8 @@ mod database;
 mod music;
 mod socials;
 mod utils;
+mod export;
+mod import;
 
 use commands::general_commands::get_server_port;
 use commands::refresh_paths_at_start::{detect_deleted_songs, refresh_paths};
@@ -17,6 +19,9 @@ use database::db_api::{
     add_new_wallpaper_to_db, create_playlist_cover, delete_playlist_cover, delete_thumbnail_and_wallpaper, get_albums_not_in_vec, get_artists_not_in_vec, get_genres_not_in_vec, get_image_from_tree, get_null_cover_from_tree, get_songs_not_in_vec, get_thumbnail, get_wallpaper
 };
 use database::db_manager::DbManager;
+use export::{export_csv::export_songs_as_csv, export_html::export_songs_as_html, 
+    export_json::export_songs_as_json,export_txt::export_songs_as_txt, export_xml::export_songs_as_xml};
+//use export::export_pdf::export_songs_as_pdf;
 use kira::manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings};
 use music::media_control_api::configure_media_controls;
 use socials::discord_rpc::{set_discord_rpc_activity_with_timestamps, DiscordRpc};
@@ -124,7 +129,15 @@ fn main() {
             disallow_connection_and_close_discord_rpc,
             set_discord_rpc_activity,
             set_discord_rpc_activity_with_timestamps,
-            clear_discord_rpc_activity
+            clear_discord_rpc_activity,
+            // EXPORT
+            export_songs_as_csv,
+            export_songs_as_json,
+            export_songs_as_xml,
+            export_songs_as_html,
+            export_songs_as_txt,
+            //export_songs_as_pdf,
+            // IMPORT
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

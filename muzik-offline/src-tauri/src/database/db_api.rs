@@ -923,6 +923,48 @@ pub fn song_exists_in_tree(db_manager: State<'_, Arc<Mutex<DbManager>>>, path: &
     }
 }
 
+pub fn get_songs_in_tree(db_manager: State<'_, Arc<Mutex<DbManager>>>, uuids: Vec<String>) -> Vec<Song>{
+    match db_manager.lock() {
+        Ok(dbm) => {
+            let song_tree = match dbm.song_tree.read() {
+                Ok(tree) => tree,
+                Err(_) => {
+                    return Vec::new();
+                }
+            };
+            let mut songs: Vec<Song> = Vec::new();
+
+            for uuid in uuids {
+                match song_tree.get(uuid) {
+                    Ok(Some(song_as_ivec)) => {
+                        let song_as_bytes = song_as_ivec.as_ref();
+                        let song_as_str = String::from_utf8_lossy(song_as_bytes);
+                        match serde_json::from_str::<Song>(&song_as_str.to_string()) {
+                            Ok(song) => {
+                                songs.push(song);
+                            }
+                            Err(_) => {
+                                println!("error converting song from json to struct");
+                            }
+                        }
+                    }
+                    Ok(None) => {
+                        println!("song with this uuid does not exist in the song tree");
+                    }
+                    Err(_) => {
+                        println!("error getting this key from the song tree");
+                    }
+                }
+            }
+
+            return songs;
+        }
+        Err(_) => {
+            return Vec::new();
+        }
+    }
+}
+
 pub fn delete_song_from_tree(db_manager: State<'_, Arc<Mutex<DbManager>>>, path: &str) {
     match db_manager.lock() {
         Ok(dbm) => {
