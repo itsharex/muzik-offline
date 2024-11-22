@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { FunctionComponent, useState } from "react";
 import { useToastStore } from "store";
 import "@styles/components/modals/AddSongToPlaylistModal.scss";
-import { getCoverURL, getRandomCover } from "utils";
+import { getCoverURL, getNullRandomCover } from "utils";
 import { motion } from "framer-motion";
 import { modal_variants } from "@content/index";
 import CreatePlaylistModal from "./CreatePlaylistModal";
@@ -51,7 +51,7 @@ const AddSongToPlaylistModal: FunctionComponent<AddSongToPlaylistModalProps> = (
                         playlists.map(playlist => 
                             <motion.div className="playlist" key={playlist.key} onClick={() => chooseThisPlaylist(playlist.key)} whileTap={{scale: 0.98}}>
                                 <div className="playlist_img">
-                                    {  !playlist.cover ? (getRandomCover(playlist.key))() : <img src={getCoverURL(playlist.cover)} alt="square-image" /> }
+                                    {  !playlist.cover ? <img src={getCoverURL(getNullRandomCover(playlist.key))} alt="song-cover" /> : <img src={getCoverURL(playlist.cover)} alt="square-image" /> }
                                 </div>
                                 <h2>{playlist.title}</h2>
                             </motion.div>

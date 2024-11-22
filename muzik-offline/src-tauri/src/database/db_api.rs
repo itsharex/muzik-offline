@@ -766,6 +766,27 @@ pub fn get_image_from_tree(dbm: MutexGuard<'_, DbManager>, uuid: &str) -> Vec<u8
     }
 }
 
+pub fn get_null_cover_from_tree(dbm: MutexGuard<'_, DbManager>, uuid: &str) -> Vec<u8> {
+    let covers_tree = match dbm.null_covers_tree.read() {
+        Ok(tree) => tree,
+        Err(_) => {
+            return Vec::new();
+        }
+    };
+
+    match covers_tree.get(uuid) {
+        Ok(Some(cover)) => {
+            return cover.to_vec();
+        }
+        Ok(None) => {
+            return Vec::new();
+        }
+        Err(_) => {
+            return Vec::new();
+        }
+    }
+}
+
 pub fn get_song_from_tree(
     db_manager: State<'_, Arc<Mutex<DbManager>>>,
     uuid: &str,
@@ -1234,6 +1255,20 @@ pub fn clear_all_trees(db_manager: State<'_, Arc<Mutex<DbManager>>>) {
             clear_tree(&covers_tree);
         }
         Err(_) => {}
+    }
+}
+
+pub fn key_exists_in_tree(tree: &Tree, key: String) -> bool {
+    match tree.get(key) {
+        Ok(Some(_)) => {
+            return true;
+        }
+        Ok(None) => {
+            return false;
+        }
+        Err(_) => {
+            return false;
+        }
     }
 }
 

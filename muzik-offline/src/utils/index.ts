@@ -179,6 +179,14 @@ export const getRandomCover = (value: number): () => JSX.Element => {
     else return NullCoverFour;
 }
 
+export const getNullRandomCover = (value: number): string => {
+    const modv: number = value % 4;
+    if(modv === 0)return "NULL_COVER_ONE";
+    else if(modv === 1)return "NULL_COVER_TWO";
+    else if(modv === 2)return "NULL_COVER_THREE";
+    else return "NULL_COVER_FOUR";
+}
+
 export const getCoverURL = (uuid: string): string => {
     const port = usePortStore.getState().port;
     return `http://localhost:${port}/image/${uuid}`;

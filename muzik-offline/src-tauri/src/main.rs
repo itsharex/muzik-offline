@@ -13,18 +13,14 @@ mod utils;
 use commands::general_commands::get_server_port;
 use commands::refresh_paths_at_start::{detect_deleted_songs, refresh_paths};
 use components::audio_manager::BackendStateManager;
-use constants::null_cover_null::NULL_COVER_NULL;
 use database::db_api::{
-    add_new_wallpaper_to_db, create_playlist_cover, delete_playlist_cover,
-    delete_thumbnail_and_wallpaper, get_albums_not_in_vec, get_artists_not_in_vec,
-    get_genres_not_in_vec, get_image_from_tree, get_songs_not_in_vec, get_thumbnail, get_wallpaper,
+    add_new_wallpaper_to_db, create_playlist_cover, delete_playlist_cover, delete_thumbnail_and_wallpaper, get_albums_not_in_vec, get_artists_not_in_vec, get_genres_not_in_vec, get_image_from_tree, get_null_cover_from_tree, get_songs_not_in_vec, get_thumbnail, get_wallpaper
 };
 use database::db_manager::DbManager;
 use kira::manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings};
 use music::media_control_api::configure_media_controls;
 use socials::discord_rpc::{set_discord_rpc_activity_with_timestamps, DiscordRpc};
 use souvlaki::{MediaControlEvent, MediaControls};
-use utils::general_utils::decode_image_in_parallel;
 use utils::music_list_organizer::MLO;
 use warp::{http::Uri, reply::Response, Filter, Reply};
 
@@ -68,7 +64,6 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_shell::init())
-        .manage(initialize_audio_manager())
         .manage(Arc::new(Mutex::new(
             DbManager::new().expect("failed to initialize db manager"),
         )))
@@ -76,6 +71,7 @@ fn main() {
         .manage(Mutex::new(
             DiscordRpc::new().expect("failed to initialize discord rpc"),
         ))
+        .manage(initialize_audio_manager())
         .setup(setup_app)
         .invoke_handler(tauri::generate_handler![
             // WINDOW CONTROL
@@ -144,8 +140,6 @@ fn initialize_audio_manager() -> Arc<Mutex<BackendStateManager>> {
         instance_handle: None,
         volume: 0.0,
         controls: None,
-        cover: decode_image_in_parallel(&NULL_COVER_NULL.to_owned())
-            .expect("failed to decode image"),
         cover_url: String::new(),
         port: 0,
     }))
@@ -162,7 +156,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let window = app.handle().clone();
 
     // Set up the image route
-    let cover_image_route = create_image_route(shared_audio_manager.clone());
+    let cover_image_route = create_image_route_for_covers(shared_db_manager.clone());
     let image_route_with_uuid = create_image_route_with_uuid(shared_db_manager.clone());
     let thumbnail_route_with_uuid = create_thumbnail_route_with_uuid(shared_db_manager.clone());
     let wallpaper_route_with_uuid = create_wallpaper_route_with_uuid(shared_db_manager.clone());
@@ -183,7 +177,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     shared_audio_manager
         .lock()
         .expect("failed to lock shared audio manager")
-        .cover_url = format!("http://localhost:{}/cover", port);
+        .cover_url = format!("http://localhost:{}/covers/NULL_COVER_NULL", port);
 
     // Set up media controls
     let mut controls = config_mca().expect("Failed to initialize media controls");
@@ -214,22 +208,37 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Creates the image route for serving the cover image.
-fn create_image_route(
-    shared_audio_manager: Arc<Mutex<BackendStateManager>>,
+fn create_image_route_for_covers(
+    shared_db_manager: Arc<Mutex<DbManager>>,
 ) -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
-    warp::path("cover").and(warp::get()).map(move || {
-        match shared_audio_manager.lock() {
-            Ok(audio_manager) => {
-                warp::reply::with_header(audio_manager.cover.clone(), "Content-Type", "image/png")
-                    .into_response()
+    warp::path!("covers" / String)
+        .and(warp::get())
+        .map(move |uuid: String| {
+            match shared_db_manager.lock() {
+                Ok(db_manager) => {
+                    if uuid.starts_with("NULL"){
+                        warp::reply::with_header(
+                            get_null_cover_from_tree(db_manager, uuid.as_str()),
+                            "Content-Type",
+                            "image/png",
+                        )
+                        .into_response()
+                    } else{
+                        warp::reply::with_header(
+                            get_image_from_tree(db_manager, uuid.as_str()),
+                            "Content-Type",
+                            "image/png",
+                        )
+                        .into_response()
+                    }
+                }
+                Err(_) => {
+                    // Redirect to default image on Imgur
+                    warp::redirect::temporary(Uri::from_static("https://i.imgur.com/1bJ0j6V.png"))
+                        .into_response()
+                }
             }
-            Err(_) => {
-                // Redirect to default image on Imgur
-                warp::redirect::temporary(Uri::from_static("https://i.imgur.com/1bJ0j6V.png"))
-                    .into_response()
-            }
-        }
-    })
+        })
 }
 
 /// Creates the image route for serving the :uuid cover image.
@@ -240,12 +249,23 @@ fn create_image_route_with_uuid(
         .and(warp::get())
         .map(move |uuid: String| {
             match shared_db_manager.lock() {
-                Ok(db_manager) => warp::reply::with_header(
-                    get_image_from_tree(db_manager, uuid.as_str()),
-                    "Content-Type",
-                    "image/png",
-                )
-                .into_response(),
+                Ok(db_manager) => {
+                    if uuid.starts_with("NULL"){
+                        warp::reply::with_header(
+                            get_null_cover_from_tree(db_manager, uuid.as_str()),
+                            "Content-Type",
+                            "image/png",
+                        )
+                        .into_response()
+                    } else{
+                        warp::reply::with_header(
+                            get_image_from_tree(db_manager, uuid.as_str()),
+                            "Content-Type",
+                            "image/png",
+                        )
+                        .into_response()
+                    }
+                }
                 Err(_) => {
                     // Redirect to default image on Imgur
                     warp::redirect::temporary(Uri::from_static("https://i.imgur.com/1bJ0j6V.png"))
@@ -320,7 +340,7 @@ fn setup_media_controls(
 
     configure_media_controls(
         controls,
-        &format!("http://localhost:{}/cover", port).to_owned(),
+        &format!("http://localhost:{}/covers/NULL_COVER_NULL", port).to_owned(),
     );
 }
 
