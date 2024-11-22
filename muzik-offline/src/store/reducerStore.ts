@@ -270,6 +270,7 @@ export const AllPlaylistsState: AllPlaylistsInterface = {
     isCreatePlaylistModalOpen: false,
     isPropertiesModalOpen: false,
     isDeletePlayListModalOpen: false,
+    isEditingPlayListModalOpen: false,
 };
 
 export const allPlaylistsReducer = (state: AllPlaylistsInterface, action: Action) => {
@@ -287,6 +288,8 @@ export const allPlaylistsReducer = (state: AllPlaylistsInterface, action: Action
         case reducerType.SET_DELETE_MODAL: return { ...state, isDeletePlayListModalOpen: action.payload };
         case reducerType.ADD_PLAYLIST: return { ...state, playlistList: [...state.playlistList, action.payload] };
         case reducerType.REMOVE_PLAYLIST: return { ...state, playlistList: state.playlistList.filter(playlist => playlist.key !== action.payload) };
+        case reducerType.SET_EDIT_PLAYLIST_MODAL: return { ...state, isEditingPlayListModalOpen: action.payload };
+        case reducerType.REPLACE_PLAYLIST: return { ...state, playlistList: state.playlistList.map(playlist => playlist.key === action.payload.key ? action.payload : playlist) };
         default: return state;
     }
 };

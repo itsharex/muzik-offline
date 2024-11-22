@@ -36,6 +36,7 @@ export enum reducerType {
     REMOVE_PLAYLIST = "REMOVE_PLAYLIST",
     SET_IN_DRAG_DROP_REGION = "SET_IN_DRAG_DROP_REGION",
     SET_IS_DRAGGING_ITEM = "SET_IS_DRAGGING_ITEM",
+    REPLACE_PLAYLIST = "REPLACE_PLAYLIST",
 }
 
 export type Action =
@@ -72,6 +73,8 @@ export type Action =
     | { type: reducerType.ADD_PLAYLIST; payload: playlist }
     | { type: reducerType.REMOVE_PLAYLIST; payload: number }
     | { type: reducerType.SET_IN_DRAG_DROP_REGION; payload: boolean }
+    | { type: reducerType.SET_IS_DRAGGING_ITEM; payload: boolean }
+    | { type: reducerType.REPLACE_PLAYLIST; payload: playlist }
 
 
 
@@ -189,7 +192,8 @@ export interface AllPlaylistsInterface{
     isPlaylistModalOpen: boolean,
     isCreatePlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
-    isDeletePlayListModalOpen: boolean
+    isDeletePlayListModalOpen: boolean,
+    isEditingPlayListModalOpen: boolean,
 }
 
 export interface PlaylistViewInterface{

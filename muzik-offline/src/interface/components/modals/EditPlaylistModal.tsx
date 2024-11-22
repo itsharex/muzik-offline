@@ -15,7 +15,8 @@ import { toastType } from '../../../types/index';
 type EditPlaylistModalProps = {
     playlistobj: playlist;
     isOpen: boolean;
-    closeModal: () => void;
+    dontNavigate?: boolean;
+    closeModal: (key: number | undefined) => void;
 }
 
 const EditPlaylistModal: FunctionComponent<EditPlaylistModalProps> = (props: EditPlaylistModalProps) => {
@@ -52,7 +53,7 @@ const EditPlaylistModal: FunctionComponent<EditPlaylistModalProps> = (props: Edi
         playlistObj.dateEdited = new Date().toLocaleDateString();
         //save changes of this playlist
         await local_playlists_db.playlists.update(props.playlistobj.key, playlistObj);
-        props.closeModal();
+        props.closeModal(playlistObj.key);
         if(cover === null)return;
 
         let toSend = "";
@@ -87,6 +88,10 @@ const EditPlaylistModal: FunctionComponent<EditPlaylistModalProps> = (props: Edi
             await local_playlists_db.playlists.delete(props.playlistobj.key);
             await invoke("delete_playlist_cover", {playlistName: playlistTitle}).then(() => {
                 //navigate to playlist page
+                if(props.dontNavigate !== undefined && props.dontNavigate === true){
+                    props.closeModal(props.playlistobj.key);
+                    return;
+                }
                 navigate("/AllPlaylists");
             });
         }
@@ -103,7 +108,7 @@ const EditPlaylistModal: FunctionComponent<EditPlaylistModalProps> = (props: Edi
 
     return (
         <div className={"EditPlaylistModal" + (props.isOpen ? " EditPlaylistModal-visible" : "")} onClick={
-            (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {if(e.target === e.currentTarget)props.closeModal()}}>
+            (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {if(e.target === e.currentTarget)props.closeModal(undefined)}}>
             <motion.div 
             animate={props.isOpen ? "open" : "closed"}
             variants={modal_variants}
