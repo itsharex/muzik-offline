@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
 import { useEffect, useReducer } from "react";
 import { DropDownMenuSmall, SquareTitleBox, GeneralContextMenu, LoaderAnimated, AddSongsToPlaylistModal } from "@components/index";
-import { ChevronDown } from "@assets/icons";
+import { ChevronDown, FolderPlus } from "@assets/icons";
 import "@styles/pages/AllArtists.scss";
 import { contextMenuEnum, contextMenuButtons } from '@muziktypes/index';
 import { local_artists_db } from "@database/database";
 import { useNavigate } from "react-router-dom";
 import { reducerType } from "@store/index";
 import { allArtistsReducer, AllArtistsState } from "@store/reducerStore";
-import { closeContextMenu, closePlaylistModal, setOpenedDDM } from "@utils/reducerUtils";
+import { closeContextMenu, closePlaylistModal, openFileDialogDND, processDragEvents, setOpenedDDM } from "@utils/reducerUtils";
 import { addTheseSongsToPlayLater, addTheseSongsToPlayNext, playTheseSongs } from "@utils/playerControl";
 
 const AllArtists = () => {
@@ -57,6 +57,8 @@ const AllArtists = () => {
         });
     }
 
+    useEffect(() => { processDragEvents(dispatch); }, [state]);
+
     useEffect(() => { setList(); }, [state.sort])
     
     return (
@@ -87,24 +89,29 @@ const AllArtists = () => {
                 </div>
             </div>
             {state.artistList.length === 0 && state.isloading === false && (
-                <h6>
-                    it seems like you may not have added any songs yet.<br/>
-                    To add songs, click on the settings button above, scroll down <br/>
-                    and click on "click here to change directories". <br/>
-                </h6>
+                <div className={"drag-drop-border" + (state.inDragDropRegion ? " drag-drop-border-hover" : "")}>
+                    <FolderPlus />
+                    { state.inDragDropRegion ? <h1>Drop it here!</h1> : <h1>Drag and drop your music folder here</h1> }
+                    <p>or</p>
+                    <motion.div className="add-folder-btn" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={openFileDialogDND}>
+                        <h2>Browse folders</h2>
+                    </motion.div>
+                </div>
             )}
             { state.isloading && <LoaderAnimated /> }
-            <div className="AllArtists_container">
-                    {state.artistList.map((artist) => 
-                        <SquareTitleBox 
-                        key={artist.key}
-                        cover={artist.cover} 
-                        title={artist.artist_name}
-                        keyV={artist.key}
-                        navigateTo={navigateTo}
-                        setMenuOpenData={setMenuOpenData}/>
-                    )}
-            </div>
+            {   state.artistList.length !== 0 &&
+                <div className="AllArtists_container">
+                        {state.artistList.map((artist) => 
+                            <SquareTitleBox 
+                            key={artist.key}
+                            cover={artist.cover} 
+                            title={artist.artist_name}
+                            keyV={artist.key}
+                            navigateTo={navigateTo}
+                            setMenuOpenData={setMenuOpenData}/>
+                        )}
+                </div>
+            }
             {
                 state.artistMenuToOpen && state.co_ords.xPos != 0 && state.co_ords.yPos != 0 && (
                     <div className="AllArtists-ContextMenu-container"  
@@ -118,7 +125,7 @@ const AllArtists = () => {
                     </div>
                 )
             }
-            <div className="bottom_margin"/>
+            {state.artistList.length !== 0 && <div className="bottom_margin"/>}
             <AddSongsToPlaylistModal 
                 isOpen={state.isPlaylistModalOpen} 
                 title={state.artistMenuToOpen? state.artistMenuToOpen.artist_name : ""} 

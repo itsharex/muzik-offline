@@ -27,10 +27,11 @@ pub async fn get_all_songs(
     clear_all_trees(db_manager.clone());
 
     let paths_as_vec = decode_directories(&paths_as_json_array);
+    let mut new_songs_detected = 0;
 
     let mut song_id: i32 = 0;
     for path in &paths_as_vec {
-        get_songs_in_path(
+        new_songs_detected += get_songs_in_path(
             db_manager.clone(),
             &path,
             &mut song_id,
@@ -40,7 +41,11 @@ pub async fn get_all_songs(
         .await;
     }
 
-    return Ok("{\"status\":\"success\"}".into());
+    if new_songs_detected > 0 {
+        Ok(String::from("New songs detected and added to the library"))
+    } else {
+        Err(String::from("No new songs detected"))
+    }
 }
 
 pub fn decode_directories(paths_as_json: &str) -> Vec<String> {

@@ -74,10 +74,48 @@
         }
     }
     
-    h6{
-        width: 100%;
-        text-align: center;
-        font-size: 20px;
+    .drag-drop-border{
+        width: calc(100vw - 227px);
+        height: calc(100% - 130px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border: 1px dashed $root-app-navigator-hover-col;
+        border-radius: 10px;
+
+        h1{
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        p{
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .add-folder-btn{
+            width: 157px;
+            height: 34px;
+            border-radius: 15px;
+            background: $app-theme-col;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+
+            h2{
+                font-size: 13px;
+                height: 13px;
+                margin-top: 11px;
+                color: $root-app-navigator-hover-col;
+                margin-right: 5px;
+            }
+        }
+    }
+
+    .drag-drop-border-hover{
+        border: 1px dashed $app-theme-col;
     }
 
     .AllArtists_container{
@@ -98,6 +136,11 @@
     .AllArtists{
         min-width: 759px;
         width: calc(100vw - var(--var-right-side-bar-width-expanded));
+
+        .drag-drop-border{
+            min-width: 759px;
+            width: calc(100vw - 227px);
+        }
 
         .AllArtists_container{
             min-width: 759px;
@@ -120,6 +163,11 @@
         min-width: 759px;
         width: calc(100vw - var(--var-right-side-bar-width-minimized));
 
+        .drag-drop-border{
+            min-width: 759px;
+            width: calc(100vw - 227px);
+        }
+
         .AllArtists_container{
             min-width: 759px;
             width: calc(100vw - var(--var-right-side-bar-width-minimized));
@@ -131,6 +179,11 @@
     .AllArtists{
         min-width: 759px;
         width: calc(100vw - var(--var-right-side-bar-width-smallest));
+
+        .drag-drop-border{
+            min-width: 759px;
+            width: calc(100vw - 105px);
+        }
 
         .AllArtists_container{
             min-width: 759px;

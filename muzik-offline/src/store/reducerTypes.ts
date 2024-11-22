@@ -34,6 +34,8 @@ export enum reducerType {
     SET_KEY_INDEX_SONG_QUEUE = "SET_KEY_INDEX_SONG_QUEUE",
     ADD_PLAYLIST = "ADD_PLAYLIST",
     REMOVE_PLAYLIST = "REMOVE_PLAYLIST",
+    SET_IN_DRAG_DROP_REGION = "SET_IN_DRAG_DROP_REGION",
+    SET_IS_DRAGGING_ITEM = "SET_IS_DRAGGING_ITEM",
 }
 
 export type Action =
@@ -69,6 +71,7 @@ export type Action =
     | { type: reducerType.SET_KEY_INDEX_SONG_QUEUE; payload: {key: number, index: number, queueType: "SongQueue" | "SongHistory"} }
     | { type: reducerType.ADD_PLAYLIST; payload: playlist }
     | { type: reducerType.REMOVE_PLAYLIST; payload: number }
+    | { type: reducerType.SET_IN_DRAG_DROP_REGION; payload: boolean }
 
 
 
@@ -89,6 +92,7 @@ export interface AllTracksStateInterface{
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
     isEditingSongModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface SearchSongInterface{
@@ -124,6 +128,7 @@ export interface AllAlbumsInterface{
     albumList: album[],
     albumMenuToOpen: album | null,
     isPlaylistModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface AllArtistsInterface{
@@ -135,6 +140,7 @@ export interface AllArtistsInterface{
     artistList: artist[],
     artistMenuToOpen: artist | null,
     isPlaylistModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface ArtistCatalogueInterface{
@@ -156,6 +162,7 @@ export interface AllGenresInterface{
     genreList: genre[],
     genreMenuToOpen: genre | null,
     isPlaylistModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface GenreViewInterface{

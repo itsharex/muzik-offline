@@ -1,8 +1,9 @@
 import { NullCoverOne, NullCoverTwo, NullCoverThree, NullCoverFour } from "@assets/index";
 import { local_albums_db, local_artists_db, local_genres_db, local_playlists_db, local_songs_db } from "@database/database";
 import { Song, album, artist, genre, playlist } from "@muziktypes/index";
-import { useHistorySongs, usePortStore, useUpcomingSongs } from "@store/index";
+import { useDirStore, useHistorySongs, usePortStore, useSavedObjectStore, useToastStore, useUpcomingSongs } from "@store/index";
 import { invoke } from "@tauri-apps/api/core";
+import { toastType } from '../types/index';
 
 export const fetch_library = async(fresh_library: boolean): Promise<{status: string, message: string}> => {
     const res_songs = await fetch_songs_metadata(fresh_library);
@@ -178,6 +179,14 @@ export const getRandomCover = (value: number): () => JSX.Element => {
     else return NullCoverFour;
 }
 
+export const getNullRandomCover = (value: number): string => {
+    const modv: number = value % 4;
+    if(modv === 0)return "NULL_COVER_ONE";
+    else if(modv === 1)return "NULL_COVER_TWO";
+    else if(modv === 2)return "NULL_COVER_THREE";
+    else return "NULL_COVER_FOUR";
+}
+
 export const getCoverURL = (uuid: string): string => {
     const port = usePortStore.getState().port;
     return `http://localhost:${port}/image/${uuid}`;
@@ -263,4 +272,45 @@ export function getSongFieldsArray(selectedFields: Set<string>): string[] {
     if(selectedFields.has("bit_depth"))fields.push("bit_depth");
     if(selectedFields.has("channels"))fields.push("channels");
     return fields;
+}
+
+export function isInArray(check: string[], container: string[]): boolean {
+    return check.every((item) => container.includes(item));
+}
+
+export async function reloadLibrary(paths: string[]){
+    //check paths only contain directories
+    let dirs = useDirStore.getState().dir.Dir;
+
+    if(isInArray(paths, Array.from(dirs))){
+        useToastStore.getState().setToast({title: "Cannot load songs...", message: "You are trying to reload a path that is already loaded", type: toastType.error, timeout: 5000});
+        return;
+    }
+
+    useToastStore.getState().setToast({title: "Loading songs...", message: "We are searching for new songs", type: toastType.info, timeout: 5000});
+
+    // add new paths to the existing paths
+    dirs = new Set([...dirs, ...paths]);
+    const local_store = useSavedObjectStore.getState().local_store;
+
+    invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(dirs), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
+    .then(async() => {
+        useDirStore.getState().setDir({Dir: dirs});
+        await local_songs_db.songs.clear();
+        await local_albums_db.albums.clear();
+        await local_artists_db.artists.clear();
+        await local_genres_db.genres.clear();
+
+        const res = await fetch_library(true);
+        let message = "";
+
+        if(res.status === "error")message = res.message;
+        else message = "Successfully loaded all the songs in the paths specified. You may need to reload the page you are on to see your new songs";
+
+        useToastStore.getState().setToast({title: "Loading songs...", message: message, type: toastType.success, timeout: 5000});
+    })
+    .catch((_error) => {
+        console.log(_error);
+        useToastStore.getState().setToast({title: "Loading songs...", message: "No new songs detected in given folders or you dropped a file", type: toastType.error, timeout: 5000});
+    });
 }

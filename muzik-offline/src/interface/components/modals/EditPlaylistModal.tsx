@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import "@styles/components/modals/EditPlaylistModal.scss";
 import { local_playlists_db } from '@database/database';
 import { invoke } from "@tauri-apps/api/core";
-import { getCoverURL, getRandomCover } from 'utils';
+import { getCoverURL, getNullRandomCover } from 'utils';
 import { modal_variants } from '@content/index';
 import { DeletePlaylistModal } from '@components/index';
 import { useNavigate } from "react-router-dom";
@@ -114,7 +114,7 @@ const EditPlaylistModal: FunctionComponent<EditPlaylistModalProps> = (props: Edi
                         {
                             cover !== null ? <img src={cover} alt="playlist_img"/> :
                                 props.playlistobj.cover !== null ? <img src={getCoverURL(props.playlistobj.cover)} alt="square-image" /> :
-                                (getRandomCover(props.playlistobj.key))()
+                                <img src={getCoverURL(getNullRandomCover(props.playlistobj.key))} alt="song-cover" />
                         }
                     </div>
                     <motion.label className="EditImageicon" whileHover={{scale: 1.03}} whileTap={{scale: 0.97}}>

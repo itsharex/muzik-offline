@@ -60,6 +60,7 @@ import WindowsRestoreIcon from './Windows/WindowsRestoreIcon';
 import LinuxClose from './Windows/LinuxClose';
 import LinuxMaximize from './Windows/LinuxMaximize';
 import LinuxMinimize from './Windows/LinuxMinimize';
+import FolderPlus from './General/FolderPlus';
 
 export {
     Next_page, Prev_page, Search, 
@@ -77,5 +78,5 @@ export {
     EditImage, Edit, Overlap, Minimize,
     ListIcon, AlertTriangle, Trash, FolderSearch, File , Check,
     WindowsCloseIcon, WindowsMaximizeIcon, WindowsMinimizeIcon, WindowsRestoreIcon,
-    LinuxClose, LinuxMaximize, LinuxMinimize
+    LinuxClose, LinuxMaximize, LinuxMinimize, FolderPlus
 }
