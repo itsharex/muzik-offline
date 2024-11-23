@@ -3,9 +3,10 @@ import { DropDownMenuLarge } from "@components/index";
 import { SavedObject } from "@database/index";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useSavedObjectStore } from "store";
-import { selectedGeneralSettingEnum } from "@muziktypes/index";
+import { useSavedObjectStore, useToastStore } from "store";
+import { selectedGeneralSettingEnum, toastType } from "@muziktypes/index";
 import "@styles/layouts/AdvancedSettings.scss";
+import { enable, disable } from '@tauri-apps/plugin-autostart';
 
 const settings_data: {
     key: number;
@@ -23,7 +24,7 @@ const settings_data: {
         key: 2,
         title: "Upcoming/History songs limit",
         dropDownName: selectedGeneralSettingEnum.UpcomingHistoryLimit,
-        options: ["5", "10", "15", "20"]
+        options: ["5", "10", "15", "20", "30", "50"]
     },
     {
         key: 3,
@@ -37,11 +38,18 @@ const settings_data: {
         dropDownName: selectedGeneralSettingEnum.SongLengthORremaining,
         options: ["song length", "song ends"]
     },
+    {
+        key: 5,
+        title: "Auto start app on system start",
+        dropDownName: selectedGeneralSettingEnum.AutoStartApp,
+        options: ["Yes", "No"]
+    }
 ]
 
 const AdvancedSettings = () => {
     const [selectedGeneralSetting, setselectedGeneralSetting] = useState<selectedGeneralSettingEnum>(selectedGeneralSettingEnum.Nothing);
     const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
+    const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
 
     function toggleDropDown(arg: selectedGeneralSettingEnum){
         if(arg === selectedGeneralSetting)setselectedGeneralSetting(selectedGeneralSettingEnum.Nothing);
@@ -49,8 +57,37 @@ const AdvancedSettings = () => {
     }
 
     function setStoreValue(arg: string, type: string){
+        if (type === "AutoStartApp" && arg === "Yes" && local_store.AutoStartApp === "No") {
+            setAutoStartApp("Yes");
+            enable().then().catch(() => {
+                setAutoStartApp("No");
+                setToast({
+                    title: "Auto start...", 
+                    message: "Failed to set auto start on system start", 
+                    type: toastType.error, timeout: 5000
+                });
+            });
+        } else if (type === "AutoStartApp" && arg === "No" && local_store.AutoStartApp === "Yes") {
+            setAutoStartApp("No");
+            disable().then().catch(() => {
+                setAutoStartApp("Yes");
+                setToast({
+                    title: "Auto start...", 
+                    message: "Failed to set auto start on system start", 
+                    type: toastType.error, timeout: 5000
+                });
+            });
+        } else {
+            let temp: SavedObject = local_store;
+            temp[type as keyof SavedObject] = arg as never;
+            setStore(temp);
+            setselectedGeneralSetting(selectedGeneralSettingEnum.Nothing);
+        }
+    }
+
+    function setAutoStartApp(arg: string) {
         let temp: SavedObject = local_store;
-        temp[type as keyof SavedObject] = arg as never;
+        temp.AutoStartApp = arg as never;
         setStore(temp);
         setselectedGeneralSetting(selectedGeneralSettingEnum.Nothing);
     }
@@ -81,6 +118,23 @@ const AdvancedSettings = () => {
                         </div>
                     </div>)
                 }
+                {/*
+                <div className="setting">
+                    <h3>Create a backup of your library(may take some time)</h3>
+                    <div className="setting_dropdown">
+                        <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={() => {}}>
+                            <h4>Create backup</h4>
+                        </motion.div>
+                    </div>
+                </div>
+                <div className="setting">
+                    <h3>Import library backup(may take some time)</h3>
+                    <div className="setting_dropdown">
+                        <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={() => {}}>
+                            <h4>Import backup</h4>
+                        </motion.div>
+                    </div>
+                </div>*/}
             </div>
         </div>
     )

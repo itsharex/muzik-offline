@@ -39,6 +39,11 @@ import DeleteSongFromPlaylistModal from './modals/DeleteSongFromPlaylistModal';
 import EditPropertiesModal from './modals/EditPropertiesModal';
 import { EditSongButton } from './context_menu/ContextMenuButtons';
 import DateInput from './input/DateInput';
+import DeleteDiretoryModal from './modals/DeleteDiretoryModal';
+import WallpapersSelectionModal from './modals/WallpapersSelectionModal';
+import RectangleSongBoxView from './cards/RectangleSongBoxView';
+import CheckboxComponent from './input/CheckboxComponent';
+import ExportModal from './modals/ExportModal';
 
 export {
     HeaderWindows, HeaderMacOS, HeaderLinuxOS, AppNavigator, LeftSidebar, AppMusicPlayer, FSMusicPlayer,
@@ -54,5 +59,6 @@ export {
     RectangleSongBoxDraggable, DeletePlaylistModal,
     DeleteButton, DeleteSongFromPlaylistModal,
     EditPropertiesModal, EditSongButton,
-    DateInput
+    DateInput, DeleteDiretoryModal, WallpapersSelectionModal,
+    RectangleSongBoxView, CheckboxComponent, ExportModal
 }

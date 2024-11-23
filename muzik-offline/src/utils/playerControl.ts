@@ -1,9 +1,10 @@
 import { useSavedObjectStore, useUpcomingSongs, usePlayerStore, usePlayingPosition, 
     usePlayingPositionSec, useHistorySongs } from "@store/index";
 import { playerState, Song } from "@muziktypes/index";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { SavedObject } from "@database/index";
 import { local_playlists_db, local_songs_db } from "@database/database";
+import { getNullRandomCover } from ".";
 
 export const addThisSongToPlayNext = async(songids: number[]) => {
     //get the song queue
@@ -91,7 +92,7 @@ export async function startPlayingNewSong(song: Song){
     temp.isPlaying = true;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
     await invoke("load_and_play_song_from_path", { soundPath: song.path, volume: volume });
-    await invoke("update_metadata", { key: song.id });
+    await invoke("update_metadata", { uuid: (song.cover_uuid !== null ? song.uuid : getNullRandomCover(song.id)) });
     await invoke("set_player_state", { state: playerState.Playing});
     usePlayerStore.getState().setPlayer(temp);
     setDiscordActivityWithTimestamps(song, 0);
@@ -104,7 +105,7 @@ export async function loadNewSong(song: Song){
     temp.isPlaying = false;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
     await invoke("load_a_song_from_path", { soundPath: song.path, volume: volume });
-    await invoke("update_metadata", { key: song.id });
+    await invoke("update_metadata", { uuid: (song.cover_uuid !== null ? song.uuid : getNullRandomCover(song.id)) });
     usePlayerStore.getState().setPlayer(temp);
     setDiscordActivity(song);
 }
@@ -339,7 +340,7 @@ function setDiscordActivityWithTimestamps(song: Song | null, curr_poss_sec: numb
             name: song.name, 
             artist: song.artist, 
             durationAsNum: song.duration_seconds - curr_poss_sec,
-            hasCover: song.cover !== null,
+            hasCover: song.cover_uuid !== null,
             id: song.id
         }).then().catch();
     }
@@ -354,7 +355,7 @@ function setDiscordActivity(song: Song | null){
         invoke("set_discord_rpc_activity", {
             name: song.name, 
             artist: song.artist,
-            hasCover: song.cover !== null,
+            hasCover: song.cover_uuid !== null,
             id: song.id
         }).then().catch();
     }

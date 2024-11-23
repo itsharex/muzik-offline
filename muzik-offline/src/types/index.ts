@@ -1,7 +1,9 @@
 export enum selectedSettingENUM {
     General = "General",
     Appearance = "Appearance", 
+    MusicFolders = "Music Folders",
     Security = "Security",
+    ExportSongs = "Export Songs",
     Advanced = "Advanced",
     About = "About"
 }
@@ -15,13 +17,16 @@ export enum selectedGeneralSettingEnum{
     UpcomingHistoryLimit = "UpcomingHistoryLimit",
     SeekStepAmount = "SeekStepAmount",
     SongLengthORremaining = "SongLengthORremaining",
-    AlwaysRoundedCornersWindows = "AlwaysRoundedCornersWindows"
+    AlwaysRoundedCornersWindows = "AlwaysRoundedCornersWindows",
+    AutoStartApp = "AutoStartApp",
 }
 
 export enum OSTYPEenum{
-    Linux = 'Linux', 
-    macOS = 'Darwin', 
-    Windows = 'Windows_NT'
+    Linux = 'linux', 
+    macOS = 'macos', 
+    Windows = 'windows',
+    iOS = 'ios',
+    Android = 'android'
 }
 
 export enum contextMenuEnum{
@@ -69,6 +74,7 @@ export interface toast{
 
 export interface Song{
     id: number,
+    uuid: string,
     title: string,
     name: string,
     artist: string,
@@ -78,7 +84,7 @@ export interface Song{
     duration: string,
     duration_seconds: number,
     path: string,
-    cover: string | null,
+    cover_uuid: string | null,
     date_recorded: string,
     date_released: string,
     file_size: number,
@@ -92,13 +98,15 @@ export interface Song{
 
 export interface artist {
     key: number;
+    uuid: string;
     cover: string | null;
     artist_name: string;
 }
 
 export interface playlist {
     key: number;
-    cover: any | null;
+    uuid: string;
+    cover: string | null;
     title: string;
     dateCreated: string;
     dateEdited: string;
@@ -107,12 +115,14 @@ export interface playlist {
 
 export interface genre {
     key: number;
+    uuid: string;
     cover: string | null;
     title: string;
 }
 
 export interface album {
     key: number;
+    uuid: string;
     cover: string | null;
     title: string;
 }
@@ -158,4 +168,9 @@ export interface Payload {
     duration?: number;
     volume?: number;
     uri?: string;
+}
+
+export interface wallpaper{
+    key: number | undefined;
+    uuid: string;
 }

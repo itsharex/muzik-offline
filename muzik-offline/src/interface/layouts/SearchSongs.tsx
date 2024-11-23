@@ -1,4 +1,4 @@
-import { RectangleSongBox, GeneralContextMenu, AddSongToPlaylistModal, PropertiesModal, LoaderAnimated, EditPropertiesModal } from "@components/index";
+import { RectangleSongBox, GeneralContextMenu, AddSongToPlaylistModal, PropertiesModal, EditPropertiesModal } from "@components/index";
 import { contextMenuEnum, contextMenuButtons } from "@muziktypes/index";
 import { useRef, useEffect, useReducer } from "react";
 import "@styles/layouts/SearchSongs.scss";
@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { SearchSongsState, searchSongsReducer } from "@store/reducerStore";
 import { addThisSongToPlayLater, addThisSongToPlayNext, playThisListNow, startPlayingNewSong } from "@utils/playerControl";
 import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectThisSong, setSongList } from "@utils/reducerUtils";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const SearchSongs = () => {
     const [state , dispatch] = useReducer(searchSongsReducer, SearchSongsState);
@@ -26,6 +28,7 @@ const SearchSongs = () => {
     function chooseOption(arg: contextMenuButtons){
         if(arg === contextMenuButtons.ShowInfo){ dispatch({ type: reducerType.SET_PROPERTIES_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.AddToPlaylist){ dispatch({ type: reducerType.SET_PLAYLIST_MODAL, payload: true}); }
+        else if(arg === contextMenuButtons.EditSong){ dispatch({ type: reducerType.SET_EDIT_SONG_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.PlayNext && state.songMenuToOpen){ 
             addThisSongToPlayNext([state.songMenuToOpen.id]);
             closeContextMenu(dispatch); 
@@ -105,14 +108,24 @@ const SearchSongs = () => {
                 {state.SongList.length === 0 && state.isloading === false && (
                     <h6>no songs found that match "{query}"</h6>
                 )}
-                { state.isloading && <LoaderAnimated /> }
+                { state.isloading && 
+                    <SkeletonTheme baseColor="#b6b6b633" highlightColor="#00000005" width={"calc(100% - 5px)"} height={50} borderRadius={20} duration={2}>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1} style={{marginBottom: "6px"}}/>
+                        <Skeleton count={1}/>
+                    </SkeletonTheme>  }
                 <ViewportList viewportRef={ref} items={state.SongList} ref={listRef}>
                     {(song, index) => (
                         <RectangleSongBox 
                         key={song.id}
                         keyV={song.id}
                         index={index + 1} 
-                        cover={song.cover} 
+                        cover={song.cover_uuid} 
                         songName={song.name} 
                         artist={song.artist}
                         length={song.duration} 

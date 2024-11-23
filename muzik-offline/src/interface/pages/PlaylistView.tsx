@@ -30,6 +30,7 @@ const PlaylistView = () => {
         if(arg === contextMenuButtons.ShowInfo){ dispatch({ type: reducerType.SET_PROPERTIES_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.AddToPlaylist){ dispatch({ type: reducerType.SET_PLAYLIST_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.Delete){ dispatch({ type: reducerType.SET_DELETE_MODAL, payload: true}); }
+        else if(arg === contextMenuButtons.EditSong){ dispatch({ type: reducerType.SET_EDIT_SONG_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.PlayNext && state.songMenuToOpen){ 
             addThisSongToPlayNext([state.songMenuToOpen.id]);
             closeContextMenu(dispatch); 
@@ -177,7 +178,7 @@ const PlaylistView = () => {
                     <h2 style={{ marginTop: state.resizeHeader ? "25px" : "68px" }}>{state.playlist_metadata.playlist_data?.title}</h2>
                     { !state.resizeHeader &&
                         <>
-                            <h4>{state.playlist_metadata.song_count} {state.playlist_metadata.song_count > 1 ? "songs" : "song"}</h4>
+                            <h4>{state.playlist_metadata.song_count} {state.playlist_metadata.song_count === 1 ? "song" : "songs"}</h4>
                             <div className="action_buttons">
                                 <motion.div className="PlayIcon" whileHover={{scale: 1.02}} whileTap={{scale: 0.98}} onClick={() => playThisSong(-1)}>
                                     <Play /><p>play</p>
@@ -210,7 +211,7 @@ const PlaylistView = () => {
                         navigateTo={navigateTo} 
                         playThisSong={playThisSong}/>
                     <div className="footer_content">
-                        <h4>{state.playlist_metadata.song_count} {state.playlist_metadata.song_count > 1 ? "Songs" : "Song"}, {state.playlist_metadata.length} listen time</h4>
+                        <h4>{state.playlist_metadata.song_count} {state.playlist_metadata.song_count > 1 || state.playlist_metadata.song_count === 0 ? "Songs" : "Song"}, {state.playlist_metadata.length} listen time</h4>
                     </div>
             </motion.div>
             {
@@ -228,7 +229,7 @@ const PlaylistView = () => {
             }
             <EditPlaylistModal 
                 playlistobj={state.playlist_metadata.playlist_data ? state.playlist_metadata.playlist_data
-                    : {key: 0, title: "", cover: null, dateCreated: "", dateEdited: "", tracksPaths: []}}
+                    : {key: 0, uuid: "", title: "", cover: null, dateCreated: "", dateEdited: "", tracksPaths: []}}
                 isOpen={state.isEditingPlayListModalOpen} closeModal={closeModalAndResetData}/>
             <AddSongToPlaylistModal isOpen={state.isPlaylistModalOpen} songPath={state.songMenuToOpen ? state.songMenuToOpen.path : ""} closeModal={() => closePlaylistModal(dispatch)} />
             <PropertiesModal isOpen={state.isPropertiesModalOpen} song={state.songMenuToOpen ? state.songMenuToOpen : undefined} closeModal={() => closePropertiesModal(dispatch)} />

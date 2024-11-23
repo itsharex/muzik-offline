@@ -32,6 +32,11 @@ export enum reducerType {
     SET_SONG_QUEUE = "SET_SONG_QUEUE",
     SET_SONG_HISTORY = "SET_SONG_HISTORY",
     SET_KEY_INDEX_SONG_QUEUE = "SET_KEY_INDEX_SONG_QUEUE",
+    ADD_PLAYLIST = "ADD_PLAYLIST",
+    REMOVE_PLAYLIST = "REMOVE_PLAYLIST",
+    SET_IN_DRAG_DROP_REGION = "SET_IN_DRAG_DROP_REGION",
+    SET_IS_DRAGGING_ITEM = "SET_IS_DRAGGING_ITEM",
+    REPLACE_PLAYLIST = "REPLACE_PLAYLIST",
 }
 
 export type Action =
@@ -65,6 +70,11 @@ export type Action =
     | { type: reducerType.SET_SONG_QUEUE; payload: Song[] }
     | { type: reducerType.SET_SONG_HISTORY; payload: Song[] }
     | { type: reducerType.SET_KEY_INDEX_SONG_QUEUE; payload: {key: number, index: number, queueType: "SongQueue" | "SongHistory"} }
+    | { type: reducerType.ADD_PLAYLIST; payload: playlist }
+    | { type: reducerType.REMOVE_PLAYLIST; payload: number }
+    | { type: reducerType.SET_IN_DRAG_DROP_REGION; payload: boolean }
+    | { type: reducerType.SET_IS_DRAGGING_ITEM; payload: boolean }
+    | { type: reducerType.REPLACE_PLAYLIST; payload: playlist }
 
 
 
@@ -85,6 +95,7 @@ export interface AllTracksStateInterface{
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
     isEditingSongModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface SearchSongInterface{
@@ -120,6 +131,7 @@ export interface AllAlbumsInterface{
     albumList: album[],
     albumMenuToOpen: album | null,
     isPlaylistModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface AllArtistsInterface{
@@ -131,6 +143,7 @@ export interface AllArtistsInterface{
     artistList: artist[],
     artistMenuToOpen: artist | null,
     isPlaylistModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface ArtistCatalogueInterface{
@@ -152,6 +165,7 @@ export interface AllGenresInterface{
     genreList: genre[],
     genreMenuToOpen: genre | null,
     isPlaylistModalOpen: boolean,
+    inDragDropRegion: boolean,
 }
 
 export interface GenreViewInterface{
@@ -178,7 +192,8 @@ export interface AllPlaylistsInterface{
     isPlaylistModalOpen: boolean,
     isCreatePlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
-    isDeletePlayListModalOpen: boolean
+    isDeletePlayListModalOpen: boolean,
+    isEditingPlayListModalOpen: boolean,
 }
 
 export interface PlaylistViewInterface{
@@ -204,5 +219,6 @@ export interface UpcomingHistoryInterface{
     SongHistory: Song[],
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
+    isEditingSongModalOpen: boolean,
     kindex_sq: {key: number, index: number, queueType: "SongQueue" | "SongHistory"},
 }

@@ -3,44 +3,76 @@
 
 mod app;
 mod commands;
-mod music;
 mod components;
-mod utils;
-mod database;
-mod socials;
 mod constants;
+mod database;
+mod music;
+mod socials;
+mod utils;
+mod windows;
+mod export;
+mod import;
 
-use constants::null_cover_null::NULL_COVER_NULL;
-use kira::manager::{AudioManager, AudioManagerSettings, backend::DefaultBackend};
-use music::media_control_api::configure_media_controls;
-use souvlaki::{MediaControlEvent, MediaControls};
-use components::audio_manager::SharedAudioManager;
-use utils::general_utils::decode_image_in_parallel;
-use utils::music_list_organizer::MLO;
+use commands::general_commands::get_server_port;
+use commands::refresh_paths_at_start::{detect_deleted_songs, refresh_paths};
+use database::db_api::{
+    add_new_wallpaper_to_db, create_playlist_cover, delete_playlist_cover,
+    delete_thumbnail_and_wallpaper, get_albums_not_in_vec, get_artists_not_in_vec,
+    get_genres_not_in_vec, get_songs_not_in_vec
+};
+use database::db_manager::DbManager;
+use export::{export_csv::export_songs_as_csv, export_html::export_songs_as_html, 
+    export_json::export_songs_as_json,export_txt::export_songs_as_txt, export_xml::export_songs_as_xml};
+//use export::export_pdf::export_songs_as_pdf;
 use socials::discord_rpc::{set_discord_rpc_activity_with_timestamps, DiscordRpc};
-use warp::{Filter, http::Uri, reply::Response, Reply};
+use utils::music_list_organizer::MLO;
 
-use tauri::Manager;
 use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc;
-use tauri::async_runtime::{self, spawn};
 
-use crate::app::controller::{toggle_app_pin, toggle_miniplayer_view, drag_app_window};
-use crate::commands::{metadata_retriever::get_all_songs, metadata_edit::edit_song_metadata};
+use crate::windows::controller::{drag_app_window, toggle_app_pin, toggle_miniplayer_view};
+use crate::commands::{metadata_edit::edit_song_metadata, metadata_retriever::get_all_songs};
 
-use crate::commands::general_commands::{open_in_file_manager, resize_frontend_image_to_fixed_height, get_audio_dir};
-use crate::music::player::{load_and_play_song_from_path, load_a_song_from_path, set_volume, pause_song, resume_playing, seek_to, seek_by, get_song_position, stop_song};
-use crate::music::media_control_api::{config_mca, update_metadata, event_handler, set_player_state};
-use crate::utils::music_list_organizer::{mlo_set_shuffle_list, mlo_set_repeat_list, mlo_get_next_batch_as_size, mlo_reset_and_set_remaining_keys};
-use crate::utils::general_utils::get_random_port;
-use crate::database::db_api::{get_batch_of_songs, get_batch_of_albums, get_batch_of_artists, get_batch_of_genres};
-use crate::socials::discord_rpc::{allow_connection_and_connect_to_discord_rpc, attempt_to_connect_if_possible, disallow_connection_and_close_discord_rpc, set_discord_rpc_activity, clear_discord_rpc_activity};
+use crate::commands::general_commands::{
+    get_audio_dir, open_in_file_manager, resize_frontend_image_to_fixed_height,
+};
+use crate::database::db_api::{
+    get_all_albums, get_all_artists, get_all_genres, get_all_songs_in_db,
+};
+use crate::music::media_control_api::{set_player_state, update_metadata};
+use crate::music::player::{
+    get_song_position, load_a_song_from_path, load_and_play_song_from_path, pause_song,
+    resume_playing, seek_by, seek_to, set_volume, stop_song,
+};
+use crate::socials::discord_rpc::{
+    allow_connection_and_connect_to_discord_rpc, attempt_to_connect_if_possible,
+    clear_discord_rpc_activity, disallow_connection_and_close_discord_rpc,
+    set_discord_rpc_activity,
+};
+use crate::utils::music_list_organizer::{
+    mlo_get_next_batch_as_size, mlo_reset_and_set_remaining_keys, mlo_set_repeat_list,
+    mlo_set_shuffle_list,
+};
+use app::setup::{
+    setup_app,
+    initialize_audio_manager,
+};
 
 fn main() {
     tauri::Builder::default()
-        .manage(initialize_audio_manager())
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec![])))
+        .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_shell::init())
+        .manage(Arc::new(Mutex::new(
+            DbManager::new().expect("failed to initialize db manager"),
+        )))
         .manage(Mutex::new(MLO::new()))
-        .manage(Mutex::new(DiscordRpc::new().expect("failed to initialize discord rpc")))
+        .manage(Mutex::new(
+            DiscordRpc::new().expect("failed to initialize discord rpc"),
+        ))
+        .manage(initialize_audio_manager())
         .setup(setup_app)
         .invoke_handler(tauri::generate_handler![
             // WINDOW CONTROL
@@ -49,14 +81,15 @@ fn main() {
             drag_app_window,
             update_metadata,
             set_player_state,
-
             // GENERAL COMMANDS
-            get_all_songs, 
+            get_all_songs,
             open_in_file_manager,
             set_volume,
             get_audio_dir,
             edit_song_metadata,
-
+            get_server_port,
+            refresh_paths,
+            detect_deleted_songs,
             // MUSIC PLAYER
             load_and_play_song_from_path,
             load_a_song_from_path,
@@ -66,113 +99,42 @@ fn main() {
             seek_to,
             seek_by,
             get_song_position,
-
             // UTILS
             resize_frontend_image_to_fixed_height,
-
             // MUSIC LIST ORGANIZER
             mlo_set_shuffle_list,
             mlo_set_repeat_list,
             mlo_reset_and_set_remaining_keys,
             mlo_get_next_batch_as_size,
-
             // DATABASE API
-            get_batch_of_songs,
-            get_batch_of_albums,
-            get_batch_of_artists,
-            get_batch_of_genres,
-
+            get_all_songs_in_db,
+            get_songs_not_in_vec,
+            get_all_albums,
+            get_albums_not_in_vec,
+            get_all_artists,
+            get_artists_not_in_vec,
+            get_all_genres,
+            get_genres_not_in_vec,
+            add_new_wallpaper_to_db,
+            create_playlist_cover,
+            delete_playlist_cover,
+            delete_thumbnail_and_wallpaper,
             // DISCORD RPC
             allow_connection_and_connect_to_discord_rpc,
             attempt_to_connect_if_possible,
             disallow_connection_and_close_discord_rpc,
             set_discord_rpc_activity,
             set_discord_rpc_activity_with_timestamps,
-            clear_discord_rpc_activity
+            clear_discord_rpc_activity,
+            // EXPORT
+            export_songs_as_csv,
+            export_songs_as_json,
+            export_songs_as_xml,
+            export_songs_as_html,
+            export_songs_as_txt,
+            //export_songs_as_pdf,
+            // IMPORT
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
-
-/// Initializes the SharedAudioManager with required settings.
-fn initialize_audio_manager() -> Arc<Mutex<SharedAudioManager>> {
-    let audio_manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default())
-        .expect("failed to initialize audio manager");
-
-    Arc::new(Mutex::new(SharedAudioManager {
-        manager: audio_manager,
-        instance_handle: None,
-        volume: 0.0,
-        controls: None,
-        cover: decode_image_in_parallel(&NULL_COVER_NULL.to_owned()).expect("failed to decode image"),
-        cover_url: String::new(),
-    }))
-}
-
-/// Sets up the Tauri application.
-fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let (tx, mut rx): (mpsc::Sender<MediaControlEvent>, mpsc::Receiver<MediaControlEvent>) = mpsc::channel(32);
-    let shared_audio_manager = Arc::clone(&app.state::<Arc<Mutex<SharedAudioManager>>>());
-    let window = app.app_handle().get_window("main").expect("failed to get window");
-
-    // Set up the image route
-    let image_route = create_image_route(shared_audio_manager.clone());
-
-    // get random port for warp server
-    let port = get_random_port();
-
-    // Start the warp server
-    spawn({
-        warp::serve(image_route)
-            .run(([127, 0, 0, 1], port))
-    });
-
-    // add url to shared audio manager
-    shared_audio_manager.lock().expect("failed to lock shared audio manager").cover_url = format!("http://localhost:{}/cover", port);
-
-    // Set up media controls
-    let mut controls = config_mca(&window).expect("Failed to initialize media controls");
-    setup_media_controls(&mut controls, tx.clone(), port);
-
-    // Store the controls in the shared audio manager
-    shared_audio_manager.lock().expect("failed to lock shared audio manager").controls = Some(controls);
-
-    // Handle media control events
-    spawn(async move {
-        while let Some(event) = rx.recv().await {
-            event_handler(&window, &event);
-        }
-    });
-    Ok(())
-}
-
-/// Creates the image route for serving the cover image.
-fn create_image_route(shared_audio_manager: Arc<Mutex<SharedAudioManager>>) -> impl Filter<Extract = (Response,), Error = warp::Rejection> + Clone {
-    warp::path("cover")
-        .and(warp::get())
-        .map(move || {
-            match shared_audio_manager.lock() {
-                Ok(audio_manager) => {
-                    warp::reply::with_header(audio_manager.cover.clone(), "Content-Type", "image/png").into_response()
-                },
-                Err(_) => {
-                    // Redirect to default image on Imgur
-                    warp::redirect::temporary(Uri::from_static("https://i.imgur.com/1bJ0j6V.png")).into_response()
-                }
-            }
-        })
-}
-
-/// Sets up the media controls for the application.
-fn setup_media_controls(controls: &mut MediaControls, tx: mpsc::Sender<MediaControlEvent>, port: u16) {
-    controls.attach(move |event: MediaControlEvent| {
-        let tx = tx.clone();
-        async_runtime::spawn(async move {
-            if tx.send(event).await.is_err() {
-                println!("Failed to send event");
-            }
-        });
-    }).expect("Failed to attach media controls");
-
-    configure_media_controls(controls, &format!("http://localhost:{}/cover", port).to_owned());
 }

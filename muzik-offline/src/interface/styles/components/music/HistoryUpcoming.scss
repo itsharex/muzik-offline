@@ -7,51 +7,55 @@
     width: calc(350px + 5vw);
     height: 80vh;
 
-    /* Track */
-    ::-webkit-scrollbar { display: none; }
-
-    .Upcoming_view, .History_view{
+    .scrollbar-container{
         height: 85%;
-        width: calc(350px + 4vw);
         margin-bottom: 20px;
-        overflow-y: auto;
-        // fade out top 10% and bottom 10% and only focus on the middle
-        mask-image: linear-gradient(
-            180deg,
-            rgb(0, 0, 0, 0) 0%,
-            rgba(0, 0, 0, 1) 30%,
-            rgba(0, 0, 0, 1) 70%,
-            rgb(0, 0, 0, 0) 100%
-        );
+        ::-webkit-scrollbar{
+            display: none;
+        }
+        .Upcoming_view, .History_view{
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+            height: 100%;
+            width: calc(350px + 4vw);
+            overflow-y: auto;
+            // fade out top 10% and bottom 10% and only focus on the middle
+            mask-image: linear-gradient(
+                180deg,
+                rgb(0, 0, 0, 0) 0%,
+                rgba(0, 0, 0, 1) 30%,
+                rgba(0, 0, 0, 1) 70%,
+                rgb(0, 0, 0, 0) 100%
+            );
+        }
+    
+        .top_view{
+            height: 100%;
+            width: calc(350px + 4vw);
+            overflow-y: auto;
+            mask-image: linear-gradient(
+                180deg,
+                rgb(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 30%,
+                rgba(0, 0, 0, 1) 70%,
+                rgb(0, 0, 0, 0) 100%
+            );
+        }
+    
+        .bottom_view{
+            height: 100%;
+            width: calc(350px + 4vw);
+            overflow-y: auto;
+            mask-image: linear-gradient(
+                180deg,
+                rgb(0, 0, 0, 0) 0%,
+                rgba(0, 0, 0, 1) 30%,
+                rgba(0, 0, 0, 1) 70%,
+                rgb(0, 0, 0, 1) 100%
+            );
+        }
     }
 
-    .top_view{
-        height: 85%;
-        width: calc(350px + 4vw);
-        margin-bottom: 20px;
-        overflow-y: auto;
-        mask-image: linear-gradient(
-            180deg,
-            rgb(0, 0, 0, 1) 0%,
-            rgba(0, 0, 0, 1) 30%,
-            rgba(0, 0, 0, 1) 70%,
-            rgb(0, 0, 0, 0) 100%
-        );
-    }
-
-    .bottom_view{
-        height: 85%;
-        width: calc(350px + 4vw);
-        margin-bottom: 20px;
-        overflow-y: auto;
-        mask-image: linear-gradient(
-            180deg,
-            rgb(0, 0, 0, 0) 0%,
-            rgba(0, 0, 0, 1) 30%,
-            rgba(0, 0, 0, 1) 70%,
-            rgb(0, 0, 0, 1) 100%
-        );
-    }
 
     .HistoryUpcoming_tabs{
         display: flex;

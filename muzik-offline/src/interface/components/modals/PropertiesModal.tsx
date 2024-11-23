@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Song, playlist } from "@muziktypes/index";
 import "@styles/components/modals/PropertiesModal.scss";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { modal_variants } from "@content/index";
 import { FunctionComponent } from "react";
 

@@ -1,6 +1,6 @@
 import { App_logo } from "@logos/index";
 import "@styles/layouts/AboutSettings.scss";
-import { open } from '@tauri-apps/api/shell';
+import { open } from '@tauri-apps/plugin-shell';
 import { motion } from "framer-motion";
 
 const AboutSettings = () => {
@@ -11,7 +11,7 @@ const AboutSettings = () => {
                 <App_logo />
             </div>
             <h3>Copyright 2024 muzik-apps. All rights reserved.</h3>
-            <h3>Version "0.4.0"</h3>
+            <h3>Version "0.6.0"</h3>
             <h3>
                 <motion.span whileTap={{scale: 0.98}} onClick={() => open("https://github.com/muzik-apps/muzik-offline")}>
                     muzik-offline

@@ -18,6 +18,7 @@ export interface SavedObject{
     SeekStepAmount: string,
     SongLengthORremaining: string,
     AlwaysRoundedCornersWindows: string,
+    AutoStartApp: string,
 }
 
 export const emptySavedObject: SavedObject = {
@@ -38,4 +39,5 @@ export const emptySavedObject: SavedObject = {
     SeekStepAmount: "10",
     SongLengthORremaining: "song length",
     AlwaysRoundedCornersWindows: "No",
+    AutoStartApp: "No"
 }

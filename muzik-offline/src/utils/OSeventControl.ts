@@ -1,8 +1,9 @@
 import { Payload } from "@muziktypes/index";
 import { changeSeekerPosition, changeSeekerPositionBtnPress, changeVolumeLevel, pauseSong, playNextSong, playPreviousSong, playSong, setVolumeLevel, stopSong } from "./playerControl";
-import { appWindow } from '@tauri-apps/api/window';
-import { invoke } from "@tauri-apps/api";
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { invoke } from "@tauri-apps/api/core";
 import { usePlayerStore, usePlayingPositionSec } from "@store/index";
+const appWindow = getCurrentWebviewWindow()
 
 export async function processOSMediaControlsEvent(event: Payload) {
     const song = usePlayerStore.getState().Player.playingSongMetadata;

@@ -1,13 +1,13 @@
 import { FunctionComponent, useState } from "react";
 import "@styles/components/modals/DirectoriesModal.scss";
-import { invoke } from "@tauri-apps/api";
-import { open } from '@tauri-apps/api/dialog';
+import { invoke } from "@tauri-apps/api/core";
+import { open } from '@tauri-apps/plugin-dialog';
 import { appConfigDir } from '@tauri-apps/api/path';
 import { toastType } from "@muziktypes/index";
 import { useDirStore, useSavedObjectStore, useToastStore } from "store";
-import { isPermissionGranted, sendNotification } from '@tauri-apps/api/notification';
+import { isPermissionGranted, sendNotification } from '@tauri-apps/plugin-notification';
 import { motion } from "framer-motion";
-import { fetch_library_in_chunks } from "utils";
+import { fetch_library } from "utils";
 import { local_albums_db, local_artists_db, local_genres_db, local_songs_db } from "@database/database";
 import { modal_variants } from "@content/index";
 
@@ -16,9 +16,14 @@ type DirectoriesModalProps = {
     closeModal: () => void;
 }
 
+/**
+ * @deprecated This component is deprecated and will be removed in future releases.
+ * Directory control has been shifted to an entirely seperate page as it is easier for the user to 
+ * control it that way. Please have a look at `MusicFoldersSettings` to see the new organisation.
+ */
 const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: DirectoriesModalProps) => {
     const { dir, setDir } = useDirStore((state) => { return { dir: state.dir, setDir: state.setDir}; });
-    const [directories, setDirectories] = useState<string[]>(dir.Dir);
+    const [directories, setDirectories] = useState<Set<string>>(dir.Dir);
     const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store}; });
 
@@ -30,7 +35,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
 
         invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(directories), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
             .then(async() => {
-                const res = await fetch_library_in_chunks();
+                const res = await fetch_library(true);
                 let message = "";
 
                 if(res.status === "error")message = res.message;
@@ -56,7 +61,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
             return item.replace(/\n$/, ''); // Removes trailing newline character
         });
         //remove duplicates from array
-        const unique = [...new Set(val)];
+        const unique = new Set(val);
         setDirectories(unique);
     }
 
@@ -69,7 +74,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
     }
 
     function closeModal(){
-        if(areArraysDifferent(directories, dir.Dir)){
+        if(areArraysDifferent(Array.from(directories), Array.from(dir.Dir))){
             setToast({title: "Loading songs...", message: "Please note that this process can take several minutes to complete depending on how many songs you have but you will be notified when it is done", type: toastType.warning, timeout: 10000});
             setDir({Dir: directories});
             reloadSongs();
@@ -91,7 +96,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
         } 
         else{
             //if directory is not contained already add the selected directory to setDirectories array
-            if(!directories.includes(selected))setDirectories([...directories, selected]);
+            if(!directories.has(selected))setDirectories(new Set(directories).add(selected));
         }
     };
 
@@ -103,7 +108,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
         await local_artists_db.artists.clear();
         await local_genres_db.genres.clear();
 
-        const res = await fetch_library_in_chunks();
+        const res = await fetch_library(true);
         let message = "";
 
         if(res.status === "error")message = res.message;
@@ -114,7 +119,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
         if(permissionGranted)sendNotification({ title: 'Refresh library...', body: message });
     }
 
-    function clearDirectories(){ setDirectories([]); }
+    function clearDirectories(){ setDirectories(new Set()); }
     
     return (
         <div className={"DirectoriesModal" + (props.isOpen ? " DirectoriesModal-visible" : "")} onClick={
@@ -125,7 +130,7 @@ const DirectoriesModal: FunctionComponent<DirectoriesModalProps> = (props: Direc
                 animate={props.isOpen ? "open" : "closed"}
                 variants={modal_variants}
                 className="modal"
-                value={directories.join(",")}
+                value={directories.size > 0 ? Array.from(directories).join(", ") : ""}
                 onChange={setDirectoriesVal}
                 placeholder="directory 1, directory 2, etc">
             </motion.textarea>

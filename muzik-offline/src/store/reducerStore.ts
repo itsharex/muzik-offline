@@ -18,6 +18,7 @@ export const AllTracksState: AllTracksStateInterface = {
     isPlaylistModalOpen: false,
     isPropertiesModalOpen: false,
     isEditingSongModalOpen: false,
+    inDragDropRegion: false,
 };
 
 export const alltracksReducer = (state: AllTracksStateInterface, action: Action) => {
@@ -32,6 +33,7 @@ export const alltracksReducer = (state: AllTracksStateInterface, action: Action)
         case reducerType.SET_PLAYLIST_MODAL: return { ...state, isPlaylistModalOpen: action.payload };
         case reducerType.SET_PROPERTIES_MODAL: return { ...state, isPropertiesModalOpen: action.payload };
         case reducerType.SET_EDIT_SONG_MODAL: return { ...state, isEditingSongModalOpen: action.payload };
+        case reducerType.SET_IN_DRAG_DROP_REGION: return { ...state, inDragDropRegion: action.payload };
         default: return state;
     }
 };
@@ -99,6 +101,7 @@ export const AllAlbumsState: AllAlbumsInterface = {
     albumList: [],
     albumMenuToOpen: null,
     isPlaylistModalOpen: false,
+    inDragDropRegion: false,
 };
 
 export const allAlbumsReducer = (state: AllAlbumsInterface, action: Action) => {
@@ -111,6 +114,7 @@ export const allAlbumsReducer = (state: AllAlbumsInterface, action: Action) => {
         case reducerType.SET_ALBUM_LIST: return { ...state, albumList: action.payload };
         case reducerType.SET_ALBUM_MENU: return { ...state, albumMenuToOpen: action.payload };
         case reducerType.SET_PLAYLIST_MODAL: return { ...state, isPlaylistModalOpen: action.payload };
+        case reducerType.SET_IN_DRAG_DROP_REGION: return { ...state, inDragDropRegion: action.payload };
         default: return state;
     }
 };
@@ -147,6 +151,7 @@ export const AllArtistsState: AllArtistsInterface = {
     artistList: [],
     artistMenuToOpen: null,
     isPlaylistModalOpen: false,
+    inDragDropRegion: false,
 };
 
 export const allArtistsReducer = (state: AllArtistsInterface, action: Action) => {
@@ -159,6 +164,7 @@ export const allArtistsReducer = (state: AllArtistsInterface, action: Action) =>
         case reducerType.SET_ARTIST_LIST: return { ...state, artistList: action.payload };
         case reducerType.SET_ARTIST_MENU: return { ...state, artistMenuToOpen: action.payload };
         case reducerType.SET_PLAYLIST_MODAL: return { ...state, isPlaylistModalOpen: action.payload };
+        case reducerType.SET_IN_DRAG_DROP_REGION: return { ...state, inDragDropRegion: action.payload };
         default: return state;
     }
 };
@@ -201,6 +207,7 @@ export const AllGenresState: AllGenresInterface = {
     genreList: [],
     genreMenuToOpen: null,
     isPlaylistModalOpen: false,
+    inDragDropRegion: false,
 };
 
 export const allGenreReducer = (state: AllGenresInterface, action: Action) => {
@@ -213,6 +220,7 @@ export const allGenreReducer = (state: AllGenresInterface, action: Action) => {
         case reducerType.SET_GENRE_LIST: return { ...state, genreList: action.payload };
         case reducerType.SET_GENRE_MENU: return { ...state, genreMenuToOpen: action.payload };
         case reducerType.SET_PLAYLIST_MODAL: return { ...state, isPlaylistModalOpen: action.payload };
+        case reducerType.SET_IN_DRAG_DROP_REGION: return { ...state, inDragDropRegion: action.payload };
         default: return state;
     }
 };
@@ -261,7 +269,8 @@ export const AllPlaylistsState: AllPlaylistsInterface = {
     isPlaylistModalOpen: false,
     isCreatePlaylistModalOpen: false,
     isPropertiesModalOpen: false,
-    isDeletePlayListModalOpen: false
+    isDeletePlayListModalOpen: false,
+    isEditingPlayListModalOpen: false,
 };
 
 export const allPlaylistsReducer = (state: AllPlaylistsInterface, action: Action) => {
@@ -277,6 +286,10 @@ export const allPlaylistsReducer = (state: AllPlaylistsInterface, action: Action
         case reducerType.SET_PROPERTIES_MODAL: return { ...state, isPropertiesModalOpen: action.payload };
         case reducerType.SET_CREATE_PLAYLIST_MODAL: return { ...state, isCreatePlaylistModalOpen: action.payload };
         case reducerType.SET_DELETE_MODAL: return { ...state, isDeletePlayListModalOpen: action.payload };
+        case reducerType.ADD_PLAYLIST: return { ...state, playlistList: [...state.playlistList, action.payload] };
+        case reducerType.REMOVE_PLAYLIST: return { ...state, playlistList: state.playlistList.filter(playlist => playlist.key !== action.payload) };
+        case reducerType.SET_EDIT_PLAYLIST_MODAL: return { ...state, isEditingPlayListModalOpen: action.payload };
+        case reducerType.REPLACE_PLAYLIST: return { ...state, playlistList: state.playlistList.map(playlist => playlist.key === action.payload.key ? action.payload : playlist) };
         default: return state;
     }
 };
@@ -289,6 +302,7 @@ export const UpcomingHistoryState: UpcomingHistoryInterface = {
     SongHistory: [],
     isPlaylistModalOpen: false,
     isPropertiesModalOpen: false,
+    isEditingSongModalOpen: false,
     kindex_sq: {key: -1, index: -1, queueType: "SongQueue"}
 };
 
@@ -301,6 +315,7 @@ export const upcomingHistoryReducer = (state: UpcomingHistoryInterface, action: 
         case reducerType.SET_SONG_HISTORY: return { ...state, SongHistory: action.payload };
         case reducerType.SET_PLAYLIST_MODAL: return { ...state, isPlaylistModalOpen: action.payload };
         case reducerType.SET_PROPERTIES_MODAL: return { ...state, isPropertiesModalOpen: action.payload };
+        case reducerType.SET_EDIT_SONG_MODAL: return { ...state, isEditingSongModalOpen: action.payload };
         case reducerType.SET_KEY_INDEX_SONG_QUEUE: return { ...state, kindex_sq: action.payload };
         default: return state;
     }
