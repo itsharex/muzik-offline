@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    app::window,
+    windows::window,
     components::{audio_manager::BackendStateManager, event_payload::Payload},
     database::{db_api::get_song_from_tree, db_manager::DbManager}
 };
