@@ -53,6 +53,14 @@ import Trash from './General/Trash';
 import FolderSearch from './General/FolderSearch';
 import File from './General/File';
 import Check from './General/Check';
+import WindowsCloseIcon from './Windows/WindowsCloseIcon';
+import WindowsMaximizeIcon from './Windows/WindowsMaximizeIcon';
+import WindowsMinimizeIcon from './Windows/WindowsMinimizeIcon';
+import WindowsRestoreIcon from './Windows/WindowsRestoreIcon';
+import LinuxClose from './Windows/LinuxClose';
+import LinuxMaximize from './Windows/LinuxMaximize';
+import LinuxMinimize from './Windows/LinuxMinimize';
+import FolderPlus from './General/FolderPlus';
 
 export {
     Next_page, Prev_page, Search, 
@@ -68,5 +76,7 @@ export {
     NullArtistCoverOne, NullArtistCoverTwo, NullArtistCoverThree, NullArtistCoverFour,
     CheckGreen, CrossRed, InformationCircleContainedOrange, InformationCircleContainedBlue,
     EditImage, Edit, Overlap, Minimize,
-    ListIcon, AlertTriangle, Trash, FolderSearch, File , Check
+    ListIcon, AlertTriangle, Trash, FolderSearch, File , Check,
+    WindowsCloseIcon, WindowsMaximizeIcon, WindowsMinimizeIcon, WindowsRestoreIcon,
+    LinuxClose, LinuxMaximize, LinuxMinimize, FolderPlus
 }

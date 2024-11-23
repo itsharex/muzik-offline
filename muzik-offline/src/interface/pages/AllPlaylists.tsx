@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useReducer } from "react";
-import { DropDownMenuSmall, SquareTitleBox, GeneralContextMenu, CreatePlaylistModal, PropertiesModal, LoaderAnimated, AddSongsToPlaylistModal, DeletePlaylistModal } from "@components/index";
+import { DropDownMenuSmall, SquareTitleBox, GeneralContextMenu, CreatePlaylistModal, PropertiesModal, LoaderAnimated, AddSongsToPlaylistModal, DeletePlaylistModal, EditPlaylistModal } from "@components/index";
 import { ChevronDown, Menu } from "@assets/icons";
 import "@styles/pages/AllPlaylists.scss";
 import { contextMenuButtons, contextMenuEnum } from '@muziktypes/index';
@@ -8,7 +8,7 @@ import { local_playlists_db } from "@database/database";
 import { useNavigate } from "react-router-dom";
 import { AllPlaylistsState, allPlaylistsReducer } from "@store/reducerStore";
 import { reducerType } from "@store/index";
-import { closeContextMenu, closeCreatePlaylistModal, closeDeletePlaylistModal, closePlaylistModal, closePropertiesModal, setOpenedDDM } from "@utils/reducerUtils";
+import { closeContextMenu, closeCreatePlaylistModal, closeDeletePlaylistModal, closeEditPlaylistModal, closePlaylistModal, closePropertiesModal, setOpenedDDM } from "@utils/reducerUtils";
 import { addTheseSongsToPlayNext, addTheseSongsToPlayLater, playTheseSongs } from "@utils/playerControl";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -32,6 +32,7 @@ const AllPlaylists = () => {
         else if(arg == contextMenuButtons.ShowPlaylist && state.playlistMenuToOpen)navigateTo(state.playlistMenuToOpen.key);
         else if(arg === contextMenuButtons.AddToPlaylist){ dispatch({ type: reducerType.SET_PLAYLIST_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.Delete){ dispatch({ type: reducerType.SET_DELETE_MODAL, payload: true}); }
+        else if(arg === contextMenuButtons.EditSong){ dispatch({ type: reducerType.SET_EDIT_PLAYLIST_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.PlayNext && state.playlistMenuToOpen){ 
             addTheseSongsToPlayNext({playlist: state.playlistMenuToOpen.title});
             closeContextMenu(dispatch); 
@@ -75,6 +76,17 @@ const AllPlaylists = () => {
             });
         }
         closeCreatePlaylistModal(dispatch);
+    }
+
+    function replacePlaylistInList(key: number | undefined){
+        if(key){
+            local_playlists_db.playlists.where("key").equals(key).first().then((playlist) => {
+                if(playlist){
+                    dispatch({ type: reducerType.REPLACE_PLAYLIST, payload: playlist });
+                }
+            }).catch(() => dispatch({ type: reducerType.REMOVE_PLAYLIST, payload: key }));
+        }
+        closeEditPlaylistModal(dispatch);
     }
 
     useEffect(() => { setList(); }, [state.sort])
@@ -154,6 +166,19 @@ const AllPlaylists = () => {
                 isOpen={state.isDeletePlayListModalOpen} 
                 title={state.playlistMenuToOpen? state.playlistMenuToOpen.title : ""} 
                 closeModal={shouldDeletePlaylist} />
+            <EditPlaylistModal
+                dontNavigate={true}
+                isOpen={state.isEditingPlayListModalOpen}
+                playlistobj={state.playlistMenuToOpen ?? {
+                    key: 0,
+                    title: "",
+                    cover: "",
+                    dateCreated: new Date().toISOString(),
+                    dateEdited: new Date().toISOString(),
+                    tracksPaths: [],
+                    uuid: ""
+                }}
+                closeModal={replacePlaylistInList} />
         </motion.div>
     )
 }

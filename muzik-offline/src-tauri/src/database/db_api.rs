@@ -766,6 +766,27 @@ pub fn get_image_from_tree(dbm: MutexGuard<'_, DbManager>, uuid: &str) -> Vec<u8
     }
 }
 
+pub fn get_null_cover_from_tree(dbm: MutexGuard<'_, DbManager>, uuid: &str) -> Vec<u8> {
+    let covers_tree = match dbm.null_covers_tree.read() {
+        Ok(tree) => tree,
+        Err(_) => {
+            return Vec::new();
+        }
+    };
+
+    match covers_tree.get(uuid) {
+        Ok(Some(cover)) => {
+            return cover.to_vec();
+        }
+        Ok(None) => {
+            return Vec::new();
+        }
+        Err(_) => {
+            return Vec::new();
+        }
+    }
+}
+
 pub fn get_song_from_tree(
     db_manager: State<'_, Arc<Mutex<DbManager>>>,
     uuid: &str,
@@ -898,6 +919,48 @@ pub fn song_exists_in_tree(db_manager: State<'_, Arc<Mutex<DbManager>>>, path: &
         }
         Err(_) => {
             return false;
+        }
+    }
+}
+
+pub fn get_songs_in_tree(db_manager: State<'_, Arc<Mutex<DbManager>>>, uuids: Vec<String>) -> Vec<Song>{
+    match db_manager.lock() {
+        Ok(dbm) => {
+            let song_tree = match dbm.song_tree.read() {
+                Ok(tree) => tree,
+                Err(_) => {
+                    return Vec::new();
+                }
+            };
+            let mut songs: Vec<Song> = Vec::new();
+
+            for uuid in uuids {
+                match song_tree.get(uuid) {
+                    Ok(Some(song_as_ivec)) => {
+                        let song_as_bytes = song_as_ivec.as_ref();
+                        let song_as_str = String::from_utf8_lossy(song_as_bytes);
+                        match serde_json::from_str::<Song>(&song_as_str.to_string()) {
+                            Ok(song) => {
+                                songs.push(song);
+                            }
+                            Err(_) => {
+                                println!("error converting song from json to struct");
+                            }
+                        }
+                    }
+                    Ok(None) => {
+                        println!("song with this uuid does not exist in the song tree");
+                    }
+                    Err(_) => {
+                        println!("error getting this key from the song tree");
+                    }
+                }
+            }
+
+            return songs;
+        }
+        Err(_) => {
+            return Vec::new();
         }
     }
 }
@@ -1234,6 +1297,20 @@ pub fn clear_all_trees(db_manager: State<'_, Arc<Mutex<DbManager>>>) {
             clear_tree(&covers_tree);
         }
         Err(_) => {}
+    }
+}
+
+pub fn key_exists_in_tree(tree: &Tree, key: String) -> bool {
+    match tree.get(key) {
+        Ok(Some(_)) => {
+            return true;
+        }
+        Ok(None) => {
+            return false;
+        }
+        Err(_) => {
+            return false;
+        }
     }
 }
 
