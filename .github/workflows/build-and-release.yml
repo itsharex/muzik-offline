@@ -59,15 +59,17 @@ jobs:
             # If you don't have `beforeBuildCommand` configured you may want to build your frontend here too.
           run: npm ci # change this to npm or pnpm depending on which one you use.
 
-        - name: Install OpenSSL
-          run: |
-            if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
-              brew install openssl
-            elif [[ "${{ matrix.platform }}" == "ubuntu-22.04" ]]; then
-              sudo apt-get update && sudo apt-get install -y openssl
-            elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
-              choco install openssl -y
-            fi
+        - name: Install OpenSSL on macOS
+          if: matrix.platform == 'macos-latest'
+          run: brew install openssl
+        
+        - name: Install OpenSSL on Ubuntu
+          if: matrix.platform == 'ubuntu-22.04'
+          run: sudo apt-get update && sudo apt-get install -y openssl
+        
+        - name: Install OpenSSL on Windows
+          if: matrix.platform == 'windows-latest'
+          run: choco install openssl -y
 
         - name: Verify OpenSSL Installation
           run: openssl version
