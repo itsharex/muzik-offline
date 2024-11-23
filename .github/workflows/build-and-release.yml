@@ -8,7 +8,7 @@ on:
 
 defaults:
     run:
-        working-directory: muzik-offline
+        working-directory: ./muzik-offline   # Navigate to the correct directory for all steps
 
 jobs:
     publish-tauri:
@@ -42,6 +42,7 @@ jobs:
           with:
             node-version: lts/*
             cache: 'npm' # Set this to npm, yarn or pnpm.
+            cache-dependency-path: './muzik-offline/package-lock.json' # Change this to your lock file path.
     
         - name: install Rust stable
           uses: dtolnay/rust-toolchain@stable # Set this to dtolnay/rust-toolchain@nightly
@@ -56,7 +57,7 @@ jobs:
     
         - name: install frontend dependencies
             # If you don't have `beforeBuildCommand` configured you may want to build your frontend here too.
-          run: npm install # change this to npm or pnpm depending on which one you use.
+          run: npm ci # change this to npm or pnpm depending on which one you use.
 
         - name: Install OpenSSL
           run: |
