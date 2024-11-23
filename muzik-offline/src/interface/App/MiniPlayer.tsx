@@ -1,7 +1,7 @@
 import { NullCoverNull, Pause, Play, SkipBack, SkipFwd, VolumeMax, VolumeMin } from "@assets/icons";
 import { usePlayerStore, useSavedObjectStore, usePlayingPositionSec, usePlayingPosition } from "@store/index";
 import { invoke } from "@tauri-apps/api/core";
-import { getCoverURL, getNullRandomCover, getRandomCover, secondsToTimeFormat } from "@utils/index";
+import { getCoverURL, getNullRandomCover, secondsToTimeFormat } from "@utils/index";
 import { changeVolumeLevel, changeSeekerPosition, changeVolumeLevelBtnPress, dragSeeker, reconfigurePlayer_AtEndOfSong, pauseSong, playSong, changeSeekerPositionBtnPress, playNextSong, playPreviousSong, setVolumeLevel } from "@utils/playerControl";
 import { motion } from "framer-motion";
 import { FunctionComponent, useRef, useEffect, useState } from "react";

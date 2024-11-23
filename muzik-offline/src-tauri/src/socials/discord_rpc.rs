@@ -1,6 +1,4 @@
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
-use dotenv::dotenv;
-use std::env;
 use std::sync::Mutex;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::State;

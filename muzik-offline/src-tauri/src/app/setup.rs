@@ -37,7 +37,6 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         mpsc::Sender<MediaControlEvent>,
         mpsc::Receiver<MediaControlEvent>,
     ) = mpsc::channel(32);
-    #[cfg(target_os = "macos")]
     setup_macos::setup_macos(app)?;
     let shared_audio_manager = Arc::clone(&app.state::<Arc<Mutex<BackendStateManager>>>());
     let shared_db_manager = Arc::clone(&app.state::<Arc<Mutex<DbManager>>>());

@@ -77,8 +77,7 @@
     
     .drag-drop-border{
         width: calc(100vw - 227px);
-        max-height: calc(100% - 40px);
-        height: fit-content;
+        height: calc(100% - 130px);
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -143,7 +142,8 @@
 
     .AllArtists_container{
         min-width: 859px;
-        height: calc(100% - 40px);
+        max-height: calc(100% - 40px);
+        height: fit-content;
         width: calc(100vw - var(--var-right-side-bar-width-expanded));
         display: grid;
         grid-template-columns: repeat(auto-fill, 150px);

@@ -6,7 +6,9 @@ fn main() {
 
     let mut config_data = String::new();
     for (key, value) in env::vars() {
+        if key.starts_with("DISCORD_CLIENT_ID") {
             config_data.push_str(&format!("pub const {}: &str = {:?};\n", key, value));
+        }
     }
 
     let out_dir = match env::var("OUT_DIR") {

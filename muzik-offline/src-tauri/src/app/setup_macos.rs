@@ -1,13 +1,24 @@
-use tauri::{TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
+#![cfg(target_os = "windows")]
+pub fn setup_macos(_app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    Ok(())
+}
 
+#[cfg(target_os = "linux")]
+pub fn setup_macos(_app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
 pub fn setup_macos(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    use tauri::{TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
+
     let win_builder =
         WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
         .fullscreen(false)
         .resizable(true)
         .title("muzik-offline")
-        .inner_size(980, 623)
-        .min_inner_size(980, 623)
+        .inner_size(980.0, 623.0)
+        .min_inner_size(980.0, 623.0)
         .transparent(true)
         .center();
 
@@ -35,7 +46,5 @@ pub fn setup_macos(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
             ns_window.setBackgroundColor_(bg_color);
         }
     }
-
     Ok(())
-
 }

@@ -22,10 +22,10 @@ const ExportSettings: FunctionComponent<ExportSettingsProps> = (props: ExportSet
         local_songs_db.songs.where("title").startsWithIgnoreCase(e.target.value).toArray().then((value) => setSongs(value));
     }
 
-    function clearSearch(){
+    /*function clearSearch(){
         setSearch("");
         local_songs_db.songs.toArray().then((value) => setSongs(value));
-    }
+    }*/
 
     function exportSongs(){
         const uuids = songs.filter((value) => selected.has(value.id)).map((value) => value.uuid);
@@ -54,7 +54,7 @@ const ExportSettings: FunctionComponent<ExportSettingsProps> = (props: ExportSet
                 </motion.div>
             </div>
             <div className="sub_heading">
-                <CheckboxComponent isChecked={songs.length === selected.size} CheckToggle={configureSelectedState} />
+                <CheckboxComponent isChecked={songs.length === 0 ? false: (songs.length === selected.size)} CheckToggle={configureSelectedState} />
                 <h3>{selected.size} {selected.size === 1 ? "song is" : "songs are"} selected</h3>
             </div>
             <div className="ExportSettings_container" ref={allSongsRef}>
