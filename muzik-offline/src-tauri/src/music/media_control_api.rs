@@ -4,7 +4,6 @@ use std::{
 };
 
 use crate::{
-    windows::window,
     components::{audio_manager::BackendStateManager, event_payload::Payload},
     database::{db_api::get_song_from_tree, db_manager::DbManager}
 };
@@ -20,6 +19,7 @@ pub fn config_mca() -> Option<MediaControls> {
     // map(|handle| handle as *mut std::os::raw::c_void)
     #[cfg(target_os = "windows")]
     let hwnd = {
+        use crate::windows::window;
         let window = match window::windows::Window::new() {
             Ok(window) => window,
             Err(err) => {

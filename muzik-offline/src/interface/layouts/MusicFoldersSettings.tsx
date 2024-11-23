@@ -23,7 +23,7 @@ const MusicFoldersSettings: FunctionComponent<MusicFoldersSettingsProps> = (prop
     const [directory, setDirectory] = useState<string>("");
 
     function reloadSongs(){
-        invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(dir.Dir), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
+        invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(Array.from(dir.Dir)), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
         .then(async() => {
                 await local_songs_db.songs.clear();
                 await local_albums_db.albums.clear();
