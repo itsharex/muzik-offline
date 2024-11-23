@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useReducer } from "react";
-import { DropDownMenuSmall, SquareTitleBox, GeneralContextMenu, CreatePlaylistModal, PropertiesModal, LoaderAnimated, AddSongsToPlaylistModal, DeletePlaylistModal, EditPlaylistModal } from "@components/index";
+import { DropDownMenuSmall, SquareTitleBox, GeneralContextMenu, CreatePlaylistModal, PropertiesModal, AddSongsToPlaylistModal, DeletePlaylistModal, EditPlaylistModal } from "@components/index";
 import { ChevronDown, Menu } from "@assets/icons";
 import "@styles/pages/AllPlaylists.scss";
 import { contextMenuButtons, contextMenuEnum } from '@muziktypes/index';
@@ -11,6 +11,8 @@ import { reducerType } from "@store/index";
 import { closeContextMenu, closeCreatePlaylistModal, closeDeletePlaylistModal, closeEditPlaylistModal, closePlaylistModal, closePropertiesModal, setOpenedDDM } from "@utils/reducerUtils";
 import { addTheseSongsToPlayNext, addTheseSongsToPlayLater, playTheseSongs } from "@utils/playerControl";
 import { invoke } from "@tauri-apps/api/core";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const AllPlaylists = () => {
     const [state , dispatch] = useReducer(allPlaylistsReducer, AllPlaylistsState);
@@ -128,7 +130,26 @@ const AllPlaylists = () => {
                     you have no playlists
                 </h6>
             )}
-            { state.isloading && <LoaderAnimated /> }
+            { state.isloading && 
+                <div className="skeleton-loading">
+                    <SkeletonTheme baseColor="#b6b6b633" highlightColor="#00000005" duration={2}>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                    </SkeletonTheme> 
+                </div>}
             <div className="AllPlaylists_container">
                     {state.playlistList.map((playlist) =>
                         <SquareTitleBox 
@@ -139,6 +160,7 @@ const AllPlaylists = () => {
                         navigateTo={navigateTo}
                         setMenuOpenData={setMenuOpenData}/>
                     )}
+                    <div className="bottom_margin"/>
             </div>
             {
                 state.playlistMenuToOpen && state.co_ords.xPos != 0 && state.co_ords.yPos != 0 && (
@@ -153,7 +175,6 @@ const AllPlaylists = () => {
                     </div>
                 )
             }
-            <div className="bottom_margin"/>
             <CreatePlaylistModal isOpen={state.isCreatePlaylistModalOpen} closeModal={addPlaylistToList}/>
             <PropertiesModal isOpen={state.isPropertiesModalOpen} playlist={state.playlistMenuToOpen ? state.playlistMenuToOpen : undefined} 
                 closeModal={() => closePropertiesModal(dispatch)}/>

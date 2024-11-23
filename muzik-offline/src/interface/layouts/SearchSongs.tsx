@@ -109,7 +109,7 @@ const SearchSongs = () => {
                     <h6>no songs found that match "{query}"</h6>
                 )}
                 { state.isloading && 
-                    <SkeletonTheme baseColor="#b6b6b633" highlightColor="#00000005" width={"calc(100%-5px)"} height={50} borderRadius={20} duration={2}>
+                    <SkeletonTheme baseColor="#b6b6b633" highlightColor="#00000005" width={"calc(100% - 5px)"} height={50} borderRadius={20} duration={2}>
                         <Skeleton count={1} style={{marginBottom: "6px"}}/>
                         <Skeleton count={1} style={{marginBottom: "6px"}}/>
                         <Skeleton count={1} style={{marginBottom: "6px"}}/>

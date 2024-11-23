@@ -67,8 +67,8 @@ const AllTracks = () => {
 
     function setList(){
         dispatch({ type: reducerType.SET_LOADING, payload: true});
-        dispatch({ type: reducerType.SET_LOADING, payload: false});
         local_songs_db.songs.orderBy(state.sort.by).toArray().then((list) =>{
+            dispatch({ type: reducerType.SET_LOADING, payload: false});
             if(state.sort.aToz === "Descending")list = list.reverse();//sort in descending order
             setSongList(list, dispatch);
         });
@@ -157,7 +157,7 @@ const AllTracks = () => {
                     </div>
                 )}
                 { state.isloading && 
-                    <SkeletonTheme baseColor="#b6b6b633" highlightColor="#00000005" width={"calc(100%-5px)"} height={50} borderRadius={20} duration={2}>
+                    <SkeletonTheme baseColor="#b6b6b633" highlightColor="#00000005" width={"calc(100% - 5px)"} height={50} borderRadius={20} duration={2}>
                         <Skeleton count={1} style={{marginBottom: "6px"}}/>
                         <Skeleton count={1} style={{marginBottom: "6px"}}/>
                         <Skeleton count={1} style={{marginBottom: "6px"}}/>

@@ -1,4 +1,4 @@
-import { SquareTitleBox, GeneralContextMenu, LoaderAnimated, AddSongsToPlaylistModal, PropertiesModal, DeletePlaylistModal, EditPlaylistModal } from "@components/index";
+import { SquareTitleBox, GeneralContextMenu, AddSongsToPlaylistModal, PropertiesModal, DeletePlaylistModal, EditPlaylistModal } from "@components/index";
 import { playlist, mouse_coOrds, contextMenuEnum, contextMenuButtons } from "@muziktypes/index";
 import { useEffect, useState } from "react";
 import "@styles/layouts/SearchPlaylists.scss";
@@ -7,6 +7,7 @@ import { useSearchStore } from "@store/index";
 import { useNavigate } from "react-router-dom";
 import { addTheseSongsToPlayNext, addTheseSongsToPlayLater, playTheseSongs } from "@utils/playerControl";
 import { invoke } from "@tauri-apps/api/core";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 
 const SearchPlaylists = () => {
     const [co_ords, setCoords] = useState<mouse_coOrds>({xPos: 0, yPos: 0});
@@ -95,7 +96,21 @@ const SearchPlaylists = () => {
             {playlists.length === 0 && loading === false && (
                 <h6>no playlists found that match "{query}"</h6>
             )}
-            { loading && <LoaderAnimated /> }
+            { loading &&
+                <div className="skeleton-loading">
+                    <SkeletonTheme baseColor="#b6b6b633" highlightColor="#00000005" duration={2}>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                    </SkeletonTheme> 
+                </div>}
             <div className="SearchPlaylists-container">
                     {playlists.map((playlist) => 
                         <SquareTitleBox 
@@ -106,6 +121,7 @@ const SearchPlaylists = () => {
                         navigateTo={navigateTo}
                         setMenuOpenData={setMenuOpenData}/>
                     )}
+                    <div className="bottom_margin"/>
             </div>
             {
                 playlistMenuToOpen && co_ords.xPos !== 0 && co_ords.yPos !== 0 && (
