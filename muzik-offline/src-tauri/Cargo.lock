@@ -2841,6 +2841,7 @@ name = "muzik-offline"
 version = "0.6.0"
 dependencies = [
  "base64 0.21.7",
+ "cocoa 0.26.0",
  "dirs 5.0.1",
  "discord-rich-presence",
  "dotenv",

@@ -14,6 +14,8 @@ use tokio::sync::mpsc;
 use crate::music::media_control_api::{config_mca, event_handler};
 use crate::utils::general_utils::get_random_port;
 
+use super::setup_macos;
+
 /// Initializes the BackendStateManager with required settings.
 pub fn initialize_audio_manager() -> Arc<Mutex<BackendStateManager>> {
     let audio_manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default())
@@ -35,6 +37,8 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         mpsc::Sender<MediaControlEvent>,
         mpsc::Receiver<MediaControlEvent>,
     ) = mpsc::channel(32);
+    #[cfg(target_os = "macos")]
+    setup_macos::setup_macos(app)?;
     let shared_audio_manager = Arc::clone(&app.state::<Arc<Mutex<BackendStateManager>>>());
     let shared_db_manager = Arc::clone(&app.state::<Arc<Mutex<DbManager>>>());
     let window = app.handle().clone();
