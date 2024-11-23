@@ -19,7 +19,7 @@ const MiniPlayer: FunctionComponent<MiniPlayerProps> = (props: MiniPlayerProps) 
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
     const {playingPosInSec, setplayingPosInSec} = usePlayingPositionSec((state) => { return {playingPosInSec: state.position, setplayingPosInSec: state.setPosition}; });
     const {playingPosition, setplayingPosition} = usePlayingPosition((state) => { return {playingPosition: state.position, setplayingPosition: state.setPosition}; });
-    const intervalIdRef = useRef<number | NodeJS.Timeout>();
+    const intervalIdRef = useRef<ReturnType<typeof setInterval>>();
 
     function changeVolume(event : any){changeVolumeLevel(event.target.value);}
 
