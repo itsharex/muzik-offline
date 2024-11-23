@@ -15,7 +15,7 @@ use tauri::{AppHandle, Emitter, State};
 
 pub fn config_mca() -> Option<MediaControls> {
     #[cfg(not(target_os = "windows"))]
-    let hwnd: Option<*mut c_void> = None;
+    let hwnd: Option<*mut std::ffi::c_void> = None;
 
     // map(|handle| handle as *mut std::os::raw::c_void)
     #[cfg(target_os = "windows")]

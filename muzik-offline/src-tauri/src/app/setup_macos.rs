@@ -1,4 +1,4 @@
-#![cfg(target_os = "windows")]
+#[cfg(target_os = "windows")]
 pub fn setup_macos(_app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
