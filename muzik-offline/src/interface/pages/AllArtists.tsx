@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useReducer } from "react";
-import { DropDownMenuSmall, SquareTitleBox, GeneralContextMenu, LoaderAnimated, AddSongsToPlaylistModal } from "@components/index";
+import { DropDownMenuSmall, SquareTitleBox, GeneralContextMenu, AddSongsToPlaylistModal } from "@components/index";
 import { ChevronDown, FolderPlus } from "@assets/icons";
 import "@styles/pages/AllArtists.scss";
 import { contextMenuEnum, contextMenuButtons } from '@muziktypes/index';
@@ -10,6 +10,8 @@ import { reducerType } from "@store/index";
 import { allArtistsReducer, AllArtistsState } from "@store/reducerStore";
 import { closeContextMenu, closePlaylistModal, openFileDialogDND, processDragEvents, setOpenedDDM } from "@utils/reducerUtils";
 import { addTheseSongsToPlayLater, addTheseSongsToPlayNext, playTheseSongs } from "@utils/playerControl";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const AllArtists = () => {
     const [state , dispatch] = useReducer(allArtistsReducer, AllArtistsState);
@@ -98,7 +100,26 @@ const AllArtists = () => {
                     </motion.div>
                 </div>
             )}
-            { state.isloading && <LoaderAnimated /> }
+            { state.isloading && 
+                <div className="skeleton-loading">
+                    <SkeletonTheme baseColor="#b6b6b633" highlightColor="#00000005" duration={2}>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                    </SkeletonTheme> 
+                </div>}
             {   state.artistList.length !== 0 &&
                 <div className="AllArtists_container">
                         {state.artistList.map((artist) => 
@@ -110,6 +131,7 @@ const AllArtists = () => {
                             navigateTo={navigateTo}
                             setMenuOpenData={setMenuOpenData}/>
                         )}
+                        <div className="bottom_margin"/>
                 </div>
             }
             {

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useReducer } from "react";
-import { DropDownMenuSmall, SquareTitleBox, GeneralContextMenu, LoaderAnimated, AddSongsToPlaylistModal } from "@components/index";
+import { DropDownMenuSmall, SquareTitleBox, GeneralContextMenu, AddSongsToPlaylistModal } from "@components/index";
 import { ChevronDown, FolderPlus } from "@assets/icons";
 import "@styles/pages/AllAlbums.scss";
 import { contextMenuEnum, contextMenuButtons } from "@muziktypes/index";
@@ -10,6 +10,8 @@ import { reducerType } from "@store/index";
 import { closeContextMenu, closePlaylistModal, openFileDialogDND, processDragEvents, setOpenedDDM } from "@utils/reducerUtils";
 import { local_albums_db } from "@database/database";
 import { addTheseSongsToPlayNext, addTheseSongsToPlayLater, playTheseSongs } from "@utils/playerControl";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const AllAlbums = () => {
     const [state , dispatch] = useReducer(allAlbumsReducer, AllAlbumsState);
@@ -95,7 +97,26 @@ const AllAlbums = () => {
                     </motion.div>
                 </div>
             )}
-            { state.isloading && <LoaderAnimated /> }
+            { state.isloading && 
+                <div className="skeleton-loading">
+                    <SkeletonTheme baseColor="#b6b6b633" highlightColor="#00000005" duration={2}>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                        <Skeleton count={1} className="skeleton-object"/>
+                    </SkeletonTheme> 
+                </div>}
             { state.albumList.length !== 0 &&
                 <div className="AllAlbums_container">
                     {state.albumList.map((album) => 
@@ -107,6 +128,7 @@ const AllAlbums = () => {
                         navigateTo={navigateTo}
                         setMenuOpenData={setMenuOpenData}/>
                     )}
+                    <div className="bottom_margin"/>
                 </div>
             }
             {
@@ -122,7 +144,6 @@ const AllAlbums = () => {
                     </div>
                 )
             }
-            {state.albumList.length !== 0 && <div className="bottom_margin"/>}
             <AddSongsToPlaylistModal 
                 isOpen={state.isPlaylistModalOpen} 
                 title={state.albumMenuToOpen? state.albumMenuToOpen.title : ""} 
