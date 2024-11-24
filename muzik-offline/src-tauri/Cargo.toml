@@ -1,6 +1,6 @@
 [package]
 name = "muzik-offline"
-version = "0.6.0"
+version = "0.6.1"
 description = "A desktop music player for listening to music offline."
 authors = ["Michael"]
 license = "MIT"
@@ -32,7 +32,7 @@ dotenv = "0.15.0"
 souvlaki = "0.7.3"
 warp = "0.3.7"
 tauri-plugin-shell = "2"
-tauri-plugin-notification = "2"
+tauri-plugin-notification = "2.0.1"
 tauri-plugin-dialog = "2"
 tauri-plugin-http = "2"
 tauri-plugin-os = "2"
