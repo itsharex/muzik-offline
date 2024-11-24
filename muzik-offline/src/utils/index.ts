@@ -288,7 +288,9 @@ export async function reloadLibrary(paths: string[]){
     useToastStore.getState().setToast({title: "Loading songs...", message: "We are searching for new songs", type: toastType.info, timeout: 5000});
 
     // add new paths to the existing paths
-    dirs = new Set([...dirs, ...paths]);
+    paths.forEach((path) => {
+        if(!dirs.has(path))dirs.add(path);
+    });
     const local_store = useSavedObjectStore.getState().local_store;
 
     invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(Array.from(dirs)), compressImageOption: local_store.CompressImage === "Yes" ? true : false })

@@ -1,7 +1,7 @@
 import { useDirStore, useSavedObjectStore, useToastStore } from "@store/index";
 import "@styles/layouts/MusicFoldersSettings.scss"; 
 import { motion } from "framer-motion";
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent, useEffect, useRef, useState } from "react";
 import { open } from '@tauri-apps/plugin-dialog';
 import { appConfigDir } from '@tauri-apps/api/path';
 import { Cross } from "@assets/icons";
@@ -17,14 +17,16 @@ type MusicFoldersSettingsProps = {
 
 const MusicFoldersSettings: FunctionComponent<MusicFoldersSettingsProps> = (props: MusicFoldersSettingsProps) => {
     const { dir, setDir } = useDirStore((state) => { return { dir: state.dir, setDir: state.setDir}; });
-    const [oldDir] = useState<Set<string>>(dir.Dir);
+    const oldDirRef = useRef<Set<string> | undefined>(undefined);
+    const [currentDir, setCurrentDir] = useState<Set<string>>(dir.Dir);
     const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store}; });
     const [directory, setDirectory] = useState<string>("");
 
     function reloadSongs(){
-        invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(Array.from(dir.Dir)), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
+        invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(Array.from(currentDir)), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
         .then(async() => {
+                setDir({Dir: currentDir});
                 await local_songs_db.songs.clear();
                 await local_albums_db.albums.clear();
                 await local_artists_db.artists.clear();
@@ -41,7 +43,19 @@ const MusicFoldersSettings: FunctionComponent<MusicFoldersSettingsProps> = (prop
                 if(permissionGranted)sendNotification({ title: 'Loading songs...', body: message });
             })
             .catch(async(_error) => {
+                if(currentDir.size === 0){
+                    setToast({title: "Loading songs...", message: "No directories specified", type: toastType.info, timeout: 5000});
+                    await local_songs_db.songs.clear();
+                    await local_albums_db.albums.clear();
+                    await local_artists_db.artists.clear();
+                    await local_genres_db.genres.clear();
+                    const permissionGranted = await isPermissionGranted();
+                if(permissionGranted)sendNotification({ title: 'Loading songs...', body: 'No directories specified' });
+                    return;
+                }
+
                 console.log(_error);
+                setDir({Dir: oldDirRef.current ?? new Set()});
                 setToast({title: "Loading songs...", message: "Failed to load all the songs in the paths specified", type: toastType.error, timeout: 5000});
                 const permissionGranted = await isPermissionGranted();
                 if (permissionGranted) {
@@ -57,29 +71,37 @@ const MusicFoldersSettings: FunctionComponent<MusicFoldersSettingsProps> = (prop
             defaultPath: await appConfigDir(),
         });
         if(selected){
-            const newDir = dir.Dir;
+            const newDir = new Set(currentDir);
             newDir.add(selected);
-            setDir({Dir: newDir});
+            setCurrentDir(newDir);
         }
     };
 
     function addNewDir(){
         if(directory === "")return;
-        const newDir = dir.Dir.add(directory);
-        setDir({Dir: newDir});
+        const newDir = new Set(currentDir);
+        newDir.add(directory);
+        setCurrentDir(newDir);
         setDirectory("");
     }
 
     useEffect(() => {
+        // on component mount
+        if(oldDirRef.current === undefined){ oldDirRef.current = new Set(dir.Dir); }
         // when component unmounts
         return () => {
-            if(areArraysDifferent(Array.from(oldDir), Array.from(dir.Dir))){
+            //console.log(Array.from(oldDirRef.current ?? new Set), Array.from(currentDir));
+            if(areArraysDifferent(Array.from(oldDirRef.current ?? new Set), Array.from(currentDir))){
                 setToast({title: "Loading songs...", message: "We are searching for new songs", type: toastType.warning, timeout: 5000});
                 reloadSongs();
             }
         }
-    }, [dir.Dir]);
+    }, [currentDir]);
 
+    useEffect(() => {
+        // listen for changes in the dir
+        setCurrentDir(dir.Dir);
+    }, [dir.Dir]);
     
     return (
         <div className="MusicFoldersSettings">
@@ -97,7 +119,7 @@ const MusicFoldersSettings: FunctionComponent<MusicFoldersSettingsProps> = (prop
             </div>
             <div className="MusicFoldersSettings_container">
                 {
-                    Array.from(dir.Dir).map((value, index) => 
+                    Array.from(currentDir).map((value, index) => 
                         <div className="path" key={index}>
                             <h3>{value}</h3>
                             <div className="icon" onClick={() => props.openConfirmModal(value)}>
