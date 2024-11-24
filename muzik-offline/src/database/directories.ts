@@ -3,5 +3,5 @@ export interface SavedDirectories{
 }
 
 export const emptyDirectories: SavedDirectories = {
-    Dir: new Set()
+    Dir: new Set<string>()
 }
