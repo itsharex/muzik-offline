@@ -30,7 +30,7 @@ pub fn setup_macos(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
     // set background color only when building for macOS
     #[cfg(target_os = "macos")]
     {
-    use cocoa::appkit::NSColor;
+    use cocoa::appkit::{NSColor, NSWindow};
     use cocoa::base::{id, nil};
 
     let ns_window = window.ns_window()? as id;
