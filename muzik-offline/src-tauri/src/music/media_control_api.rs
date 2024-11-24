@@ -4,7 +4,6 @@ use std::{
 };
 
 use crate::{
-    windows::window,
     components::{audio_manager::BackendStateManager, event_payload::Payload},
     database::{db_api::get_song_from_tree, db_manager::DbManager}
 };
@@ -15,11 +14,12 @@ use tauri::{AppHandle, Emitter, State};
 
 pub fn config_mca() -> Option<MediaControls> {
     #[cfg(not(target_os = "windows"))]
-    let hwnd: Option<*mut c_void> = None;
+    let hwnd: Option<*mut std::ffi::c_void> = None;
 
     // map(|handle| handle as *mut std::os::raw::c_void)
     #[cfg(target_os = "windows")]
     let hwnd = {
+        use crate::windows::window;
         let window = match window::windows::Window::new() {
             Ok(window) => window,
             Err(err) => {

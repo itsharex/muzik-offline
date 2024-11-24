@@ -156,7 +156,8 @@ const App = () => {
         <div 
           className={
             "app_container " + 
-            (local_store.OStype === OSTYPEenum.Windows && ((!appFS && !isMaximised) || local_store.AlwaysRoundedCornersWindows === "Yes") ? " windows-app-config " : "") +
+            ((local_store.OStype === OSTYPEenum.Windows || local_store.OStype === OSTYPEenum.Linux) && 
+              ((!appFS && !isMaximised) || local_store.AlwaysRoundedCornersWindows === "Yes") ? " windows-app-config " : "") +
             (local_store.OStype === OSTYPEenum.Linux || !local_store.AppThemeBlur ? " linux-config " : "")
             
           } 

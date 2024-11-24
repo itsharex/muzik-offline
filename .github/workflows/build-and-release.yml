@@ -8,7 +8,7 @@ on:
 
 defaults:
     run:
-        working-directory: muzik-offline
+        working-directory: ./muzik-offline   # Navigate to the correct directory for all steps
 
 jobs:
     publish-tauri:
@@ -20,12 +20,16 @@ jobs:
                 include:
                     - platform: 'macos-latest' # for Arm based macs (M1 and above).
                       args: '--target aarch64-apple-darwin'
+                      rust-version: "1.77.2"
                     - platform: 'macos-latest' # for Intel based macs.
                       args: '--target x86_64-apple-darwin'
+                      rust-version: "1.77.2"
                     - platform: 'ubuntu-22.04'
                       args: ''
+                      rust-version: "stable"
                     - platform: 'windows-latest'
                       args: ''
+                      rust-version: "stable"
     
         runs-on: ${{ matrix.platform }}
         steps:
@@ -42,12 +46,14 @@ jobs:
           with:
             node-version: lts/*
             cache: 'npm' # Set this to npm, yarn or pnpm.
+            cache-dependency-path: './muzik-offline/package-lock.json' # Change this to your lock file path.
     
         - name: install Rust stable
-          uses: dtolnay/rust-toolchain@stable # Set this to dtolnay/rust-toolchain@nightly
+          uses: dtolnay/rust-toolchain@master # Set this to dtolnay/rust-toolchain@nightly
           with:
             # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
             targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+            toolchain: ${{ matrix.rust-version }}
     
         - name: Rust cache
           uses: swatinem/rust-cache@v2
@@ -56,17 +62,19 @@ jobs:
     
         - name: install frontend dependencies
             # If you don't have `beforeBuildCommand` configured you may want to build your frontend here too.
-          run: npm install # change this to npm or pnpm depending on which one you use.
+          run: npm ci # change this to npm or pnpm depending on which one you use.
 
-        - name: Install OpenSSL
-          run: |
-            if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
-              brew install openssl
-            elif [[ "${{ matrix.platform }}" == "ubuntu-22.04" ]]; then
-              sudo apt-get update && sudo apt-get install -y openssl
-            elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
-              choco install openssl -y
-            fi
+        - name: Install OpenSSL on macOS
+          if: matrix.platform == 'macos-latest'
+          run: brew install openssl
+        
+        - name: Install OpenSSL on Ubuntu
+          if: matrix.platform == 'ubuntu-22.04'
+          run: sudo apt-get update && sudo apt-get install -y openssl
+        
+        - name: Install OpenSSL on Windows
+          if: matrix.platform == 'windows-latest'
+          run: choco install openssl -y
 
         - name: Verify OpenSSL Installation
           run: openssl version
@@ -78,9 +86,9 @@ jobs:
         - uses: tauri-apps/tauri-action@v0
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            with:
-            tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-            releaseName: 'App v__VERSION__'
+          with:
+            tagName: muzik-offline-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+            releaseName: 'Muzik-offline v__VERSION__'
             releaseBody: 'See the assets to download this version and install.'
             releaseDraft: true
             prerelease: false

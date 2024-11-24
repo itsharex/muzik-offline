@@ -1,4 +1,4 @@
-#![cfg(target_os = "windows")]
+#[cfg(target_os = "windows")]
 pub fn setup_macos(_app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
@@ -19,7 +19,6 @@ pub fn setup_macos(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
         .title("muzik-offline")
         .inner_size(980.0, 623.0)
         .min_inner_size(980.0, 623.0)
-        .transparent(true)
         .center();
 
     // set transparent title bar only when building for macOS

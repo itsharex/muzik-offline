@@ -24,7 +24,7 @@ const AppMusicPlayer : FunctionComponent<AppMusicPlayerProps> = (props: AppMusic
     const {playingPosition, setplayingPosition} = usePlayingPosition((state) => { return {playingPosition: state.position, setplayingPosition: state.setPosition}; });
     const { isMaximised } = useIsMaximisedStore((state) => { return { isMaximised: state.isMaximised}; });
     const { appFS } = useIsFSStore((state) => { return { appFS: state.isFS}; });
-    const intervalIdRef = useRef<number | NodeJS.Timeout>();
+    const intervalIdRef = useRef<ReturnType<typeof setInterval>>();
     
     function changeVolume(event : any){changeVolumeLevel(event.target.value);}
 
