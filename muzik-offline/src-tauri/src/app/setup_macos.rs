@@ -19,7 +19,6 @@ pub fn setup_macos(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
         .title("muzik-offline")
         .inner_size(980.0, 623.0)
         .min_inner_size(980.0, 623.0)
-        .transparent(true)
         .center();
 
     // set transparent title bar only when building for macOS
@@ -31,7 +30,7 @@ pub fn setup_macos(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
     // set background color only when building for macOS
     #[cfg(target_os = "macos")]
     {
-    use cocoa::appkit::{NSColor, NSWindow};
+    use cocoa::appkit::NSColor;
     use cocoa::base::{id, nil};
 
     let ns_window = window.ns_window()? as id;
