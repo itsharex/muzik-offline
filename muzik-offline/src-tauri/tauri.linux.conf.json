@@ -43,7 +43,7 @@
   },
   "productName": "muzik-offline",
   "mainBinaryName": "muzik-offline",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "identifier": "com.muzik-offline.dev",
   "plugins": {},
   "app": {
