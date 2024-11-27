@@ -106,7 +106,11 @@ const App = () => {
       }
       setFirstRun(false);
     }*/
-    invoke("refresh_paths", { pathsAsJsonArray: JSON.stringify(paths), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
+    invoke("refresh_paths", { 
+      athsAsJsonArray: JSON.stringify(paths), 
+      compressImageOption: local_store.CompressImage === "Yes" ? true : false,
+      maxDepth: local_store.DirectoryScanningDepth
+    })
     .then(async(response: any) => {
       if(response === "No new songs detected")return;
       const res = await fetch_library(false);

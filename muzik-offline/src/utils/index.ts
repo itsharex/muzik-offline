@@ -293,7 +293,11 @@ export async function reloadLibrary(paths: string[]){
     });
     const local_store = useSavedObjectStore.getState().local_store;
 
-    invoke("get_all_songs", { pathsAsJsonArray: JSON.stringify(Array.from(dirs)), compressImageOption: local_store.CompressImage === "Yes" ? true : false })
+    invoke("get_all_songs", { 
+        pathsAsJsonArray: JSON.stringify(Array.from(dirs)), 
+        compressImageOption: local_store.CompressImage === "Yes" ? true : false,
+        maxDepth: local_store.DirectoryScanningDepth
+    })
     .then(async() => {
         useDirStore.getState().setDir({Dir: dirs});
         await local_songs_db.songs.clear();
