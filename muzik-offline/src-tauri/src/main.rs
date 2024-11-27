@@ -13,7 +13,7 @@ mod windows;
 mod export;
 mod import;
 
-use commands::general_commands::get_server_port;
+use commands::general_commands::{collect_env_args, get_server_port};
 use commands::refresh_paths_at_start::{detect_deleted_songs, refresh_paths};
 use database::db_api::{
     add_new_wallpaper_to_db, create_playlist_cover, delete_playlist_cover,
@@ -90,6 +90,7 @@ fn main() {
             get_server_port,
             refresh_paths,
             detect_deleted_songs,
+            collect_env_args,
             // MUSIC PLAYER
             load_and_play_song_from_path,
             load_a_song_from_path,
