@@ -36,7 +36,7 @@
   },
   "productName": "muzik-offline",
   "mainBinaryName": "muzik-offline",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "identifier": "com.muzik-offline.dev",
   "plugins": {},
   "app": {
@@ -53,7 +53,8 @@
         "decorations": false,
         "transparent": true,
         "shadow": false,
-        "center": true
+        "center": true,
+        "dragDropEnabled": true
       }
     ],
     "security": {

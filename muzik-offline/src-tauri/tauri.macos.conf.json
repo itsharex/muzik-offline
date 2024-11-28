@@ -36,26 +36,11 @@
   },
   "productName": "muzik-offline",
   "mainBinaryName": "muzik-offline",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "identifier": "com.muzik-offline.dev",
   "plugins": {},
   "app": {
-    "windows": [
-      {
-        "fullscreen": false,
-        "resizable": true,
-        "title": "muzik-offline",
-        "width": 980,
-        "height": 623,
-        "minWidth": 980,
-        "minHeight": 623,
-        "titleBarStyle": "Transparent",
-        "decorations": false,
-        "transparent": true,
-        "shadow": false,
-        "center": true
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }
