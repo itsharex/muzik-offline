@@ -55,6 +55,8 @@ use crate::utils::music_list_organizer::{
 use app::setup::{
     setup_app,
     initialize_audio_manager,
+    initialise_kira_audio_manager,
+    initialise_rodio_audio_manager
 };
 
 fn main() {
@@ -73,6 +75,8 @@ fn main() {
             DiscordRpc::new().expect("failed to initialize discord rpc"),
         ))
         .manage(initialize_audio_manager())
+        .manage(initialise_kira_audio_manager())
+        .manage(initialise_rodio_audio_manager())
         .setup(setup_app)
         .invoke_handler(tauri::generate_handler![
             // WINDOW CONTROL
