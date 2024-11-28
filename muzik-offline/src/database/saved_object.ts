@@ -19,7 +19,8 @@ export interface SavedObject{
     SongLengthORremaining: string,
     AlwaysRoundedCornersWindows: string,
     AutoStartApp: string,
-    DirectoryScanningDepth: number
+    DirectoryScanningDepth: number,
+    player: "rodio" | "kira"
 }
 
 export const emptySavedObject: SavedObject = {
@@ -41,5 +42,6 @@ export const emptySavedObject: SavedObject = {
     SongLengthORremaining: "song length",
     AlwaysRoundedCornersWindows: "No",
     AutoStartApp: "No",
-    DirectoryScanningDepth: 1
+    DirectoryScanningDepth: 1,
+    player: "rodio"
 }
