@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use tauri::State;
 use std::fs::File;
 use std::io::BufReader;
-use rodio::{Decoder, Source};
+use rodio::{Decoder, DeviceTrait, Source};
 
 pub fn load_and_play_song_from_path_rodio(
     audio_manager: State<'_, Arc<Mutex<RodioManager>>>,
@@ -214,6 +214,79 @@ pub fn set_volume_rodio(audio_manager: State<'_, Arc<Mutex<RodioManager>>>, volu
                 }
                 Err(_) => {
 
+                }
+            }
+        }
+        Err(_) => {
+            //failed to lock audio manager
+        }
+    }
+}
+
+#[tauri::command]
+pub fn get_output_devices() -> Vec<String> {
+    use rodio::cpal::traits::HostTrait;
+    let host = rodio::cpal::default_host();
+    let devices: Vec<rodio::Device> = match host.output_devices(){
+        Ok(devices) => {
+            devices.collect()
+        }
+        Err(_) => {
+            return Vec::new();
+        }
+    };
+
+    let mut usable_device_names = Vec::new();
+
+    for device in &devices{
+        match device.name(){
+            Ok(name) => {
+                usable_device_names.push(name);
+            }
+            Err(_) => {
+
+            }
+        }
+    }
+    
+    usable_device_names
+}
+
+#[tauri::command]
+pub fn set_output_device(
+    audio_manager: State<'_, Arc<Mutex<RodioManager>>>,
+    device_name: &str
+) {
+    use rodio::cpal::traits::HostTrait;
+    let host = rodio::cpal::default_host();
+    let devices: Vec<rodio::Device> = match host.output_devices(){
+        Ok(devices) => {
+            devices.collect()
+        }
+        Err(_) => {
+            return;
+        }
+    };
+
+    let device = devices.iter().find(|device| {
+        match device.name(){
+            Ok(name) => {
+                name == device_name
+            }
+            Err(_) => {
+                false
+            }
+        }
+    });
+
+    match audio_manager.lock() {
+        Ok(manager) => {
+            match device{
+                Some(device) => {
+                    manager.set_device(device.clone());
+                }
+                None => {
+                    // Handle the case where the device was not found
                 }
             }
         }

@@ -43,6 +43,7 @@ use crate::music::player::{
     get_song_position, load_a_song_from_path, load_and_play_song_from_path, pause_song,
     resume_playing, seek_by, seek_to, set_volume, stop_song,
 };
+use crate::music::rodio_player::{get_output_devices, set_output_device};
 use crate::socials::discord_rpc::{
     allow_connection_and_connect_to_discord_rpc, attempt_to_connect_if_possible,
     clear_discord_rpc_activity, disallow_connection_and_close_discord_rpc,
@@ -104,6 +105,8 @@ fn main() {
             seek_to,
             seek_by,
             get_song_position,
+            get_output_devices,
+            set_output_device,
             // UTILS
             resize_frontend_image_to_fixed_height,
             // MUSIC LIST ORGANIZER

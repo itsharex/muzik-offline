@@ -7,7 +7,7 @@ enum AudioCommand {
 }
 
 pub struct RodioManager {
-    pub sender: Sender<AudioCommand>,
+    sender: Sender<AudioCommand>,
     pub sink: Arc<Mutex<Option<Sink>>>,
 }
 
