@@ -92,3 +92,53 @@
         text-align: center;
     }
 }
+
+@media only screen and (min-height: 650px){
+    .EqualizerSlider{
+        .input-container{
+            input[type="range"] {
+                width: calc(90vh - 371px);
+            }
+        }
+    }
+}
+
+@media only screen and (min-height: 750px){
+    .EqualizerSlider{
+        .input-container{
+            input[type="range"] {
+                width: calc(80vh - 371px);
+            }
+        }
+    }
+}
+
+@media only screen and (min-height: 850px){
+    .EqualizerSlider{
+        .input-container{
+            input[type="range"] {
+                width: calc(70vh - 371px);
+            }
+        }
+    }
+}
+
+@media only screen and (min-height: 950px){
+    .EqualizerSlider{
+        .input-container{
+            input[type="range"] {
+                width: calc(60vh - 371px);
+            }
+        }
+    }
+}
+
+@media only screen and (min-height: 1050px){
+    .EqualizerSlider{
+        .input-container{
+            input[type="range"] {
+                width: calc(50vh - 371px);
+            }
+        }
+    }
+}

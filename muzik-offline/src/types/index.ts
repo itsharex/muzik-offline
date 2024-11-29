@@ -21,6 +21,10 @@ export enum selectedGeneralSettingEnum{
     AudioLabPreset = "AudioLabPreset",
     AlwaysRoundedCornersWindows = "AlwaysRoundedCornersWindows",
     AutoStartApp = "AutoStartApp",
+    AudioQuality = "AudioQuality",
+    PlayBackSpeed = "PlayBackSpeed",
+    AudioTransition = "AudioTransition",
+    OutputDevice = "OutputDevice"
 }
 
 export enum OSTYPEenum{

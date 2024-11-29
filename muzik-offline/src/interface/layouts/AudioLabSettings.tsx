@@ -1,133 +1,199 @@
 import { ChevronDown } from "@assets/icons";
-import { DropDownMenuLarge, EqualizerSlider } from "@components/index";
-import { selectedGeneralSettingEnum, AudioLabPreset, toastType } from "@muziktypes/index";
-import { FlatAudioLab, useSavedObjectStore, useSavedPresetsValues, useToastStore } from "@store/index";
+import { DropDownMenuLarge } from "@components/index";
+import { SavedObject } from "@database/saved_object";
+import { selectedGeneralSettingEnum } from "@muziktypes/index";
+import { useSavedObjectStore } from "@store/index";
 import "@styles/layouts/AudioLabSettings.scss"; 
+import { invoke } from "@tauri-apps/api/core";
+import { stopSong } from "@utils/playerControl";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { FunctionComponent, useEffect, useState } from "react";4
 
-const AudioLabSettings = () => {
-    const { setToast } = useToastStore((state) => { return { setToast: state.setToast }; });
-    const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
-    const {map, addValues} = useSavedPresetsValues((state) => {return { map: state.map, addValues: state.addValue}; });
-    const [AudioLabPreset, setAudioLabPreset] = useState<string>(local_store.AudioLabPreset);
-    const [AudioLab, setAudioLab] = useState<AudioLabPreset>(map.get(local_store.AudioLabPreset) ?? FlatAudioLab);
+const settings_data: {
+    key: number;
+    title: string;
+    dropDownName: selectedGeneralSettingEnum;
+    options: string[]
+}[] = [
+    {
+        key: 1,
+        title: "Compress song images(will only be compressed on subsequent directory scans)",
+        dropDownName: selectedGeneralSettingEnum.AudioQuality,
+        options: ["Lossless(24b/192kHz)", "Lossless(24b/48kHz)", "High(320kbps)", "Medium(192kbps)", "Low(128kbps)"]
+    },
+    {
+        key: 2,
+        title: "Playback speed of music",
+        dropDownName: selectedGeneralSettingEnum.PlayBackSpeed,
+        options: ["0.25", "0.5", "0.75", "1", "1.25", "1.5", "1.75", "2"]
+    },
+    {
+        key: 3,
+        title: "Seamless, fade-in/out audio transitions",
+        dropDownName: selectedGeneralSettingEnum.AudioTransition,
+        options: ["Yes", "No"]
+    }
+]
+
+type AudioLabSettingsProps = {
+    openEqualiser: () => void;
+}
+
+const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (props: AudioLabSettingsProps) => {
     const [selectedGeneralSetting, setselectedGeneralSetting] = useState<selectedGeneralSettingEnum>(selectedGeneralSettingEnum.Nothing);
-    
-    function toggleDropDown(){
-        if(selectedGeneralSetting === selectedGeneralSettingEnum.AudioLabPreset)
-            setselectedGeneralSetting(selectedGeneralSettingEnum.Nothing);
-        else setselectedGeneralSetting(selectedGeneralSettingEnum.AudioLabPreset);
+    const [selectedOutputDevice, setselectedOutputDevice] = useState<selectedGeneralSettingEnum>(selectedGeneralSettingEnum.Nothing);
+    const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
+    const [currentOutputDevice, setOutputDevice] = useState<string>("");
+    const [outputDevices, setOutputDevices] = useState<string[]>([]);
+
+    function toggleDropDown(arg: selectedGeneralSettingEnum){
+        if(arg === selectedGeneralSetting)setselectedGeneralSetting(selectedGeneralSettingEnum.Nothing);
+        else setselectedGeneralSetting(arg);
     }
 
+    function toggleDropDownOutputDevice(arg: selectedGeneralSettingEnum){
+        if(arg === selectedOutputDevice)setselectedOutputDevice(selectedGeneralSettingEnum.Nothing);
+        else setselectedOutputDevice(arg);
+    }
 
-    function setStoreValue(arg: string){
-        let temp = local_store;
-        temp.AudioLabPreset = arg;
-        setAudioLab(map.get(temp.AudioLabPreset) ?? FlatAudioLab);
-        setAudioLabPreset(temp.AudioLabPreset);
+    function setStoreValue(arg: string, type: string){
+        let temp: SavedObject = local_store;
+        temp[type as keyof SavedObject] = arg as never;
         setStore(temp);
         setselectedGeneralSetting(selectedGeneralSettingEnum.Nothing);
+    } 
+
+    async function changeAudioBackend(arg: "rodio" | "kira"){
+        if(arg === local_store.player)return;
+        let temp: SavedObject = local_store;
+        temp.player = arg;
+        setStore(temp);
+        await stopSong();
     }
 
-    function createNewPreset(){
-        if(map.has(AudioLabPreset)){
-            setToast({title: "Preset creation", message: "A preset with that name already exists", type: toastType.error, timeout: 3000});
-        }
-        else {
-            addValues(AudioLabPreset, AudioLab);
-            let temp = local_store;
-            temp.AudioLabPreset = AudioLabPreset;
-            temp.SavedPresets.push(AudioLabPreset);
-            setStore(temp);
-        }
-    }
-
-    function deletePreset(){
-        if(map.has(AudioLabPreset)){
-            // don't allow flat to be deleted
-            if(AudioLabPreset === "flat"){
-                setToast({title: "Preset deletion", message: "The flat preset cannot be deleted", type: toastType.error, timeout: 3000});
-                return;
+    useEffect(() => {
+        const setup = () => {
+            if (local_store.OutputDevice === "") {
+                invoke<string>("get_default_output_device").then((res) => {
+                    setOutputDevice(res);
+                });
+            } else {
+                setOutputDevice(local_store.OutputDevice);
             }
-            map.delete(AudioLabPreset);
-            let temp = local_store;
-            temp.SavedPresets = temp.SavedPresets.filter((preset) => preset !== AudioLabPreset);
-            setStore(temp);
-            resetPresetName();
-        }
-        else {
-            setToast({title: "Preset deletion", message: "No preset with that name exists", type: toastType.error, timeout: 3000});
-        }
-    }
 
-    function resetPresetName(){setAudioLabPreset("");}
+            invoke<string[]>("get_output_devices").then((res) => {
+                setOutputDevices(res);
+            });
+        }
 
+        setup();
+    }, []);
+    
     return (
         <div className="AudioLabSettings">
             <h2>Audio Lab</h2>
             <div className="AudioLabSettings_container">
-                <div className="setting">
-                    <h3>Select a preset</h3>
-                    <div className="setting_dropdown">
-                        <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={toggleDropDown}>
-                            <h4>{local_store.AudioLabPreset}</h4>
-                            <motion.div className="chevron_icon" animate={{rotate: selectedGeneralSetting === selectedGeneralSettingEnum.AudioLabPreset ? 180 : 0}}>
-                                <ChevronDown />
+                <h5>Select your audio backend</h5>
+                <motion.div className={"audio-backend" + (local_store.player === "rodio" ? " selected" : "")}
+                    whileTap={{scale: 0.98}} onClick={() => changeAudioBackend("rodio")}>
+                    <div className="logo">
+                        <img src="https://avatars.githubusercontent.com/u/9999738?s=200&v=4" alt="Rodio logo" />
+                    </div>
+                    <h3>Rodio</h3>
+                    <div className="details">
+                        <div className="benefits">
+                            <ul>
+                                <li>More stable and faster</li>
+                                <li>More developed specifically for audio playback</li>
+                                <li>Supports output device switching</li>
+                            </ul>
+                        </div>
+                        <div className="downsides">
+                            <dl>
+                                <dd>- No equaliser support</dd>
+                                <dd>- No audio effects</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </motion.div>
+                <motion.div className={"audio-backend" + (local_store.player === "kira" ? " selected" : "")}
+                    whileTap={{scale: 0.98}} onClick={() => changeAudioBackend("kira")}>
+                    <div className="logo">
+                        <img src="https://avatars.githubusercontent.com/u/2637802?v=4" alt="Kira logo" />
+                    </div>
+                    <h3>Kira</h3>
+                    <div className="details">
+                        <div className="benefits">
+                            <ul>
+                                <li>More developed specifically for game audio playback</li>
+                                <li>Supports 3D spatial audio(coming soon)</li>
+                                <li>Supports sound effects and equaliser(coming soon)</li>
+                            </ul>
+                        </div>
+                        <div className="downsides">
+                            <dl>
+                                <dd>- Can be slow and unstable for large files</dd>
+                                <dd>- No support for switching output device in app</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </motion.div>
+                {
+                    settings_data.map((value) => 
+                    <div className="setting" key={value.key}>
+                        <h3>{value.title}</h3>
+                        <div className="setting_dropdown">
+                            <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={() => toggleDropDown(value.dropDownName)}>
+                                <h4>{local_store[(value.dropDownName.toString() as keyof SavedObject)]}</h4>
+                                <motion.div className="chevron_icon" animate={{rotate: selectedGeneralSetting === value.dropDownName ? 180 : 0}}>
+                                    <ChevronDown />
+                                </motion.div>
                             </motion.div>
-                        </motion.div>
+                            <div className="DropDownMenu_container">
+                                <DropDownMenuLarge
+                                    options={value.options} 
+                                    isOpen={selectedGeneralSetting === value.dropDownName} 
+                                    type={value.dropDownName}
+                                    selectOption={setStoreValue}
+                                />
+                            </div>
+                        </div>
+                    </div>)
+                }
+                <div className="setting">
+                    <h3>Output device</h3>
+                    <div className="setting_dropdown">
+                        { local_store.player === "rodio" ?
+                            <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={() => toggleDropDownOutputDevice(selectedGeneralSettingEnum.OutputDevice)}>
+                                <h4>{currentOutputDevice}</h4>
+                                <motion.div className="chevron_icon" animate={{rotate: selectedOutputDevice === selectedGeneralSettingEnum.OutputDevice ? 180 : 0}}>
+                                    <ChevronDown />
+                                </motion.div>
+                            </motion.div>
+                            :
+                            <div className="setting_dropdown greyed_out">
+                                <h4>Playing from default</h4>
+                                <div className="chevron_icon">
+                                    <ChevronDown />
+                                </div>
+                            </div>
+                        }
                         <div className="DropDownMenu_container">
                             <DropDownMenuLarge
-                                options={local_store.SavedPresets} 
-                                isOpen={selectedGeneralSetting === selectedGeneralSettingEnum.AudioLabPreset} 
-                                type={selectedGeneralSettingEnum.AudioLabPreset}
+                                options={outputDevices} 
+                                isOpen={selectedOutputDevice === selectedGeneralSettingEnum.OutputDevice} 
+                                type={selectedOutputDevice}
                                 selectOption={setStoreValue}
                             />
                         </div>
                     </div>
                 </div>
                 <div className="setting">
-                    <h3>Action</h3>
+                    <h3>Equaliser</h3>
                     <div className="setting_dropdown">
-                        <input type="text" placeholder="Type here to set preset name"
-                            value={AudioLabPreset} onChange={(e) => setAudioLabPreset(e.target.value)}/>
-                        {
-                            map.has(AudioLabPreset) ?
-                            <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={deletePreset}>
-                                <h4>delete preset</h4>
-                            </motion.div>
-                            :
-                            <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={createNewPreset}>
-                                <h4>create a new preset</h4>
-                            </motion.div>
-                        }
-                    </div>
-                </div>
-                <div className="equalizer_container">
-                    <div className="decibel_labels">
-                        { ["12dB", "6dB", "0dB", "-6dB", "-12dB"].map((value) => <div key={value} className="decibel_level">{value}</div>) }
-                    </div>
-                    <div className="equalizer_border">
-                        <div className="equalizer">
-                            <EqualizerSlider frequency={"62Hz"} value={AudioLab.SixtyTwoHz} 
-                                updateValue={(value) => {resetPresetName(); setAudioLab({ ... AudioLab, SixtyTwoHz: value })}}/>
-                            <EqualizerSlider frequency={"125Hz"} value={AudioLab.OneTwentyFiveHz} 
-                                updateValue={(value) => {resetPresetName(); setAudioLab({ ... AudioLab, OneTwentyFiveHz: value })}}/>
-                            <EqualizerSlider frequency={"250Hz"} value={AudioLab.TwoFiftyHz} 
-                                updateValue={(value) => {resetPresetName(); setAudioLab({ ... AudioLab, TwoFiftyHz: value })}}/>
-                            <EqualizerSlider frequency={"500Hz"} value={AudioLab.FiveHundredHz} 
-                                updateValue={(value) => {resetPresetName(); setAudioLab({ ... AudioLab, FiveHundredHz: value })}}/>
-                            <EqualizerSlider frequency={"1kHz"} value={AudioLab.OnekHz} 
-                                updateValue={(value) => {resetPresetName(); setAudioLab({ ... AudioLab, OnekHz: value })}}/>
-                            <EqualizerSlider frequency={"2kHz"} value={AudioLab.TwokHz} 
-                                updateValue={(value) => {resetPresetName(); setAudioLab({ ... AudioLab, TwokHz: value })}}/>
-                            <EqualizerSlider frequency={"4kHz"} value={AudioLab.FourkHz} 
-                                updateValue={(value) => {resetPresetName(); setAudioLab({ ... AudioLab, FourkHz: value })}}/>
-                            <EqualizerSlider frequency={"8kHz"} value={AudioLab.EightkHz} 
-                                updateValue={(value) => {resetPresetName(); setAudioLab({ ... AudioLab, EightkHz: value })}}/>
-                            <EqualizerSlider frequency={"16kHz"} value={AudioLab.SixteenkHz} 
-                                updateValue={(value) => {resetPresetName(); setAudioLab({ ... AudioLab, SixteenkHz: value })}}/>
-                        </div>
+                        <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={props.openEqualiser}>
+                            <h4>Open equaliser</h4>
+                        </motion.div>
                     </div>
                 </div>
             </div>

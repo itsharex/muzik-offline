@@ -224,6 +224,27 @@ pub fn set_volume_rodio(audio_manager: State<'_, Arc<Mutex<RodioManager>>>, volu
 }
 
 #[tauri::command]
+pub fn get_default_output_device() -> String {
+    use rodio::cpal::traits::HostTrait;
+    let host = rodio::cpal::default_host();
+    match host.default_output_device(){
+        Some(device) => {
+            match device.name(){
+                Ok(name) => {
+                    name
+                }
+                Err(_) => {
+                    String::new()
+                }
+            }
+        }
+        None => {
+            String::new()
+        }
+    }
+}
+
+#[tauri::command]
 pub fn get_output_devices() -> Vec<String> {
     use rodio::cpal::traits::HostTrait;
     let host = rodio::cpal::default_host();

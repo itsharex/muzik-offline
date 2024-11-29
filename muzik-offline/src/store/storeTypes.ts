@@ -2,9 +2,7 @@ import { SavedDirectories } from "@database/directories";
 import { Player } from "@database/player";
 import { SavedObject } from "@database/saved_object";
 import { viewableSideEl } from "@database/side_elements";
-import { SavedWallpaper } from "@database/wallpaper";
 import { AudioLabPreset, toast } from "@muziktypes/index";
-import { toast } from "@muziktypes/index";
 
 export interface MaximisedState {
     isMaximised: boolean;

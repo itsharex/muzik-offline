@@ -22,7 +22,11 @@ export interface SavedObject{
     AlwaysRoundedCornersWindows: string,
     AutoStartApp: string,
     DirectoryScanningDepth: number,
-    player: "rodio" | "kira"
+    player: "rodio" | "kira",
+    AudioQuality: string,
+    PlayBackSpeed: string,
+    AudioTransition: string,
+    OutputDevice: string
 }
 
 export const emptySavedObject: SavedObject = {
@@ -47,5 +51,9 @@ export const emptySavedObject: SavedObject = {
     AlwaysRoundedCornersWindows: "No",
     AutoStartApp: "No",
     DirectoryScanningDepth: 1,
-    player: "rodio"
+    player: "rodio",
+    AudioQuality: "High(320kbps)",
+    PlayBackSpeed: "1",
+    AudioTransition: "No",
+    OutputDevice: ""
 }

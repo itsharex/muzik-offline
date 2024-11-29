@@ -45,6 +45,7 @@ import WallpapersSelectionModal from './modals/WallpapersSelectionModal';
 import RectangleSongBoxView from './cards/RectangleSongBoxView';
 import CheckboxComponent from './input/CheckboxComponent';
 import ExportModal from './modals/ExportModal';
+import EqualizerModal from './modals/EqualizerModal';
 
 export {
     HeaderWindows, HeaderMacOS, HeaderLinuxOS, AppNavigator, LeftSidebar, AppMusicPlayer, FSMusicPlayer,
@@ -61,5 +62,6 @@ export {
     DeleteButton, DeleteSongFromPlaylistModal, EqualizerSlider,
     EditPropertiesModal, EditSongButton,
     DateInput, DeleteDiretoryModal, WallpapersSelectionModal,
-    RectangleSongBoxView, CheckboxComponent, ExportModal
+    RectangleSongBoxView, CheckboxComponent, ExportModal,
+    EqualizerModal
 }

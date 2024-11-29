@@ -77,7 +77,7 @@ export {
     NullArtistCoverOne, NullArtistCoverTwo, NullArtistCoverThree, NullArtistCoverFour,
     CheckGreen, CrossRed, InformationCircleContainedOrange, InformationCircleContainedBlue,
     EditImage, Edit, Overlap, Minimize,
-    ListIcon, AlertTriangle, Trash, FolderSearch, File , Check, WaveForm
+    ListIcon, AlertTriangle, Trash, FolderSearch, File , Check, WaveForm,
     WindowsCloseIcon, WindowsMaximizeIcon, WindowsMinimizeIcon, WindowsRestoreIcon,
     LinuxClose, LinuxMaximize, LinuxMinimize, FolderPlus
 }
