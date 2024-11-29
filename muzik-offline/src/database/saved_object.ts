@@ -21,6 +21,8 @@ export interface SavedObject{
     SavedPresets: string[],
     AlwaysRoundedCornersWindows: string,
     AutoStartApp: string,
+    DirectoryScanningDepth: number,
+    player: "rodio" | "kira"
 }
 
 export const emptySavedObject: SavedObject = {
@@ -44,4 +46,6 @@ export const emptySavedObject: SavedObject = {
     SavedPresets: ["flat", "hip-hop"],
     AlwaysRoundedCornersWindows: "No",
     AutoStartApp: "No",
+    DirectoryScanningDepth: 1,
+    player: "rodio"
 }

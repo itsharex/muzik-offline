@@ -4,6 +4,7 @@ import { playerState, Song } from "@muziktypes/index";
 import { invoke } from "@tauri-apps/api/core";
 import { SavedObject } from "@database/index";
 import { local_playlists_db, local_songs_db } from "@database/database";
+import { getNullRandomCover } from ".";
 
 export const addThisSongToPlayNext = async(songids: number[]) => {
     //get the song queue
@@ -90,8 +91,8 @@ export async function startPlayingNewSong(song: Song){
     temp.lengthOfSongInSeconds = song.duration_seconds;
     temp.isPlaying = true;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
-    await invoke("load_and_play_song_from_path", { soundPath: song.path, volume: volume });
-    await invoke("update_metadata", { uuid: song.uuid, key: song.id });
+    await invoke("load_and_play_song_from_path", { soundPath: song.path, player: useSavedObjectStore.getState().local_store.player, volume: volume });
+    await invoke("update_metadata", { uuid: (song.cover_uuid !== null ? song.uuid : getNullRandomCover(song.id)) });
     await invoke("set_player_state", { state: playerState.Playing});
     usePlayerStore.getState().setPlayer(temp);
     setDiscordActivityWithTimestamps(song, 0);
@@ -103,15 +104,15 @@ export async function loadNewSong(song: Song){
     temp.lengthOfSongInSeconds = song.duration_seconds;
     temp.isPlaying = false;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
-    await invoke("load_a_song_from_path", { soundPath: song.path, volume: volume });
-    await invoke("update_metadata", { uuid: song.uuid, key: song.id });
+    await invoke("load_a_song_from_path", { soundPath: song.path, player: useSavedObjectStore.getState().local_store.player, volume: volume });
+    await invoke("update_metadata", { uuid: (song.cover_uuid !== null ? song.uuid : getNullRandomCover(song.id)) });
     usePlayerStore.getState().setPlayer(temp);
     setDiscordActivity(song);
 }
 
 export async function playSong(){
     if(usePlayerStore.getState().Player.playingSongMetadata){
-        await invoke("resume_playing");
+        await invoke("resume_playing", {player: useSavedObjectStore.getState().local_store.player});
         await invoke("set_player_state", { state: playerState.Playing});
         let temp = usePlayerStore.getState().Player;
         temp.isPlaying = true;
@@ -123,7 +124,7 @@ export async function playSong(){
 
 export async function pauseSong(){
     if(usePlayerStore.getState().Player.playingSongMetadata){
-        await invoke("pause_song");
+        await invoke("pause_song", {player: useSavedObjectStore.getState().local_store.player});
         await invoke("set_player_state", { state: playerState.Paused});
         let temp = usePlayerStore.getState().Player;
         temp.isPlaying = false;
@@ -135,7 +136,7 @@ export async function pauseSong(){
 
 export async function stopSong(){
     if(usePlayerStore.getState().Player.playingSongMetadata){
-        await invoke("stop_song");
+        await invoke("stop_song", {player: useSavedObjectStore.getState().local_store.player});
         await invoke("set_player_state", { state: playerState.Stopped});
         let temp = usePlayerStore.getState().Player;
         temp.playingSongMetadata = null;
@@ -160,7 +161,8 @@ export async function dragSeeker(){
 export function changeSeekerPosition(value: number){
     if(usePlayerStore.getState().Player.playingSongMetadata === null)return;
     const position = (value / 100) * usePlayerStore.getState().Player.lengthOfSongInSeconds;
-    invoke("seek_to", {position: position}).then(() => {if(usePlayerStore.getState().Player.wasPlayingBeforePause === true)playSong()});
+    invoke("seek_to", {player: useSavedObjectStore.getState().local_store.player, position: position})
+        .then(() => {if(usePlayerStore.getState().Player.wasPlayingBeforePause === true)playSong()});
 }
 
 export function changeSeekerPositionBtnPress(isDecreasing: boolean){
@@ -181,6 +183,7 @@ export function changeSeekerPositionBtnPress(isDecreasing: boolean){
         usePlayingPositionSec.getState().setPosition(position + delta_amount);
     }
     invoke("seek_by", {
+        player: useSavedObjectStore.getState().local_store.player,
         delta: delta_amount ? delta_amount : 10.0
     }).then(() => {if(usePlayerStore.getState().Player.wasPlayingBeforePause === true)playSong()});
 }
@@ -192,7 +195,7 @@ export function changeVolumeLevel(value: number){
     useSavedObjectStore.getState().setStore(temp);
 }
 
-export async function setVolumeLevel(value: number){await invoke("set_volume", {volume: value / 100});}
+export async function setVolumeLevel(value: number){await invoke("set_volume", {player: useSavedObjectStore.getState().local_store.player, volume: value / 100});}
 
 export function changeVolumeLevelBtnPress(isDecreasing: boolean){
     if(isDecreasing === true){
