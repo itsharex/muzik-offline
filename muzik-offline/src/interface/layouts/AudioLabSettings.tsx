@@ -17,7 +17,7 @@ const settings_data: {
 }[] = [
     {
         key: 1,
-        title: "Compress song images(will only be compressed on subsequent directory scans)",
+        title: "Audio quality of music",
         dropDownName: selectedGeneralSettingEnum.AudioQuality,
         options: ["Lossless(24b/192kHz)", "Lossless(24b/48kHz)", "High(320kbps)", "Medium(192kbps)", "Low(128kbps)"]
     },
