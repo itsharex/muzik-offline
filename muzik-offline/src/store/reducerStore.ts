@@ -18,6 +18,7 @@ export const AllTracksState: AllTracksStateInterface = {
     isPlaylistModalOpen: false,
     isPropertiesModalOpen: false,
     isEditingSongModalOpen: false,
+    isDeleteSongModalOpen: false,
     inDragDropRegion: false,
 };
 
@@ -34,6 +35,7 @@ export const alltracksReducer = (state: AllTracksStateInterface, action: Action)
         case reducerType.SET_PROPERTIES_MODAL: return { ...state, isPropertiesModalOpen: action.payload };
         case reducerType.SET_EDIT_SONG_MODAL: return { ...state, isEditingSongModalOpen: action.payload };
         case reducerType.SET_IN_DRAG_DROP_REGION: return { ...state, inDragDropRegion: action.payload };
+        case reducerType.SET_DELETE_MODAL: return { ...state, isDeleteSongModalOpen: action.payload };
         default: return state;
     }
 };

@@ -95,6 +95,7 @@ export interface AllTracksStateInterface{
     isPlaylistModalOpen: boolean,
     isPropertiesModalOpen: boolean,
     isEditingSongModalOpen: boolean,
+    isDeleteSongModalOpen: boolean,
     inDragDropRegion: boolean,
 }
 
