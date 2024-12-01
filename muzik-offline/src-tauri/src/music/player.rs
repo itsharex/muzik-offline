@@ -4,26 +4,14 @@ use tauri::State;
 
 use super::{
     kira_player::{
-        load_and_play_song_from_path_kira, 
-        load_a_song_from_path_kira, 
-        pause_song_kira,
-        stop_song_kira,
-        resume_playing_kira,
-        seek_to_kira,
-        seek_by_kira,
-        get_song_position_kira,
-        set_volume_kira
+        get_song_position_kira, load_a_song_from_path_kira, load_and_play_song_from_path_kira, 
+        pause_song_kira, resume_playing_kira, seek_by_kira, seek_to_kira, set_playback_speed_kira, 
+        set_volume_kira, stop_song_kira
     }, 
     rodio_player::{
-        load_and_play_song_from_path_rodio,
-        load_a_song_from_path_rodio,
-        pause_song_rodio,
-        stop_song_rodio,
-        resume_playing_rodio,
-        seek_to_rodio,
-        seek_by_rodio,
-        get_song_position_rodio,
-        set_volume_rodio
+        get_song_position_rodio, load_a_song_from_path_rodio, load_and_play_song_from_path_rodio, 
+        pause_song_rodio, resume_playing_rodio, seek_by_rodio, seek_to_rodio, set_volume_rodio, 
+        stop_song_rodio, set_playback_speed_rodio
     }};
 
 #[tauri::command]
@@ -33,13 +21,15 @@ pub fn load_and_play_song_from_path(
     sound_path: &str,
     player: &str,
     volume: f64,
+    play_back_speed: f32,
+    fade_in_out: bool,
 ) {
     match player{
         "rodio" => {
-            load_and_play_song_from_path_rodio(rodio_audio_manager, sound_path, volume);
+            load_and_play_song_from_path_rodio(rodio_audio_manager, sound_path, volume, play_back_speed, fade_in_out);
         }
         "kira" => {
-            load_and_play_song_from_path_kira(kira_audio_manager, sound_path, volume);
+            load_and_play_song_from_path_kira(kira_audio_manager, sound_path, volume, play_back_speed, fade_in_out);
         }
         _ => {
             // Handle the case where the player is not recognized
@@ -54,13 +44,15 @@ pub fn load_a_song_from_path(
     sound_path: &str,
     player: &str,
     volume: f64,
+    play_back_speed: f32,
+    fade_in_out: bool,
 ) {
     match player{
         "rodio" => {
-            load_a_song_from_path_rodio(rodio_audio_manager, sound_path, volume);
+            load_a_song_from_path_rodio(rodio_audio_manager, sound_path, volume, play_back_speed, fade_in_out);
         }
         "kira" => {
-            load_a_song_from_path_kira(kira_audio_manager, sound_path, volume);
+            load_a_song_from_path_kira(kira_audio_manager, sound_path, volume, play_back_speed, fade_in_out);
         }
         _ => {
             // Handle the case where the player is not recognized
@@ -189,6 +181,26 @@ pub fn set_volume(
         }
         "kira" => {
             set_volume_kira(kira_audio_manager, volume);
+        }
+        _ => {
+            // Handle the case where the player is not recognized
+        }
+    }
+}
+
+#[tauri::command]
+pub fn set_playback_speed(
+    rodio_audio_manager: State<'_, Arc<Mutex<RodioManager>>>,
+    kira_audio_manager: State<'_, Arc<Mutex<KiraManager>>>,
+    player: &str,
+    speed: f32
+) {
+    match player{
+        "rodio" => {
+            set_playback_speed_rodio(rodio_audio_manager, speed);
+        }
+        "kira" => {
+            set_playback_speed_kira(kira_audio_manager, speed as f64);
         }
         _ => {
             // Handle the case where the player is not recognized

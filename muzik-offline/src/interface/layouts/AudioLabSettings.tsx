@@ -15,12 +15,12 @@ const settings_data: {
     dropDownName: selectedGeneralSettingEnum;
     options: string[]
 }[] = [
-    {
+    /*{
         key: 1,
         title: "Audio quality of music",
         dropDownName: selectedGeneralSettingEnum.AudioQuality,
         options: ["Lossless(24b/192kHz)", "Lossless(24b/48kHz)", "High(320kbps)", "Medium(192kbps)", "Low(128kbps)"]
-    },
+    },*/
     {
         key: 2,
         title: "Playback speed of music",
@@ -29,7 +29,7 @@ const settings_data: {
     },
     {
         key: 3,
-        title: "Seamless, fade-in/out audio transitions",
+        title: "Seamless, fade-in/out audio transitions(will only apply on next song)",
         dropDownName: selectedGeneralSettingEnum.AudioTransition,
         options: ["Yes", "No"]
     }
@@ -45,6 +45,7 @@ const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (props: Audio
     const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
     const [currentOutputDevice, setOutputDevice] = useState<string>("");
     const [outputDevices, setOutputDevices] = useState<string[]>([]);
+    const [audioBackend, setAudioBackend] = useState<"rodio" | "kira">(local_store.player);
 
     function toggleDropDown(arg: selectedGeneralSettingEnum){
         if(arg === selectedGeneralSetting)setselectedGeneralSetting(selectedGeneralSettingEnum.Nothing);
@@ -56,19 +57,27 @@ const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (props: Audio
         else setselectedOutputDevice(arg);
     }
 
-    function setStoreValue(arg: string, type: string){
+    async function setStoreValue(arg: string, type: string){
         let temp: SavedObject = local_store;
         temp[type as keyof SavedObject] = arg as never;
         setStore(temp);
         setselectedGeneralSetting(selectedGeneralSettingEnum.Nothing);
+        if (type === selectedGeneralSettingEnum.PlayBackSpeed){
+            await invoke("set_playback_speed", {player: local_store.player, speed: parseFloat(arg)});
+        }
     } 
 
-    async function changeAudioBackend(arg: "rodio" | "kira"){
+    function changeAudioBackend(arg: "rodio" | "kira"){
         if(arg === local_store.player)return;
-        let temp: SavedObject = local_store;
-        temp.player = arg;
-        setStore(temp);
-        await stopSong();
+        setAudioBackend(arg);
+        stopSong().then(() => {
+            let temp: SavedObject = local_store;
+            temp.player = arg;
+            setStore(temp);
+        }).catch((err) => {
+            console.error(err);
+            setAudioBackend(local_store.player);
+        });
     }
 
     useEffect(() => {
@@ -94,7 +103,7 @@ const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (props: Audio
             <h2>Audio Lab</h2>
             <div className="AudioLabSettings_container">
                 <h5>Select your audio backend</h5>
-                <motion.div className={"audio-backend" + (local_store.player === "rodio" ? " selected" : "")}
+                <motion.div className={"audio-backend" + (audioBackend === "rodio" ? " selected" : "")}
                     whileTap={{scale: 0.98}} onClick={() => changeAudioBackend("rodio")}>
                     <div className="logo">
                         <img src="https://avatars.githubusercontent.com/u/9999738?s=200&v=4" alt="Rodio logo" />
@@ -116,7 +125,7 @@ const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (props: Audio
                         </div>
                     </div>
                 </motion.div>
-                <motion.div className={"audio-backend" + (local_store.player === "kira" ? " selected" : "")}
+                <motion.div className={"audio-backend" + (audioBackend === "kira" ? " selected" : "")}
                     whileTap={{scale: 0.98}} onClick={() => changeAudioBackend("kira")}>
                     <div className="logo">
                         <img src="https://avatars.githubusercontent.com/u/2637802?v=4" alt="Kira logo" />
@@ -172,7 +181,7 @@ const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (props: Audio
                             </motion.div>
                             :
                             <div className="setting_dropdown greyed_out">
-                                <h4>Playing from default</h4>
+                                <h4>default</h4>
                                 <div className="chevron_icon">
                                     <ChevronDown />
                                 </div>

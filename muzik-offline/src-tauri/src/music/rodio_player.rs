@@ -1,5 +1,5 @@
-use crate::components::rodio_audio_manager::RodioManager;
-use std::sync::{Arc, Mutex};
+use crate::{components::rodio_audio_manager::RodioManager, utils::general_utils::calculate_volume};
+use std::{sync::{Arc, Mutex}, time::Duration};
 use tauri::State;
 use std::fs::File;
 use std::io::BufReader;
@@ -9,18 +9,33 @@ pub fn load_and_play_song_from_path_rodio(
     audio_manager: State<'_, Arc<Mutex<RodioManager>>>,
     sound_path: &str,
     volume: f64,
+    play_back_speed: f32,
+    fade_in_out: bool,
 ) {
     match audio_manager.lock() {
-        Ok(manager) => {
+        Ok(mut manager) => {
             let file = File::open(sound_path).expect("Failed to open audio file");
             let source = Decoder::new(BufReader::new(file)).expect("Failed to create decoder");
+            if fade_in_out {
+                manager.crossfade = true;
+            } else {
+                manager.crossfade = false;
+            }
+
             match manager.sink.lock(){
                 Ok(sink_guard) => {
                     if let Some(ref sink) = *sink_guard {
                         // Clear the sink and append the new audio file
                         sink.stop();
                         sink.clear();
-                        sink.append(source.convert_samples::<f32>());
+                        if fade_in_out {
+                            sink.append(source
+                                .convert_samples::<f32>()
+                                .speed(play_back_speed)
+                                .fade_in(Duration::from_secs(6)));
+                        } else {
+                            sink.append(source.convert_samples::<f32>().speed(play_back_speed));
+                        }
                         sink.set_volume(volume as f32); // the volume will always be between 0.0 and 1.0 so hopefully this is safe
                         sink.play();
                     } else {
@@ -42,18 +57,38 @@ pub fn load_a_song_from_path_rodio(
     audio_manager: State<'_, Arc<Mutex<RodioManager>>>,
     sound_path: &str,
     volume: f64,
+    play_back_speed: f32,
+    fade_in_out: bool,
 ) {
     match audio_manager.lock() {
-        Ok(manager) => {
+        Ok(mut manager) => {
             let file = File::open(sound_path).expect("Failed to open audio file");
             let source = Decoder::new(BufReader::new(file)).expect("Failed to create decoder");
+            if fade_in_out {
+                manager.crossfade = true;
+            } else {
+                manager.crossfade = false;
+            }
+            manager.duration = match source.total_duration(){
+                Some(duration) => {
+                    Some(duration)
+                }
+                None => {
+                    None
+                }
+            };
+
             match manager.sink.lock(){
                 Ok(sink_guard) => {
                     if let Some(ref sink) = *sink_guard {
                         // Clear the sink and append the new audio file
                         sink.stop();
                         sink.clear();
-                        sink.append(source.convert_samples::<f32>());
+                        if fade_in_out {
+                            sink.append(source.convert_samples::<f32>().speed(play_back_speed).fade_in(Duration::from_secs(6)).fade_out(Duration::from_secs(6)));
+                        } else {
+                            sink.append(source.convert_samples::<f32>().speed(play_back_speed));
+                        }
                         sink.set_volume(volume as f32); // the volume will always be between 0.0 and 1.0 so hopefully this is safe
                     } else {
                         // Handle the case where the sink is None
@@ -178,27 +213,32 @@ pub fn seek_by_rodio(audio_manager: State<'_, Arc<Mutex<RodioManager>>>, delta: 
 }
 
 pub fn get_song_position_rodio(audio_manager: State<'_, Arc<Mutex<RodioManager>>>) -> f64 {
-    match audio_manager.lock() {
+    let (pos, duration, cross_fade) = match audio_manager.lock() {
         Ok(manager) => {
             match manager.sink.lock(){
                 Ok(sink_guard) => {
                     if let Some(ref sink) = *sink_guard {
-                        sink.get_pos().as_secs_f64()
+                        (sink.get_pos(), manager.duration.unwrap_or(std::time::Duration::from_secs(0)), manager.crossfade)
                     } else {
                         // Handle the case where the sink is None
-                        0.0
+                        (std::time::Duration::from_secs(0), std::time::Duration::from_secs(0), false)
                     }
                 }
                 Err(_) => {
-                    0.0
+                    (std::time::Duration::from_secs(0), std::time::Duration::from_secs(0), false)
                 }
             }
         }
         Err(_) => {
             //failed to lock audio manager
-            0.0
+            (std::time::Duration::from_secs(0), std::time::Duration::from_secs(0), false)
         }
+    };
+
+    if cross_fade && pos > duration.saturating_sub(Duration::from_secs(6)) {
+        set_volume_rodio(audio_manager, calculate_volume(duration.saturating_sub(pos)));
     }
+    return pos.as_secs_f64();
 }
 
 pub fn set_volume_rodio(audio_manager: State<'_, Arc<Mutex<RodioManager>>>, volume: f64) {
@@ -300,14 +340,58 @@ pub fn set_output_device(
         }
     });
 
+    let pos = match audio_manager.lock() {
+        Ok(manager) => {
+            match manager.sink.lock(){
+                Ok(sink_guard) => {
+                    if let Some(ref sink) = *sink_guard {
+                        sink.get_pos()
+                    } else {
+                        // Handle the case where the sink is None
+                        std::time::Duration::from_secs(0)
+                    }
+                }
+                Err(_) => {
+                    std::time::Duration::from_secs(0)
+                }
+            }
+        }
+        Err(_) => {
+            //failed to lock audio manager
+            std::time::Duration::from_secs(0)
+        }
+    };
+
     match audio_manager.lock() {
         Ok(manager) => {
             match device{
                 Some(device) => {
-                    manager.set_device(device.clone());
+                    manager.set_device(device.clone(), pos);
                 }
                 None => {
                     // Handle the case where the device was not found
+                }
+            }
+        }
+        Err(_) => {
+            //failed to lock audio manager
+        }
+    }
+}
+
+pub fn set_playback_speed_rodio(audio_manager: State<'_, Arc<Mutex<RodioManager>>>, speed: f32) {
+    match audio_manager.lock() {
+        Ok(manager) => {
+            match manager.sink.lock(){
+                Ok(sink_guard) => {
+                    if let Some(ref sink) = *sink_guard {
+                        sink.set_speed(speed);
+                    } else {
+                        // Handle the case where the sink is None
+                    }
+                }
+                Err(_) => {
+
                 }
             }
         }

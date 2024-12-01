@@ -91,7 +91,13 @@ export async function startPlayingNewSong(song: Song){
     temp.lengthOfSongInSeconds = song.duration_seconds;
     temp.isPlaying = true;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
-    await invoke("load_and_play_song_from_path", { soundPath: song.path, player: useSavedObjectStore.getState().local_store.player, volume: volume });
+    await invoke("load_and_play_song_from_path", { 
+        soundPath: song.path, 
+        player: useSavedObjectStore.getState().local_store.player, 
+        volume: volume,
+        playBackSpeed: parseInt(useSavedObjectStore.getState().local_store.PlayBackSpeed),
+        fadeInOut: useSavedObjectStore.getState().local_store.AudioTransition === "Yes" ? true : false
+    });
     await invoke("update_metadata", { uuid: (song.cover_uuid !== null ? song.uuid : getNullRandomCover(song.id)) });
     await invoke("set_player_state", { state: playerState.Playing});
     usePlayerStore.getState().setPlayer(temp);
@@ -104,7 +110,13 @@ export async function loadNewSong(song: Song){
     temp.lengthOfSongInSeconds = song.duration_seconds;
     temp.isPlaying = false;
     const volume = (useSavedObjectStore.getState().local_store.Volume / 100);
-    await invoke("load_a_song_from_path", { soundPath: song.path, player: useSavedObjectStore.getState().local_store.player, volume: volume });
+    await invoke("load_a_song_from_path", { 
+        soundPath: song.path, 
+        player: useSavedObjectStore.getState().local_store.player, 
+        volume: volume,
+        playBackSpeed: parseInt(useSavedObjectStore.getState().local_store.PlayBackSpeed),
+        fadeInOut: useSavedObjectStore.getState().local_store.AudioTransition === "Yes" ? true : false
+    });
     await invoke("update_metadata", { uuid: (song.cover_uuid !== null ? song.uuid : getNullRandomCover(song.id)) });
     usePlayerStore.getState().setPlayer(temp);
     setDiscordActivity(song);

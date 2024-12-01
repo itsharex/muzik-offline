@@ -23,6 +23,7 @@ use database::db_api::{
 use database::db_manager::DbManager;
 use export::{export_csv::export_songs_as_csv, export_html::export_songs_as_html, 
     export_json::export_songs_as_json,export_txt::export_songs_as_txt, export_xml::export_songs_as_xml};
+use music::player::set_playback_speed;
 //use export::export_pdf::export_songs_as_pdf;
 use socials::discord_rpc::{set_discord_rpc_activity_with_timestamps, DiscordRpc};
 use utils::music_list_organizer::MLO;
@@ -108,6 +109,7 @@ fn main() {
             get_default_output_device,
             get_output_devices,
             set_output_device,
+            set_playback_speed,
             // UTILS
             resize_frontend_image_to_fixed_height,
             // MUSIC LIST ORGANIZER

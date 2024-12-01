@@ -26,6 +26,8 @@ pub fn initialise_kira_audio_manager() -> Arc<Mutex<KiraManager>> {
         manager: audio_manager,
         instance_handle: None,
         volume: 0.0,
+        crossfade: false,
+        duration: None,
     }))
 }
 

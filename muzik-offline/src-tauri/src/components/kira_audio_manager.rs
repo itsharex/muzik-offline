@@ -7,4 +7,6 @@ pub struct KiraManager {
     pub manager: AudioManager<DefaultBackend>,
     pub instance_handle: Option<StreamingSoundHandle<FromFileError>>,
     pub volume: f64,
+    pub crossfade: bool,
+    pub duration: Option<std::time::Duration>,
 }

@@ -1,14 +1,17 @@
 use rodio::{OutputStream, Device, Sink};
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{channel, Sender};
+use std::time::Duration;
 
 enum AudioCommand {
-    SetDevice(Device)
+    SetDevice(Device, Duration)
 }
 
 pub struct RodioManager {
     sender: Sender<AudioCommand>,
     pub sink: Arc<Mutex<Option<Sink>>>,
+    pub crossfade: bool,
+    pub duration: Option<Duration>,
 }
 
 impl RodioManager {
@@ -24,10 +27,50 @@ impl RodioManager {
 
             for command in receiver {
                 match command {
-                    AudioCommand::SetDevice(device) => {
+                    AudioCommand::SetDevice(device, pos) => {
                         if let Ok((new_stream, new_handle)) = OutputStream::try_from_device(&device) {
+                            let was_paused = match cloned_sink.lock(){
+                                Ok(mut sink) => {
+                                    match sink.as_mut(){
+                                        Some(sink) => {
+                                            sink.is_paused()
+                                        }
+                                        None => {
+                                            false
+                                        }
+                                    }
+                                }
+                                Err(_) => {
+                                    false
+                                }
+                            };
+
                             _current_stream = new_stream;
                             _current_handle = new_handle;
+                            match cloned_sink.lock(){
+                                Ok(mut sink) => {
+                                    match sink.as_mut(){
+                                        Some(sink) => {
+                                            match sink.try_seek(pos){
+                                                Ok(_) => {
+                                                    if !was_paused {
+                                                        sink.play();
+                                                    }
+                                                }
+                                                Err(_) => {
+                                                    eprintln!("Failed to seek sink");
+                                                }
+                                            }
+                                        }
+                                        None => {
+                                            eprintln!("Failed to lock sink");
+                                        }
+                                    }
+                                }
+                                Err(_) => {
+                                    eprintln!("Failed to lock sink");
+                                }
+                            }
                             println!("Switched audio device successfully!");
                         } else {
                             eprintln!("Failed to switch audio device");
@@ -39,12 +82,14 @@ impl RodioManager {
 
         Self { 
             sender,
-            sink: sink.clone()
+            sink: sink.clone(),
+            crossfade: false,
+            duration: None,
         }
     }
 
-    pub fn set_device(&self, device: Device) {
-        match self.sender.send(AudioCommand::SetDevice(device)){
+    pub fn set_device(&self, device: Device, pos: Duration) {
+        match self.sender.send(AudioCommand::SetDevice(device, pos)){
             Ok(_) => {
 
             }

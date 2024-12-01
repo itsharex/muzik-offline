@@ -1,4 +1,4 @@
-use crate::components::kira_audio_manager::KiraManager;
+use crate::{components::kira_audio_manager::KiraManager, utils::general_utils::calculate_volume};
 use kira::{
     sound::{
         streaming::{StreamingSoundData, StreamingSoundHandle, StreamingSoundSettings},
@@ -6,13 +6,15 @@ use kira::{
     },
     tween::Tween,
 };
-use std::sync::{Arc, Mutex};
+use std::{sync::{Arc, Mutex}, time::Duration};
 use tauri::State;
 
 pub fn load_and_play_song_from_path_kira(
     audio_manager: State<'_, Arc<Mutex<KiraManager>>>,
     sound_path: &str,
     volume: f64,
+    play_back_speed: f32,
+    fade_in_out: bool,
 ) {
     match audio_manager.lock() {
         Ok(mut manager) => {
@@ -33,28 +35,62 @@ pub fn load_and_play_song_from_path_kira(
                 }
             }
 
+            if fade_in_out {
+                manager.crossfade = true;
+            } else {
+                manager.crossfade = false;
+            }
+
             //try and load and play a new song
             match StreamingSoundData::from_file(sound_path, StreamingSoundSettings::default()) {
                 Ok(sound_data) => {
+                    manager.duration = Some(sound_data.duration());
+                    if fade_in_out {
+                        sound_data.settings.fade_in_tween(Tween{
+                            duration: Duration::from_secs(6),
+                            start_time: kira::StartTime::Immediate,
+                            easing: kira::tween::Easing::Linear,
+                        });
+                    }
                     match manager.manager.play(sound_data) {
                         Ok(instance_handle) => {
                             //playback started
                             manager.instance_handle = Some(instance_handle);
-                            //set volume
+
+                            //set playback speed
                             match &mut manager.instance_handle {
                                 Some(handle) => {
-                                    match handle.set_volume(volume, Tween::default()) {
+                                    match handle.set_playback_rate(play_back_speed as f64, Tween::default()) {
                                         Ok(_) => {
-                                            //set volume
-                                            manager.volume = volume;
+                                            //set speed
                                         }
                                         Err(_) => {
-                                            //failed to set volume
+                                            //failed to set speed
                                         }
                                     }
                                 }
                                 None => {
                                     //no song is currently playing
+                                }
+                            }
+                        
+                            if !fade_in_out {
+                                //set volume
+                                match &mut manager.instance_handle {
+                                    Some(handle) => {
+                                        match handle.set_volume(volume, Tween::default()) {
+                                            Ok(_) => {
+                                                //set volume
+                                                manager.volume = volume;
+                                            }
+                                            Err(_) => {
+                                                //failed to set volume
+                                            }
+                                        }
+                                    }
+                                    None => {
+                                        //no song is currently playing
+                                    }
                                 }
                             }
                         }
@@ -78,6 +114,8 @@ pub fn load_a_song_from_path_kira(
     audio_manager: State<'_, Arc<Mutex<KiraManager>>>,
     sound_path: &str,
     volume: f64,
+    play_back_speed: f32,
+    fade_in_out: bool,
 ) {
     match audio_manager.lock() {
         Ok(mut manager) => {
@@ -98,9 +136,22 @@ pub fn load_a_song_from_path_kira(
                 }
             }
 
+            if fade_in_out {
+                manager.crossfade = true;
+            } else {
+                manager.crossfade = false;
+            }
+
             //try and load and play then immediately pause a new song
             match StreamingSoundData::from_file(sound_path, StreamingSoundSettings::default()) {
                 Ok(sound_data) => {
+                    manager.duration = Some(sound_data.duration());
+                    if fade_in_out {
+                        sound_data.settings.fade_in_tween(Tween{
+                            duration: Duration::from_secs(6),
+                            ..Default::default()
+                        });
+                    }
                     match manager.manager.play(sound_data) {
                         Ok(instance_handle) => {
                             //playback started
@@ -121,6 +172,24 @@ pub fn load_a_song_from_path_kira(
                                     //no song is currently playing
                                 }
                             }
+
+                            //set playback speed
+                            match &mut manager.instance_handle {
+                                Some(handle) => {
+                                    match handle.set_playback_rate(play_back_speed as f64, Tween::default()) {
+                                        Ok(_) => {
+                                            //set speed
+                                        }
+                                        Err(_) => {
+                                            //failed to set speed
+                                        }
+                                    }
+                                }
+                                None => {
+                                    //no song is currently playing
+                                }
+                            }
+
                             //set volume
                             match &mut manager.instance_handle {
                                 Some(handle) => {
@@ -281,24 +350,29 @@ pub fn seek_by_kira(audio_manager: State<'_, Arc<Mutex<KiraManager>>>, delta: f6
 }
 
 pub fn get_song_position_kira(audio_manager: State<'_, Arc<Mutex<KiraManager>>>) -> f64 {
-    match audio_manager.lock() {
+    let (pos, duration, cross_fade) = match audio_manager.lock() {
         Ok(mut manager) => {
             match &mut manager.instance_handle {
                 Some(handle) => {
                     let song_position = handle.position();
-                    song_position.floor()
+                    (std::time::Duration::from_secs_f64(song_position), manager.duration.unwrap_or(std::time::Duration::from_secs(0)), manager.crossfade)
                 }
                 None => {
                     //no song is currently paused or playing
-                    0.0
+                    (std::time::Duration::from_secs(0), std::time::Duration::from_secs(0), false)
                 }
             }
         }
         Err(_) => {
             //failed to lock audio manager
-            0.0
+            (std::time::Duration::from_secs(0), std::time::Duration::from_secs(0), false)
         }
+    };
+
+    if cross_fade && pos > duration.saturating_sub(Duration::from_secs(6)) {
+        set_volume_kira(audio_manager, calculate_volume(duration.saturating_sub(pos)));
     }
+    return pos.as_secs_f64();
 }
 
 pub fn set_volume_kira(audio_manager: State<'_, Arc<Mutex<KiraManager>>>, volume: f64) {
@@ -380,6 +454,31 @@ fn handle_true_seeking(handle: &mut StreamingSoundHandle<FromFileError>, volume:
         }
         Err(_) => {
             //failed to set volume
+        }
+    }
+}
+
+pub fn set_playback_speed_kira(audio_manager: State<'_, Arc<Mutex<KiraManager>>>, speed: f64) {
+    match audio_manager.lock() {
+        Ok(mut manager) => {
+            match &mut manager.instance_handle {
+                Some(handle) => {
+                    match handle.set_playback_rate(speed, Tween::default()) {
+                        Ok(_) => {
+                            //set speed
+                        }
+                        Err(_) => {
+                            //failed to set speed
+                        }
+                    }
+                }
+                None => {
+                    //no song is currently paused or playing
+                }
+            }
+        }
+        Err(_) => {
+            //failed to lock audio manager
         }
     }
 }
