@@ -13,6 +13,7 @@ pub fn load_and_play_song_from_path_kira(
     audio_manager: State<'_, Arc<Mutex<KiraManager>>>,
     sound_path: &str,
     volume: f64,
+    duration: f64,
     play_back_speed: f32,
     fade_in_out: bool,
 ) {
@@ -41,10 +42,11 @@ pub fn load_and_play_song_from_path_kira(
                 manager.crossfade = false;
             }
 
+            manager.duration = Some(Duration::from_secs_f64(duration));
+
             //try and load and play a new song
             match StreamingSoundData::from_file(sound_path, StreamingSoundSettings::default()) {
                 Ok(sound_data) => {
-                    manager.duration = Some(sound_data.duration());
                     if fade_in_out {
                         sound_data.settings.fade_in_tween(Tween{
                             duration: Duration::from_secs(6),
@@ -114,6 +116,7 @@ pub fn load_a_song_from_path_kira(
     audio_manager: State<'_, Arc<Mutex<KiraManager>>>,
     sound_path: &str,
     volume: f64,
+    duration: f64,
     play_back_speed: f32,
     fade_in_out: bool,
 ) {
@@ -141,11 +144,11 @@ pub fn load_a_song_from_path_kira(
             } else {
                 manager.crossfade = false;
             }
+            manager.duration = Some(Duration::from_secs_f64(duration));
 
             //try and load and play then immediately pause a new song
             match StreamingSoundData::from_file(sound_path, StreamingSoundSettings::default()) {
                 Ok(sound_data) => {
-                    manager.duration = Some(sound_data.duration());
                     if fade_in_out {
                         sound_data.settings.fade_in_tween(Tween{
                             duration: Duration::from_secs(6),
@@ -372,7 +375,7 @@ pub fn get_song_position_kira(audio_manager: State<'_, Arc<Mutex<KiraManager>>>)
     if cross_fade && pos > duration.saturating_sub(Duration::from_secs(6)) {
         set_volume_kira(audio_manager, calculate_volume(duration.saturating_sub(pos)));
     }
-    return pos.as_secs_f64();
+    return pos.as_secs_f64().floor();
 }
 
 pub fn set_volume_kira(audio_manager: State<'_, Arc<Mutex<KiraManager>>>, volume: f64) {

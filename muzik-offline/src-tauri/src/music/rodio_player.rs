@@ -9,6 +9,7 @@ pub fn load_and_play_song_from_path_rodio(
     audio_manager: State<'_, Arc<Mutex<RodioManager>>>,
     sound_path: &str,
     volume: f64,
+    duration: f64,
     play_back_speed: f32,
     fade_in_out: bool,
 ) {
@@ -21,6 +22,7 @@ pub fn load_and_play_song_from_path_rodio(
             } else {
                 manager.crossfade = false;
             }
+            manager.duration = Some(Duration::from_secs_f64(duration));
 
             match manager.sink.lock(){
                 Ok(sink_guard) => {
@@ -57,6 +59,7 @@ pub fn load_a_song_from_path_rodio(
     audio_manager: State<'_, Arc<Mutex<RodioManager>>>,
     sound_path: &str,
     volume: f64,
+    duration: f64,
     play_back_speed: f32,
     fade_in_out: bool,
 ) {
@@ -69,14 +72,7 @@ pub fn load_a_song_from_path_rodio(
             } else {
                 manager.crossfade = false;
             }
-            manager.duration = match source.total_duration(){
-                Some(duration) => {
-                    Some(duration)
-                }
-                None => {
-                    None
-                }
-            };
+            manager.duration = Some(Duration::from_secs_f64(duration));
 
             match manager.sink.lock(){
                 Ok(sink_guard) => {
@@ -238,7 +234,7 @@ pub fn get_song_position_rodio(audio_manager: State<'_, Arc<Mutex<RodioManager>>
     if cross_fade && pos > duration.saturating_sub(Duration::from_secs(6)) {
         set_volume_rodio(audio_manager, calculate_volume(duration.saturating_sub(pos)));
     }
-    return pos.as_secs_f64();
+    return pos.as_secs_f64().floor();
 }
 
 pub fn set_volume_rodio(audio_manager: State<'_, Arc<Mutex<RodioManager>>>, volume: f64) {

@@ -21,15 +21,16 @@ pub fn load_and_play_song_from_path(
     sound_path: &str,
     player: &str,
     volume: f64,
+    duration: f64,
     play_back_speed: f32,
     fade_in_out: bool,
 ) {
     match player{
         "rodio" => {
-            load_and_play_song_from_path_rodio(rodio_audio_manager, sound_path, volume, play_back_speed, fade_in_out);
+            load_and_play_song_from_path_rodio(rodio_audio_manager, sound_path, volume, duration, play_back_speed, fade_in_out);
         }
         "kira" => {
-            load_and_play_song_from_path_kira(kira_audio_manager, sound_path, volume, play_back_speed, fade_in_out);
+            load_and_play_song_from_path_kira(kira_audio_manager, sound_path, volume, duration, play_back_speed, fade_in_out);
         }
         _ => {
             // Handle the case where the player is not recognized
@@ -44,15 +45,16 @@ pub fn load_a_song_from_path(
     sound_path: &str,
     player: &str,
     volume: f64,
+    duration: f64,
     play_back_speed: f32,
     fade_in_out: bool,
 ) {
     match player{
         "rodio" => {
-            load_a_song_from_path_rodio(rodio_audio_manager, sound_path, volume, play_back_speed, fade_in_out);
+            load_a_song_from_path_rodio(rodio_audio_manager, sound_path, volume, duration, play_back_speed, fade_in_out);
         }
         "kira" => {
-            load_a_song_from_path_kira(kira_audio_manager, sound_path, volume, play_back_speed, fade_in_out);
+            load_a_song_from_path_kira(kira_audio_manager, sound_path, volume, duration, play_back_speed, fade_in_out);
         }
         _ => {
             // Handle the case where the player is not recognized

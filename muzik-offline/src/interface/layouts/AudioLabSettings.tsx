@@ -39,22 +39,16 @@ type AudioLabSettingsProps = {
     openEqualiser: () => void;
 }
 
-const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (props: AudioLabSettingsProps) => {
+const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (_props: AudioLabSettingsProps) => {
     const [selectedGeneralSetting, setselectedGeneralSetting] = useState<selectedGeneralSettingEnum>(selectedGeneralSettingEnum.Nothing);
-    const [selectedOutputDevice, setselectedOutputDevice] = useState<selectedGeneralSettingEnum>(selectedGeneralSettingEnum.Nothing);
     const {local_store, setStore} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
-    const [currentOutputDevice, setOutputDevice] = useState<string>("");
+    const [currentOutputDevice, setOutputDevice] = useState<string>("default");
     const [outputDevices, setOutputDevices] = useState<string[]>([]);
     const [audioBackend, setAudioBackend] = useState<"rodio" | "kira">(local_store.player);
 
     function toggleDropDown(arg: selectedGeneralSettingEnum){
         if(arg === selectedGeneralSetting)setselectedGeneralSetting(selectedGeneralSettingEnum.Nothing);
         else setselectedGeneralSetting(arg);
-    }
-
-    function toggleDropDownOutputDevice(arg: selectedGeneralSettingEnum){
-        if(arg === selectedOutputDevice)setselectedOutputDevice(selectedGeneralSettingEnum.Nothing);
-        else setselectedOutputDevice(arg);
     }
 
     async function setStoreValue(arg: string, type: string){
@@ -64,6 +58,10 @@ const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (props: Audio
         setselectedGeneralSetting(selectedGeneralSettingEnum.Nothing);
         if (type === selectedGeneralSettingEnum.PlayBackSpeed){
             await invoke("set_playback_speed", {player: local_store.player, speed: parseFloat(arg)});
+        }
+        if (type === selectedGeneralSettingEnum.OutputDevice){
+            await invoke("set_output_device", {deviceName: arg});
+            setOutputDevice(arg);
         }
     } 
 
@@ -173,9 +171,9 @@ const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (props: Audio
                     <h3>Output device</h3>
                     <div className="setting_dropdown">
                         { local_store.player === "rodio" ?
-                            <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={() => toggleDropDownOutputDevice(selectedGeneralSettingEnum.OutputDevice)}>
+                            <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={() => toggleDropDown(selectedGeneralSettingEnum.OutputDevice)}>
                                 <h4>{currentOutputDevice}</h4>
-                                <motion.div className="chevron_icon" animate={{rotate: selectedOutputDevice === selectedGeneralSettingEnum.OutputDevice ? 180 : 0}}>
+                                <motion.div className="chevron_icon" animate={{rotate: selectedGeneralSetting === selectedGeneralSettingEnum.OutputDevice ? 180 : 0}}>
                                     <ChevronDown />
                                 </motion.div>
                             </motion.div>
@@ -190,21 +188,21 @@ const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (props: Audio
                         <div className="DropDownMenu_container">
                             <DropDownMenuLarge
                                 options={outputDevices} 
-                                isOpen={selectedOutputDevice === selectedGeneralSettingEnum.OutputDevice} 
-                                type={selectedOutputDevice}
+                                isOpen={selectedGeneralSetting === selectedGeneralSettingEnum.OutputDevice} 
+                                type={selectedGeneralSettingEnum.OutputDevice}
                                 selectOption={setStoreValue}
                             />
                         </div>
                     </div>
                 </div>
-                <div className="setting">
+                {/*<div className="setting">
                     <h3>Equaliser</h3>
                     <div className="setting_dropdown">
                         <motion.div className="setting_dropdown" whileTap={{scale: 0.98}} whileHover={{scale: 1.03}} onClick={props.openEqualiser}>
                             <h4>Open equaliser</h4>
                         </motion.div>
                     </div>
-                </div>
+                </div>*/}
             </div>
         </div>
     )

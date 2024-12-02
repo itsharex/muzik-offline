@@ -95,6 +95,7 @@ export async function startPlayingNewSong(song: Song){
         soundPath: song.path, 
         player: useSavedObjectStore.getState().local_store.player, 
         volume: volume,
+        duration: song.duration_seconds,
         playBackSpeed: parseInt(useSavedObjectStore.getState().local_store.PlayBackSpeed),
         fadeInOut: useSavedObjectStore.getState().local_store.AudioTransition === "Yes" ? true : false
     });
@@ -114,6 +115,7 @@ export async function loadNewSong(song: Song){
         soundPath: song.path, 
         player: useSavedObjectStore.getState().local_store.player, 
         volume: volume,
+        duration: song.duration_seconds,
         playBackSpeed: parseInt(useSavedObjectStore.getState().local_store.PlayBackSpeed),
         fadeInOut: useSavedObjectStore.getState().local_store.AudioTransition === "Yes" ? true : false
     });
