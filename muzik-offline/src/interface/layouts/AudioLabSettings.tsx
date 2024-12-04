@@ -98,7 +98,7 @@ const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (_props: Audi
     
     return (
         <div className="AudioLabSettings">
-            <h2>Audio Lab</h2>
+            <h2>Audio Lab Settings</h2>
             <div className="AudioLabSettings_container">
                 <h5>Select your audio backend</h5>
                 <motion.div className={"audio-backend" + (audioBackend === "rodio" ? " selected" : "")}
