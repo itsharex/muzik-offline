@@ -185,7 +185,7 @@ const AudioLabSettings: FunctionComponent<AudioLabSettingsProps> = (_props: Audi
                                 </div>
                             </div>
                         }
-                        <div className="DropDownMenu_container">
+                        <div className="DropDownMenu_container_last">
                             <DropDownMenuLarge
                                 options={outputDevices} 
                                 isOpen={selectedGeneralSetting === selectedGeneralSettingEnum.OutputDevice} 

@@ -95,7 +95,7 @@
     
                     h4{
                         font-size: 13px;
-                        height: 13px;
+                        height: min-content;
                         margin-left: 4px;
                         color: $root-app-navigator-hover-col;
                     }
@@ -123,6 +123,13 @@
                     position: absolute;
                     right: 5px;
                     top: 55px;
+                    z-index: $z-index-9250;
+                }
+
+                .DropDownMenu_container_last{
+                    position: absolute;
+                    right: 5px;
+                    bottom: 55px;
                     z-index: $z-index-9250;
                 }
             }
