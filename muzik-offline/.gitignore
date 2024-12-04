@@ -23,5 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
-src-airplay-cast/__pycache__
-src-airplay-cast/*.exe
+/src-airplay-cast/__pycache__/
+/src-airplay-cast/*.exe
