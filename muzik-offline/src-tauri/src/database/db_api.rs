@@ -1066,6 +1066,27 @@ pub fn insert_into_album_tree(db_manager: Arc<Mutex<DbManager>>, song: &Song) {
     }
 }
 
+pub fn delete_album_from_tree(db_manager: State<'_, Arc<Mutex<DbManager>>>, album_name: &str) {
+    match db_manager.lock() {
+        Ok(dbm) => {
+            let album_tree = match dbm.album_tree.write() {
+                Ok(tree) => tree,
+                Err(_) => {
+                    return;
+                }
+            };
+
+            match album_tree.remove(
+                uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_URL, album_name.as_bytes()).to_string(),
+            ) {
+                Ok(_) => {}
+                Err(_) => {}
+            }
+        }
+        Err(_) => {}
+    }
+}
+
 pub fn insert_into_artist_tree(db_manager: Arc<Mutex<DbManager>>, song: &Song) {
     match db_manager.lock() {
         Ok(dbm) => {
@@ -1148,6 +1169,27 @@ pub fn insert_into_artist_tree(db_manager: Arc<Mutex<DbManager>>, song: &Song) {
     }
 }
 
+pub fn delete_artist_from_tree(db_manager: State<'_, Arc<Mutex<DbManager>>>, artist_name: &str) {
+    match db_manager.lock() {
+        Ok(dbm) => {
+            let artist_tree = match dbm.artist_tree.write() {
+                Ok(tree) => tree,
+                Err(_) => {
+                    return;
+                }
+            };
+
+            match artist_tree.remove(
+                uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_URL, artist_name.as_bytes()).to_string(),
+            ) {
+                Ok(_) => {}
+                Err(_) => {}
+            }
+        }
+        Err(_) => {}
+    }
+}
+
 pub fn insert_into_genre_tree(db_manager: Arc<Mutex<DbManager>>, song: &Song) {
     match db_manager.lock() {
         Ok(dbm) => {
@@ -1220,6 +1262,27 @@ pub fn insert_into_genre_tree(db_manager: Arc<Mutex<DbManager>>, song: &Song) {
                         Err(_) => {}
                     }
                 }
+                Err(_) => {}
+            }
+        }
+        Err(_) => {}
+    }
+}
+
+pub fn delete_genre_from_tree(db_manager: State<'_, Arc<Mutex<DbManager>>>, genre_name: &str) {
+    match db_manager.lock() {
+        Ok(dbm) => {
+            let genre_tree = match dbm.genre_tree.write() {
+                Ok(tree) => tree,
+                Err(_) => {
+                    return;
+                }
+            };
+
+            match genre_tree.remove(
+                uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_URL, genre_name.as_bytes()).to_string(),
+            ) {
+                Ok(_) => {}
                 Err(_) => {}
             }
         }

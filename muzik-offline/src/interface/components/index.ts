@@ -45,6 +45,7 @@ import WallpapersSelectionModal from './modals/WallpapersSelectionModal';
 import RectangleSongBoxView from './cards/RectangleSongBoxView';
 import CheckboxComponent from './input/CheckboxComponent';
 import ExportModal from './modals/ExportModal';
+import DeleteSongModal from './modals/DeleteSongModal';
 import EqualizerModal from './modals/EqualizerModal';
 
 export {
@@ -63,5 +64,5 @@ export {
     EditPropertiesModal, EditSongButton,
     DateInput, DeleteDiretoryModal, WallpapersSelectionModal,
     RectangleSongBoxView, CheckboxComponent, ExportModal,
-    EqualizerModal
+    DeleteSongModal, EqualizerModal
 }

@@ -1,14 +1,15 @@
 use crate::{
-    components::audio_manager::AppAudioManager,
-    utils::general_utils::{
+    components::audio_manager::AppAudioManager, database::db_manager::DbManager, utils::general_utils::{
         decode_image_in_parallel, encode_image_in_parallel, resize_and_compress_image,
-    },
+    }
 };
+use crate::database::db_api::{delete_song_from_tree, delete_album_from_tree, delete_artist_from_tree, delete_genre_from_tree};
 use dirs::audio_dir;
 use std::{
     process::Command,
     sync::{Arc, Mutex},
 };
+use trash;
 use tauri::State;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -84,6 +85,46 @@ pub fn get_audio_dir() -> String {
             return String::from("");
         }
     }
+}
+
+#[tauri::command]
+pub async fn delete_song_metadata(
+    db_manager: State<'_, Arc<Mutex<DbManager>>>,
+    path: String,
+    album: String,
+    album_appearance_count: i32,
+    artist: String,
+    artist_appearance_count: i32,
+    genre: String,
+    genre_appearance_count: i32,
+) -> Result<String, String> {
+    // attempt to move file path to trash
+    match trash::delete(&path) {
+        Ok(_) => {}
+        Err(e) => {
+            return Err(format!("Failed to move file to trash because {}", e));
+        }
+    }
+
+    // delete song from database
+    delete_song_from_tree(db_manager.clone(), &path);
+
+    // delete album from database if it has no more songs
+    if album_appearance_count <= 1 {
+        delete_album_from_tree(db_manager.clone(), &album);
+    }
+
+    // delete artist from database if it has no more songs
+    if artist_appearance_count <= 1 {
+        delete_artist_from_tree(db_manager.clone(), &artist);
+    }
+
+    // delete genre from database if it has no more songs
+    if genre_appearance_count <= 1 {
+        delete_genre_from_tree(db_manager.clone(), &genre);
+    }
+
+    Ok(String::from("SUCCESS"))
 }
 
 #[cfg(target_os = "macos")]
