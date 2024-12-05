@@ -9,6 +9,7 @@ use std::{
     process::Command,
     sync::{Arc, Mutex},
 };
+use trash;
 use tauri::State;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -98,10 +99,10 @@ pub async fn delete_song_metadata(
     genre_appearance_count: i32,
 ) -> Result<String, String> {
     // attempt to move file path to trash
-    match std::fs::remove_file(&path) {
+    match trash::delete(&path) {
         Ok(_) => {}
-        Err(_) => {
-            return Err(String::from("Could not move to trash"))
+        Err(e) => {
+            return Err(format!("Failed to move file to trash because {}", e));
         }
     }
 

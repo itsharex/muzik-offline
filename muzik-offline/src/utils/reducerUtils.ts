@@ -6,7 +6,7 @@ import { appConfigDir } from '@tauri-apps/api/path';
 import { reloadLibrary } from ".";
 import { invoke } from "@tauri-apps/api/core";
 import { useToastStore } from "@store/index";
-import { local_albums_db, local_artists_db, local_genres_db } from "@database/database";
+import { local_albums_db, local_artists_db, local_genres_db, local_songs_db } from "@database/database";
 
 export function selectThisSong(index: number, dispatch: React.Dispatch<Action>){ 
     dispatch({ type: reducerType.SET_SELECTED, payload: index }); 
@@ -60,7 +60,7 @@ export function closeEditPropertiesModal(dispatch: React.Dispatch<Action>){
     closeContextMenu(dispatch);
 }
 
-export function closeDeleteSongModal(dispatch: React.Dispatch<Action>, song: Song | null, deleteSong: boolean){
+export async function closeDeleteSongModal(dispatch: React.Dispatch<Action>, song: Song | null, deleteSong: boolean){
     dispatch({ type: reducerType.SET_DELETE_MODAL, payload: false });
     closeContextMenu(dispatch);
     if(!deleteSong)return;
@@ -73,11 +73,11 @@ export function closeDeleteSongModal(dispatch: React.Dispatch<Action>, song: Son
         });
         return;
     }
-    const album_appearance_count = local_albums_db.albums.where('title').equals(song.album).count();
-    const artist_appearance_count = local_artists_db.artists.where('artist_name').equals(song.artist).count();
-    const genre_appearance_count = local_genres_db.genres.where('title').equals(song.genre).count();
+    const album_appearance_count = await local_albums_db.albums.where('title').equals(song.album).count();
+    const artist_appearance_count = await local_artists_db.artists.where('artist_name').equals(song.artist).count();
+    const genre_appearance_count = await local_genres_db.genres.where('title').equals(song.genre).count();
 
-    invoke('delete_song', { 
+    invoke('delete_song_metadata', { 
         path: song.path,
         album: song.album,
         albumAppearanceCount: album_appearance_count,
@@ -86,6 +86,10 @@ export function closeDeleteSongModal(dispatch: React.Dispatch<Action>, song: Son
         genre: song.genre,
         genreAppearanceCount: genre_appearance_count 
     }).then(() => {
+        local_songs_db.songs.where('uuid').equals(song.uuid).delete();
+        if (album_appearance_count <= 1) local_albums_db.albums.where('title').equals(song.album).delete();
+        if (artist_appearance_count <= 1) local_artists_db.artists.where('artist_name').equals(song.artist).delete();
+        if (genre_appearance_count <= 1) local_genres_db.genres.where('title').equals(song.genre).delete();
         useToastStore.getState().setToast({
             message: `${song.name} was sent to trash`,
             type: toastType.success, 
