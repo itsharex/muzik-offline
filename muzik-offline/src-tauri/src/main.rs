@@ -34,7 +34,7 @@ use crate::windows::controller::{drag_app_window, toggle_app_pin, toggle_minipla
 use crate::commands::{metadata_edit::edit_song_metadata, metadata_retriever::get_all_songs};
 
 use crate::commands::general_commands::{
-    get_audio_dir, open_in_file_manager, resize_frontend_image_to_fixed_height,
+    get_audio_dir, open_in_file_manager, resize_frontend_image_to_fixed_height, delete_song_metadata,
 };
 use crate::database::db_api::{
     get_all_albums, get_all_artists, get_all_genres, get_all_songs_in_db,
@@ -85,9 +85,10 @@ fn main() {
             toggle_app_pin,
             toggle_miniplayer_view,
             drag_app_window,
-            update_metadata,
             set_player_state,
             // GENERAL COMMANDS
+            update_metadata,
+            delete_song_metadata,
             get_all_songs,
             open_in_file_manager,
             set_volume,

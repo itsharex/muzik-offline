@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef } from "react";
-import { AddSongToPlaylistModal, EditPropertiesModal, GeneralContextMenu, LargeResizableCover, LoaderAnimated, PropertiesModal, RectangleSongBox } from "@components/index";
+import { AddSongToPlaylistModal, DeleteSongModal, EditPropertiesModal, GeneralContextMenu, LargeResizableCover, LoaderAnimated, PropertiesModal, RectangleSongBox } from "@components/index";
 import "@styles/pages/AlbumDetails.scss";
 import { motion } from "framer-motion";
 import { Play, Shuffle } from "@assets/icons";
@@ -10,7 +10,7 @@ import { getAlbumSongs, getCoverURL, getRandomCover, secondsToTimeFormat } from 
 import { ViewportList } from "react-viewport-list";
 import { albumDetailsReducer, AlbumDetailsState } from "@store/reducerStore";
 import { startPlayingNewSong, playThisListNow, addThisSongToPlayLater, addThisSongToPlayNext } from "@utils/playerControl";
-import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectThisSong, setSongList } from "@utils/reducerUtils";
+import { closeContextMenu, closeDeleteSongModal, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, processArrowKeysInput, selectThisSong, setSongList } from "@utils/reducerUtils";
 import { variants_list } from "@content/index";
 import { reducerType } from "@store/index";
 
@@ -31,6 +31,7 @@ const AlbumDetails = () => {
         if(arg === contextMenuButtons.ShowInfo){ dispatch({ type: reducerType.SET_PROPERTIES_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.AddToPlaylist){ dispatch({ type: reducerType.SET_PLAYLIST_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.EditSong){ dispatch({ type: reducerType.SET_EDIT_SONG_MODAL, payload: true}); }
+        else if(arg === contextMenuButtons.Delete){ dispatch({ type: reducerType.SET_DELETE_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.PlayNext && state.songMenuToOpen){ 
             addThisSongToPlayNext([state.songMenuToOpen.id]);
             closeContextMenu(dispatch); 
@@ -194,6 +195,7 @@ const AlbumDetails = () => {
             <PropertiesModal isOpen={state.isPropertiesModalOpen} song={state.songMenuToOpen!} closeModal={() => closePropertiesModal(dispatch)} />
             <EditPropertiesModal isOpen={state.isEditingSongModalOpen} songID={state.songMenuToOpen ? state.songMenuToOpen.id : -1} closeModal={() => closeEditPropertiesModal(dispatch)} />
             <AddSongToPlaylistModal isOpen={state.isPlaylistModalOpen} songPath={state.songMenuToOpen ? state.songMenuToOpen.path : ""} closeModal={() => closePlaylistModal(dispatch)} />
+            <DeleteSongModal isOpen={state.isDeleteSongModalOpen} title={state.songMenuToOpen ? state.songMenuToOpen.title : ""} closeModal={(deleteSong) => closeDeleteSongModal(dispatch, state.songMenuToOpen, deleteSong)} />
         </motion.div>
     )
 }

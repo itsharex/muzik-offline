@@ -49,6 +49,7 @@ export const SearchSongsState: SearchSongInterface = {
     isPlaylistModalOpen: false,
     isPropertiesModalOpen: false,
     isEditingSongModalOpen: false,
+    isDeleteSongModalOpen: false,
 };
 
 export const searchSongsReducer = (state: SearchSongInterface, action: Action) => {
@@ -61,6 +62,7 @@ export const searchSongsReducer = (state: SearchSongInterface, action: Action) =
         case reducerType.SET_PLAYLIST_MODAL: return { ...state, isPlaylistModalOpen: action.payload };
         case reducerType.SET_PROPERTIES_MODAL: return { ...state, isPropertiesModalOpen: action.payload };
         case reducerType.SET_EDIT_SONG_MODAL: return { ...state, isEditingSongModalOpen: action.payload };
+        case reducerType.SET_DELETE_MODAL: return { ...state, isDeleteSongModalOpen: action.payload };
         default: return state;
     }
 };
@@ -75,6 +77,7 @@ export const AlbumDetailsState: AlbumDetailsInterface = {
     isPlaylistModalOpen: false,
     isPropertiesModalOpen: false,
     isEditingSongModalOpen: false,
+    isDeleteSongModalOpen: false,
     resizeHeader: false,
 };
 
@@ -89,6 +92,7 @@ export const albumDetailsReducer = (state: AlbumDetailsInterface, action: Action
         case reducerType.SET_PLAYLIST_MODAL: return { ...state, isPlaylistModalOpen: action.payload };
         case reducerType.SET_PROPERTIES_MODAL: return { ...state, isPropertiesModalOpen: action.payload };
         case reducerType.SET_EDIT_SONG_MODAL: return { ...state, isEditingSongModalOpen: action.payload };
+        case reducerType.SET_DELETE_MODAL: return { ...state, isDeleteSongModalOpen: action.payload };
         case reducerType.SET_RESIZE_HEADER: return { ...state, resizeHeader: action.payload };
         default: return state;
     }
@@ -181,6 +185,7 @@ export const GenreViewState: GenreViewInterface = {
     isPlaylistModalOpen: false,
     isPropertiesModalOpen: false,
     isEditingSongModalOpen: false,
+    isDeleteSongModalOpen: false,
     resizeHeader: false,
 };
 
@@ -195,6 +200,7 @@ export const genreViewReducer = (state: GenreViewInterface, action: Action) => {
         case reducerType.SET_PLAYLIST_MODAL: return { ...state, isPlaylistModalOpen: action.payload };
         case reducerType.SET_PROPERTIES_MODAL: return { ...state, isPropertiesModalOpen: action.payload };
         case reducerType.SET_EDIT_SONG_MODAL: return { ...state, isEditingSongModalOpen: action.payload };
+        case reducerType.SET_DELETE_MODAL: return { ...state, isDeleteSongModalOpen: action.payload };
         case reducerType.SET_RESIZE_HEADER: return { ...state, resizeHeader: action.payload };
         default: return state;
     }
