@@ -2,7 +2,7 @@ import { SavedDirectories } from "@database/directories";
 import { Player } from "@database/player";
 import { SavedObject } from "@database/saved_object";
 import { viewableSideEl } from "@database/side_elements";
-import { toast } from "@muziktypes/index";
+import { AudioLabPreset, toast } from "@muziktypes/index";
 
 export interface MaximisedState {
     isMaximised: boolean;
@@ -79,4 +79,9 @@ export interface QueueInterface{
     push_front: (song: number) => void;
     pop_back: () => void;
     setQueue: (setTo: number[]) => void;
+}
+
+export interface SavedPresetsValues{
+    map: Map<string, AudioLabPreset>;
+    addValue: (key: string, value: AudioLabPreset) => void;
 }
