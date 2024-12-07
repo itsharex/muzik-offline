@@ -36,6 +36,7 @@ import SongCardResizableDraggable from './lists/SongCardResizableDraggable';
 import RectangleSongBoxDraggable from './lists/RectangleSongBoxDraggable';
 import DeletePlaylistModal from './modals/DeletePlaylistModal';
 import DeleteSongFromPlaylistModal from './modals/DeleteSongFromPlaylistModal';
+import EqualizerSlider from './sliders/EqualizerSlider';
 import EditPropertiesModal from './modals/EditPropertiesModal';
 import { EditSongButton } from './context_menu/ContextMenuButtons';
 import DateInput from './input/DateInput';
@@ -44,6 +45,8 @@ import WallpapersSelectionModal from './modals/WallpapersSelectionModal';
 import RectangleSongBoxView from './cards/RectangleSongBoxView';
 import CheckboxComponent from './input/CheckboxComponent';
 import ExportModal from './modals/ExportModal';
+import DeleteSongModal from './modals/DeleteSongModal';
+import EqualizerModal from './modals/EqualizerModal';
 
 export {
     HeaderWindows, HeaderMacOS, HeaderLinuxOS, AppNavigator, LeftSidebar, AppMusicPlayer, FSMusicPlayer,
@@ -57,8 +60,9 @@ export {
     CreatePlaylistModal, EditPlaylistModal, AddSongToPlaylistModal, LoaderAnimated,
     AirplayCastModal, AddSongsToPlaylistModal, MusicPopOver, SongCardResizableDraggable,
     RectangleSongBoxDraggable, DeletePlaylistModal,
-    DeleteButton, DeleteSongFromPlaylistModal,
+    DeleteButton, DeleteSongFromPlaylistModal, EqualizerSlider,
     EditPropertiesModal, EditSongButton,
     DateInput, DeleteDiretoryModal, WallpapersSelectionModal,
-    RectangleSongBoxView, CheckboxComponent, ExportModal
+    RectangleSongBoxView, CheckboxComponent, ExportModal,
+    DeleteSongModal, EqualizerModal
 }

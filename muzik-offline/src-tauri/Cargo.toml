@@ -1,6 +1,6 @@
 [package]
 name = "muzik-offline"
-version = "0.6.2"
+version = "0.7.0"
 description = "A desktop music player for listening to music offline."
 authors = ["Michael"]
 license = "MIT"
@@ -40,6 +40,8 @@ printpdf = "0.7.0"
 tabled = "0.16.0"
 walkdir = "2.5.0"
 futures = "0.3.31"
+rodio = "0.20.1"
+trash = "5.2.0"
 
 [dependencies.uuid]
 version = "1.11.0"

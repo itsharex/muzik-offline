@@ -1,9 +1,12 @@
-import { Song } from "@muziktypes/index";
+import { Song, toastType } from "@muziktypes/index";
 import { Action, reducerType } from "@store/reducerTypes";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from '@tauri-apps/plugin-dialog';
 import { appConfigDir } from '@tauri-apps/api/path';
 import { reloadLibrary } from ".";
+import { invoke } from "@tauri-apps/api/core";
+import { useToastStore } from "@store/index";
+import { local_albums_db, local_artists_db, local_genres_db, local_songs_db } from "@database/database";
 
 export function selectThisSong(index: number, dispatch: React.Dispatch<Action>){ 
     dispatch({ type: reducerType.SET_SELECTED, payload: index }); 
@@ -55,6 +58,52 @@ export function closePropertiesModal(dispatch: React.Dispatch<Action>){
 export function closeEditPropertiesModal(dispatch: React.Dispatch<Action>){
     dispatch({ type: reducerType.SET_EDIT_SONG_MODAL, payload: false });
     closeContextMenu(dispatch);
+}
+
+export async function closeDeleteSongModal(dispatch: React.Dispatch<Action>, song: Song | null, deleteSong: boolean){
+    dispatch({ type: reducerType.SET_DELETE_MODAL, payload: false });
+    closeContextMenu(dispatch);
+    if(!deleteSong)return;
+    if(!song){
+        useToastStore.getState().setToast({
+            message: "Song not found", 
+            type: toastType.error, 
+            title: "Delete Song Error", 
+            timeout: 3000
+        });
+        return;
+    }
+    const album_appearance_count = await local_albums_db.albums.where('title').equals(song.album).count();
+    const artist_appearance_count = await local_artists_db.artists.where('artist_name').equals(song.artist).count();
+    const genre_appearance_count = await local_genres_db.genres.where('title').equals(song.genre).count();
+
+    invoke('delete_song_metadata', { 
+        path: song.path,
+        album: song.album,
+        albumAppearanceCount: album_appearance_count,
+        artist: song.artist,
+        artistAppearanceCount: artist_appearance_count,
+        genre: song.genre,
+        genreAppearanceCount: genre_appearance_count 
+    }).then(() => {
+        local_songs_db.songs.where('uuid').equals(song.uuid).delete();
+        if (album_appearance_count <= 1) local_albums_db.albums.where('title').equals(song.album).delete();
+        if (artist_appearance_count <= 1) local_artists_db.artists.where('artist_name').equals(song.artist).delete();
+        if (genre_appearance_count <= 1) local_genres_db.genres.where('title').equals(song.genre).delete();
+        useToastStore.getState().setToast({
+            message: `${song.name} was sent to trash`,
+            type: toastType.success, 
+            title: "Delete Song", 
+            timeout: 3000
+        });
+    }).catch((err: any) => {
+        useToastStore.getState().setToast({
+            message: err,
+            type: toastType.error, 
+            title: "Delete Song Error", 
+            timeout: 3000
+        });
+    });
 }
 
 export function closeContextMenu( dispatch: React.Dispatch<Action>, e?: React.MouseEvent<HTMLDivElement, MouseEvent>,){

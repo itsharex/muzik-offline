@@ -1,12 +1,18 @@
 import { Song } from "@muziktypes/index";
 
+export enum RepeatingLevel{
+    NO_REPEAT,
+    REPEAT_ONE,
+    REPEAT_ALL
+}
+
 export interface Player{
     playingSongMetadata: Song | null;
     isPlaying: boolean;
     wasPlayingBeforePause: boolean;
     lengthOfSongInSeconds: number;
     isShuffling: boolean;
-    repeatingLevel: 0 | 1 | 2;
+    repeatingLevel: RepeatingLevel;
 }
 
 export const emptyPlayer: Player = {
@@ -15,5 +21,5 @@ export const emptyPlayer: Player = {
     wasPlayingBeforePause: false,
     lengthOfSongInSeconds: 0,
     isShuffling: false,
-    repeatingLevel: 0,
+    repeatingLevel: RepeatingLevel.NO_REPEAT,
 }

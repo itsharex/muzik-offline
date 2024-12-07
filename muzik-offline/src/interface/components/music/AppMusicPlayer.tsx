@@ -8,6 +8,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { changeVolumeLevel, changeSeekerPosition, changeVolumeLevelBtnPress, dragSeeker, pauseSong, playSong, repeatToggle, shuffleToggle, setVolumeLevel, reconfigurePlayer_AtEndOfSong, playPreviousSong, playNextSong, changeSeekerPositionBtnPress } from "@utils/playerControl";
 import { AirplayCastModal, MusicPopOver } from "@components/index";
 import { OSTYPEenum } from "@muziktypes/index";
+import { RepeatingLevel } from "@database/player";
 
 type AppMusicPlayerProps = {
     openPlayer: () => void;
@@ -40,7 +41,7 @@ const AppMusicPlayer : FunctionComponent<AppMusicPlayerProps> = (props: AppMusic
     }
 
     async function upDateSeeker(){
-        const value: any = await invoke("get_song_position");
+        const value: any = await invoke("get_song_position", { player: useSavedObjectStore.getState().local_store.player});
         if(value === Player.lengthOfSongInSeconds && Player.playingSongMetadata){
             reconfigurePlayer_AtEndOfSong();
         }
@@ -107,9 +108,9 @@ const AppMusicPlayer : FunctionComponent<AppMusicPlayerProps> = (props: AppMusic
                     </div>
                     <div className="music_controller">
                         <div className="Controls">
-                            <motion.div className={"control_icon" + (Player.repeatingLevel > 0 ? " coloured" : "")} 
+                            <motion.div className={"control_icon" + (Player.repeatingLevel != RepeatingLevel.NO_REPEAT ? " coloured" : "")} 
                             whileTap={{scale: 0.98}} onClick={repeatToggle}>
-                                {Player.repeatingLevel === 2 ?
+                                {Player.repeatingLevel === RepeatingLevel.REPEAT_ONE ?
                                     <RepeatOne />
                                     :
                                     <Repeat />

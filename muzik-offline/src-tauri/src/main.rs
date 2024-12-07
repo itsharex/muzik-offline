@@ -13,7 +13,7 @@ mod windows;
 mod export;
 mod import;
 
-use commands::general_commands::get_server_port;
+use commands::general_commands::{collect_env_args, get_server_port};
 use commands::refresh_paths_at_start::{detect_deleted_songs, refresh_paths};
 use database::db_api::{
     add_new_wallpaper_to_db, create_playlist_cover, delete_playlist_cover,
@@ -23,6 +23,7 @@ use database::db_api::{
 use database::db_manager::DbManager;
 use export::{export_csv::export_songs_as_csv, export_html::export_songs_as_html, 
     export_json::export_songs_as_json,export_txt::export_songs_as_txt, export_xml::export_songs_as_xml};
+use music::player::set_playback_speed;
 //use export::export_pdf::export_songs_as_pdf;
 use socials::discord_rpc::{set_discord_rpc_activity_with_timestamps, DiscordRpc};
 use utils::music_list_organizer::MLO;
@@ -33,7 +34,7 @@ use crate::windows::controller::{drag_app_window, toggle_app_pin, toggle_minipla
 use crate::commands::{metadata_edit::edit_song_metadata, metadata_retriever::get_all_songs};
 
 use crate::commands::general_commands::{
-    get_audio_dir, open_in_file_manager, resize_frontend_image_to_fixed_height,
+    get_audio_dir, open_in_file_manager, resize_frontend_image_to_fixed_height, delete_song_metadata,
 };
 use crate::database::db_api::{
     get_all_albums, get_all_artists, get_all_genres, get_all_songs_in_db,
@@ -43,6 +44,7 @@ use crate::music::player::{
     get_song_position, load_a_song_from_path, load_and_play_song_from_path, pause_song,
     resume_playing, seek_by, seek_to, set_volume, stop_song,
 };
+use crate::music::rodio_player::{get_output_devices, set_output_device, get_default_output_device};
 use crate::socials::discord_rpc::{
     allow_connection_and_connect_to_discord_rpc, attempt_to_connect_if_possible,
     clear_discord_rpc_activity, disallow_connection_and_close_discord_rpc,
@@ -55,6 +57,8 @@ use crate::utils::music_list_organizer::{
 use app::setup::{
     setup_app,
     initialize_audio_manager,
+    initialise_kira_audio_manager,
+    initialise_rodio_audio_manager
 };
 
 fn main() {
@@ -73,15 +77,18 @@ fn main() {
             DiscordRpc::new().expect("failed to initialize discord rpc"),
         ))
         .manage(initialize_audio_manager())
+        .manage(initialise_kira_audio_manager())
+        .manage(initialise_rodio_audio_manager())
         .setup(setup_app)
         .invoke_handler(tauri::generate_handler![
             // WINDOW CONTROL
             toggle_app_pin,
             toggle_miniplayer_view,
             drag_app_window,
-            update_metadata,
             set_player_state,
             // GENERAL COMMANDS
+            update_metadata,
+            delete_song_metadata,
             get_all_songs,
             open_in_file_manager,
             set_volume,
@@ -90,6 +97,7 @@ fn main() {
             get_server_port,
             refresh_paths,
             detect_deleted_songs,
+            collect_env_args,
             // MUSIC PLAYER
             load_and_play_song_from_path,
             load_a_song_from_path,
@@ -99,6 +107,10 @@ fn main() {
             seek_to,
             seek_by,
             get_song_position,
+            get_default_output_device,
+            get_output_devices,
+            set_output_device,
+            set_playback_speed,
             // UTILS
             resize_frontend_image_to_fixed_height,
             // MUSIC LIST ORGANIZER

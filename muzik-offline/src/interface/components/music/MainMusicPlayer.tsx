@@ -5,6 +5,7 @@ import { usePlayerStore, usePlayingPosition, usePlayingPositionSec, useSavedObje
 import { getCoverURL, getNullRandomCover, secondsToTimeFormat } from "utils";
 import { changeVolumeLevel, changeSeekerPosition, dragSeeker, changeVolumeLevelBtnPress, repeatToggle, pauseSong, playSong, shuffleToggle, setVolumeLevel, playPreviousSong, playNextSong } from "utils/playerControl";
 import { OSTYPEenum } from "@muziktypes/index";
+import { RepeatingLevel } from "@database/player";
 
 const MainMusicPlayer = () => {
     const {local_store} = useSavedObjectStore((state) => { return { local_store: state.local_store, setStore: state.setStore}; });
@@ -50,9 +51,9 @@ const MainMusicPlayer = () => {
                 <h3>{Player.playingSongMetadata ? Player.playingSongMetadata.artist : "No song is playing"}</h3>
             </div>
             <div className="Controls">
-                <motion.div className={"control_icon" + (Player.repeatingLevel > 0 ? " coloured" : "")} 
+                <motion.div className={"control_icon" + (Player.repeatingLevel > RepeatingLevel.NO_REPEAT ? " coloured" : "")} 
                     whileTap={{scale: 0.98}} onClick={repeatToggle}>
-                        {Player.repeatingLevel === 2 ?
+                        {Player.repeatingLevel === RepeatingLevel.REPEAT_ONE ?
                             <RepeatOne />
                             :
                             <Repeat />

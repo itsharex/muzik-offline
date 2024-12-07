@@ -35,12 +35,13 @@ const GeneralContextMenu: FunctionComponent<GeneralContextMenuProps> = (props: G
         //else if(){//5 items
         //    scmHeight = 250;
         //}
-        else if(props.CMtype === contextMenuEnum.ArtistCM || props.CMtype === contextMenuEnum.AlbumCM
-            || props.CMtype === contextMenuEnum.SongCM){//6 items
+        else if(props.CMtype === contextMenuEnum.ArtistCM || props.CMtype === contextMenuEnum.AlbumCM){//6 items
             scmHeight = 280;
         }
-        else if(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.PlaylistSongsCM){//7 items
-            scmHeight = 310;
+        else if(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.PlaylistSongsCM
+            || props.CMtype === contextMenuEnum.SongCM
+        ){//7 items
+            scmHeight = 317;
         }
         if(props.overRideY)return yPos;
         else return yPos > winHeight - scmHeight ? (winHeight - scmHeight) : yPos;
@@ -66,8 +67,8 @@ const GeneralContextMenu: FunctionComponent<GeneralContextMenuProps> = (props: G
                 && <EditSongButton title={props.title} chooseOption={props.chooseOption}/>}
             {(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.SongCM || props.CMtype === contextMenuEnum.PlaylistSongsCM) 
                 && <ShowInfoButton chooseOption={props.chooseOption}/>}
-            {(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.PlaylistSongsCM) 
-            && <DeleteButton title={props.title} chooseOption={props.chooseOption}/>}
+            {(props.CMtype === contextMenuEnum.PlaylistCM || props.CMtype === contextMenuEnum.PlaylistSongsCM
+                || props.CMtype === contextMenuEnum.SongCM) && <DeleteButton title={props.title} chooseOption={props.chooseOption}/>}
         </motion.div >
     )
 }

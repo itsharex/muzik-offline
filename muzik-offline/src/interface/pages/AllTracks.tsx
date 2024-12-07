@@ -2,14 +2,14 @@ import { contextMenuButtons, contextMenuEnum } from "@muziktypes/index";
 import { motion } from "framer-motion";
 import { useRef, useEffect, useReducer } from "react";
 import { ChevronDown, FolderPlus, Shuffle } from "@assets/icons";
-import { AddSongToPlaylistModal, DropDownMenuSmall, EditPropertiesModal, GeneralContextMenu, PropertiesModal, RectangleSongBox } from "@components/index";
+import { AddSongToPlaylistModal, DeleteSongModal, DropDownMenuSmall, EditPropertiesModal, GeneralContextMenu, PropertiesModal, RectangleSongBox } from "@components/index";
 import { ViewportList } from 'react-viewport-list';
 import { local_albums_db, local_songs_db } from "@database/database";
 import { useNavigate } from "react-router-dom";
 import { AllTracksState, alltracksReducer, reducerType } from "store";
 import { addThisSongToPlayLater, addThisSongToPlayNext, playThisListNow, startPlayingNewSong } from "utils/playerControl";
 import "@styles/pages/AllTracks.scss";
-import { closeContextMenu, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, openFileDialogDND, processArrowKeysInput, processDragEvents, selectSortOption, selectThisSong, setOpenedDDM, setSongList } from "utils/reducerUtils";
+import { closeContextMenu, closeDeleteSongModal, closeEditPropertiesModal, closePlaylistModal, closePropertiesModal, openFileDialogDND, processArrowKeysInput, processDragEvents, selectSortOption, selectThisSong, setOpenedDDM, setSongList } from "utils/reducerUtils";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import 'react-loading-skeleton/dist/skeleton.css';
 
@@ -29,6 +29,7 @@ const AllTracks = () => {
         if(arg === contextMenuButtons.ShowInfo){ dispatch({ type: reducerType.SET_PROPERTIES_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.AddToPlaylist){ dispatch({ type: reducerType.SET_PLAYLIST_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.EditSong){ dispatch({ type: reducerType.SET_EDIT_SONG_MODAL, payload: true}); }
+        else if(arg === contextMenuButtons.Delete){ dispatch({ type: reducerType.SET_DELETE_MODAL, payload: true}); }
         else if(arg === contextMenuButtons.PlayNext && state.songMenuToOpen){ 
             addThisSongToPlayNext([state.songMenuToOpen.id]);
             closeContextMenu(dispatch); 
@@ -82,7 +83,7 @@ const AllTracks = () => {
         else if(ev.target.id !== "gsearch" && state.selected >= 1 && state.selected <= state.SongList.length){
             dispatch({type: reducerType.SET_SONG_MENU, payload: state.SongList[state.selected - 1]});
             if(((ev.ctrlKey || ev.metaKey) && (ev.key === "p" || ev.key === "P" )) || ev.key === "Enter")chooseOption(contextMenuButtons.Play);
-            else if((ev.ctrlKey || ev.metaKey) && (ev.key === "i" || ev.key === "I"))chooseOption(contextMenuButtons.ShowInfo);
+            else if((ev.ctrlKey || ev.metaKey) && !ev.shiftKey && (ev.key === "i" || ev.key === "I"))chooseOption(contextMenuButtons.ShowInfo);
             else if((ev.ctrlKey || ev.metaKey) && ev.shiftKey && (ev.key === "a" || ev.key === "A"))chooseOption(contextMenuButtons.AddToPlaylist);
             else if((ev.ctrlKey || ev.metaKey) && ev.shiftKey && (ev.key === "n" || ev.key === "N"))chooseOption(contextMenuButtons.PlayNext);
             else if((ev.ctrlKey || ev.metaKey) && ev.shiftKey && (ev.key === "l" || ev.key === "L"))chooseOption(contextMenuButtons.PlayLater);
@@ -204,6 +205,7 @@ const AllTracks = () => {
             <PropertiesModal isOpen={state.isPropertiesModalOpen} song={state.songMenuToOpen!} closeModal={() => closePropertiesModal(dispatch)} />
             <EditPropertiesModal isOpen={state.isEditingSongModalOpen} songID={state.songMenuToOpen ? state.songMenuToOpen.id : -1} closeModal={() => closeEditPropertiesModal(dispatch)} />
             <AddSongToPlaylistModal isOpen={state.isPlaylistModalOpen} songPath={state.songMenuToOpen ? state.songMenuToOpen.path : ""} closeModal={() => closePlaylistModal(dispatch)} />
+            <DeleteSongModal isOpen={state.isDeleteSongModalOpen} title={state.songMenuToOpen ? state.songMenuToOpen.title : ""} closeModal={(deleteSong) => closeDeleteSongModal(dispatch, state.songMenuToOpen, deleteSong)} />
         </motion.div>
     )
 }
