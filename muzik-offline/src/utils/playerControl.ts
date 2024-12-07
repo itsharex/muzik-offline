@@ -5,6 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { SavedObject } from "@database/index";
 import { local_playlists_db, local_songs_db } from "@database/database";
 import { getNullRandomCover } from ".";
+import { RepeatingLevel } from "@database/player";
 
 export const addThisSongToPlayNext = async(songids: number[]) => {
     //get the song queue
@@ -237,16 +238,16 @@ export async function shuffleToggle(){
 
 export async function repeatToggle(){
     let temp = usePlayerStore.getState().Player;
-    temp.repeatingLevel = usePlayerStore.getState().Player.repeatingLevel + 1 > 2 ? 0 : (usePlayerStore.getState().Player.repeatingLevel + 1) as 0 | 1 | 2;
+    temp.repeatingLevel = temp.repeatingLevel === RepeatingLevel.NO_REPEAT ? RepeatingLevel.REPEAT_ONE : temp.repeatingLevel === RepeatingLevel.REPEAT_ONE ? RepeatingLevel.REPEAT_ALL : RepeatingLevel.NO_REPEAT;
     usePlayerStore.getState().setPlayer(temp);
-    await invoke("mlo_set_repeat_list", {repeatList: temp.repeatingLevel > 0 ? true : false});
+    await invoke("mlo_set_repeat_list", {repeatList: temp.repeatingLevel !== RepeatingLevel.NO_REPEAT ? true : false});
 }
 
 export function reconfigurePlayer_AtEndOfSong(){
-    if(usePlayerStore.getState().Player.repeatingLevel === 0 || usePlayerStore.getState().Player.repeatingLevel === 1){
+    if(usePlayerStore.getState().Player.repeatingLevel === RepeatingLevel.NO_REPEAT || usePlayerStore.getState().Player.repeatingLevel === RepeatingLevel.REPEAT_ALL){
         playNextSong();
     }
-    else if(usePlayerStore.getState().Player.repeatingLevel === 2){
+    else if(usePlayerStore.getState().Player.repeatingLevel === RepeatingLevel.REPEAT_ONE){
         const song = usePlayerStore.getState().Player.playingSongMetadata;
         if(song === null)return;
         usePlayingPositionSec.getState().setPosition(0);
@@ -262,8 +263,8 @@ export async function playNextSong(){
     usePlayingPositionSec.getState().setPosition(0);
     usePlayingPosition.getState().setPosition(0);
     useUpcomingSongs.getState().dequeue();
-    if(useUpcomingSongs.getState().queue.length === 0 && usePlayerStore.getState().Player.repeatingLevel === 0)await stopSong();
-    else if(useUpcomingSongs.getState().queue.length === 0 && usePlayerStore.getState().Player.repeatingLevel === 1){
+    if(useUpcomingSongs.getState().queue.length === 0 && usePlayerStore.getState().Player.repeatingLevel === RepeatingLevel.NO_REPEAT)await stopSong();
+    else if(useUpcomingSongs.getState().queue.length === 0 && usePlayerStore.getState().Player.repeatingLevel === RepeatingLevel.REPEAT_ALL){
         const limit = Number.parseInt(useSavedObjectStore.getState().local_store.UpcomingHistoryLimit);
         get_next_batch(limit).then(async() => {
             if(useUpcomingSongs.getState().queue.length >= 1){
