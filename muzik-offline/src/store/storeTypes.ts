@@ -12,6 +12,7 @@ export interface MaximisedState {
 export interface firstRunState{
     firstRun: boolean;
     setFirstRun: (nFR: boolean) => void;
+    reset: () => void;
 }
 
 export interface portState{
@@ -39,21 +40,25 @@ export interface wallpaperInterface{
     wallpaperUUID: string | null;
     setWallpaper: (nW: string) => void;
     unsetWallpaper: () => void;
+    reset: () => void;
 }
 
 export interface viewableSideElInterface{
     viewableEl: viewableSideEl;
     setviewableEl: (setTo: viewableSideEl) => void;
+    reset: () => void;
 }
 
 export interface SavedDirectoriesInterface{
     dir: SavedDirectories;
     setDir: (setTo: SavedDirectories) => void;
+    reset: () => void;
 }
 
 export interface SavedObjectInterface{
     local_store: SavedObject;
     setStore: (setTo: SavedObject) => void;
+    reset: () => void;
 }
 
 export interface PlayerInterface{
@@ -84,4 +89,10 @@ export interface QueueInterface{
 export interface SavedPresetsValues{
     map: Map<string, AudioLabPreset>;
     addValue: (key: string, value: AudioLabPreset) => void;
+    set: (setTo: Map<string, AudioLabPreset>) => void;
+}
+
+export interface VersionInterface{
+    version: string;
+    setVersion: (setTo: string) => void;
 }
