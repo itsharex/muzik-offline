@@ -59,3 +59,34 @@ export const emptySavedObject: SavedObject = {
     AudioTransition: "No",
     OutputDevice: ""
 }
+
+export function resetObject(obj: SavedObject){
+    obj.LaunchTab = "All tracks";
+    obj.AppActivityDiscord = "No";
+    obj.BGColour = "blue_purple_gradient";
+    obj.ThemeColour = "blueberry";
+    obj.PlayerBar = true;
+    obj.Volume = 0;
+    obj.VolumeStepAmount = "5";
+    obj.SongSeeker = 0;
+    obj.Animations = false;
+    obj.AppThemeBlur = true;
+    obj.WallpaperOpacityAmount = "8";
+    obj.OStype = OSTYPEenum.Windows;
+    obj.CompressImage = "No";
+    obj.UpcomingHistoryLimit = "10";
+    obj.SeekStepAmount = "10";
+    obj.SongLengthORremaining = "song length";
+    obj.AudioLabPreset = "flat";
+    obj.SavedPresets = ["flat", "hip-hop"];
+    obj.AlwaysRoundedCornersWindows = "No";
+    obj.AutoStartApp = "No";
+    obj.DirectoryScanningDepth = 1;
+    obj.player = "rodio";
+    obj.AudioQuality = "High(320kbps)";
+    obj.PlayBackSpeed = "1";
+    obj.AudioTransition = "No";
+    obj.OutputDevice = "";
+
+    return obj;
+}

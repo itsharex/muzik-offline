@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { firstRunState, FSState, MaximisedState, PlayerInterface, PlayingPositionInterface, portState, QueueInterface, SavedDirectoriesInterface, SavedObjectInterface, searchInterface, toastInterface, viewableSideElInterface, wallpaperInterface, SavedPresetsValues } from './storeTypes';
+import { firstRunState, FSState, MaximisedState, PlayerInterface, PlayingPositionInterface, portState, QueueInterface, SavedDirectoriesInterface, SavedObjectInterface, searchInterface, toastInterface, viewableSideElInterface, wallpaperInterface, SavedPresetsValues, VersionInterface } from './storeTypes';
 import { emptyDirectories } from '@database/directories';
 import { emptyPlayer } from '@database/player';
 import { emptySavedObject } from '@database/saved_object';
@@ -37,6 +37,7 @@ export const useFisrstRunStore = create<firstRunState>()(
             (set) => ({
                 firstRun: true,
                 setFirstRun: (nFR) => set((_state) => ({ firstRun: nFR })),
+                reset: () => set((_state) => ({ firstRun: true })),
             }),
         {name: 'firstRun',}
         )
@@ -86,6 +87,7 @@ export const useWallpaperStore = create<wallpaperInterface>()(
                 wallpaperUUID: "",
                 setWallpaper: (nW) => set((_state) => ({ wallpaperUUID: nW })),
                 unsetWallpaper: () => set((_state) => ({ wallpaperUUID: null})),
+                reset: () => set((_state) => ({ wallpaperUUID: "" })),
             }),
         {name: 'SavedWallpaperUUID-offline',}
         )
@@ -98,6 +100,7 @@ export const useViewableSideElStore = create<viewableSideElInterface>()(
             (set) => ({
                 viewableEl: viewableSideElements,
                 setviewableEl: (setTo) => set((_state) => ({ viewableEl: setTo })),
+                reset: () => set((_state) => ({ viewableEl: viewableSideElements })),
             }),
         {name: 'viewableEl',}
         )
@@ -110,6 +113,7 @@ export const useDirStore = create<SavedDirectoriesInterface>()(
             (set) => ({
                 dir: emptyDirectories,
                 setDir: (setTo) => set((_state) => ({ dir: setTo })),
+                reset: () => set((_state) => ({ dir: emptyDirectories })),
             }),
             {
                 name: 'directories', // Key for localStorage
@@ -151,6 +155,7 @@ export const useSavedObjectStore = create<SavedObjectInterface>()(
             (set) => ({
                 local_store: emptySavedObject,
                 setStore: (setTo) => set((_state) => ({ local_store: setTo })),
+                reset: () => set((_state) => ({ local_store: emptySavedObject })),
             }),
         {name: 'SavedObject-offline',}
         )
@@ -206,5 +211,19 @@ export const useSavedPresetsValues = create<SavedPresetsValues>()(
     (set) => ({
         map: premade_audio_labs,
         addValue: (key: string, value: AudioLabPreset) => set((state) => ({ map: state.map.set(key, value) })),
+        set: (setTo) => set((_state) => ({ map: setTo })),
     }),
+)
+
+export const useVersionStore = create<VersionInterface>()(
+    devtools(
+        persist(
+            (set) => ({
+                version: "",
+                setVersion: (nV) => set((_state) => ({ version: nV })),
+                reset: () => set((_state) => ({ version: "" })),
+            }),
+        {name: 'version',}
+        )
+    )
 )

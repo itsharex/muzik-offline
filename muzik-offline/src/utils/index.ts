@@ -1,9 +1,12 @@
 import { NullCoverOne, NullCoverTwo, NullCoverThree, NullCoverFour } from "@assets/index";
 import { local_albums_db, local_artists_db, local_genres_db, local_playlists_db, local_songs_db } from "@database/database";
 import { Song, album, artist, genre, playlist } from "@muziktypes/index";
-import { useDirStore, useHistorySongs, usePortStore, useSavedObjectStore, useToastStore, useUpcomingSongs } from "@store/index";
+import { useDirStore, useFisrstRunStore, useHistorySongs, usePortStore, useSavedObjectStore, useToastStore, useUpcomingSongs, useVersionStore, useViewableSideElStore, useWallpaperStore } from "@store/index";
 import { invoke } from "@tauri-apps/api/core";
 import { toastType } from '../types/index';
+import { getVersion } from "@tauri-apps/api/app";
+import { resetObject } from "@database/saved_object";
+import { resetViewableElements } from "@database/side_elements";
 
 export const fetch_library = async(fresh_library: boolean): Promise<{status: string, message: string}> => {
     const res_songs = await fetch_songs_metadata(fresh_library);
@@ -317,4 +320,25 @@ export async function reloadLibrary(paths: string[]){
         console.log(_error);
         useToastStore.getState().setToast({title: "Loading songs...", message: "No new songs detected in given folders or you dropped a file", type: toastType.error, timeout: 5000});
     });
+}
+
+export const shouldClearZustandStores = async() => {
+    const savedAppVersion = useVersionStore.getState().version;
+    const currentVersion = await getVersion();
+
+    if(savedAppVersion === currentVersion)return;
+
+    useVersionStore.getState().setVersion(currentVersion);
+    useFisrstRunStore.getState().reset();
+    useWallpaperStore.getState().reset();
+    useViewableSideElStore.getState().setviewableEl(resetViewableElements(useViewableSideElStore.getState().viewableEl));
+    useDirStore.getState().setDir({Dir: new Set<string>()});
+    useSavedObjectStore.getState().setStore(resetObject(useSavedObjectStore.getState().local_store));
+
+    await local_songs_db.songs.clear();
+    await local_albums_db.albums.clear();
+    await local_artists_db.artists.clear();
+    await local_genres_db.genres.clear();
+
+    useToastStore.getState().setToast({title: "App updated", message: "We have updated the app to a new version, please reload the app to see the changes", type: toastType.info, timeout: 5000});
 }

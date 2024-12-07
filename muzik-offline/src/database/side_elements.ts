@@ -13,3 +13,13 @@ export const viewableSideElements: viewableSideEl = {
     All_genres: true,
     All_playlists: true,
 }
+
+export function resetViewableElements(obj: viewableSideEl){
+    obj.All_tracks = true;
+    obj.All_artists = true;
+    obj.All_albums = true;
+    obj.All_genres = true;
+    obj.All_playlists = true;
+
+    return obj;
+}
