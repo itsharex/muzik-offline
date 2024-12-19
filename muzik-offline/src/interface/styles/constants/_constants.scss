@@ -230,9 +230,9 @@ $z-index-7000: 7000;
     /* layer-blur/300 */
     --var-layer-blur-300: blur(0px);//on windows and macos, value is 0px
 
-    --var-right-side-bar-width-expanded: 224px;
-    --var-right-side-bar-width-minimized: 223px;
-    --var-right-side-bar-width-smallest: 94px;
+    --var-right-side-bar-width-expanded: 215px;
+    --var-right-side-bar-width-minimized: 217px;
+    --var-right-side-bar-width-smallest: 73px;
 
     h1, h2, h3, h4, h5, h6, p{ cursor:default; }
 }
