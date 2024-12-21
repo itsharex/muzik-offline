@@ -20,7 +20,7 @@ use super::setup_macos;
 
 /// Initializes the kira audio manager with required settings.
 pub fn initialise_kira_audio_manager() -> Arc<Mutex<Option<KiraManager>>> {
-    /*match AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()){
+    match AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()){
         Ok(audio_manager) => {
             Arc::new(Mutex::new(Some(KiraManager {
                 manager: audio_manager,
@@ -33,9 +33,7 @@ pub fn initialise_kira_audio_manager() -> Arc<Mutex<Option<KiraManager>>> {
         Err(_) => {
             Arc::new(Mutex::new(None))
         }
-    }*/
-    // just testing return None
-    Arc::new(Mutex::new(None))
+    }
 }
 
 /// Initializes the Rodio audio manager with required settings.
