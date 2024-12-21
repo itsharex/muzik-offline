@@ -15,7 +15,7 @@ use super::{
     }};
 
 #[tauri::command]
-pub fn get_avaiable_audio_backends(rodio_audio_manager: State<'_, Arc<Mutex<RodioManager>>>, kira_audio_manager: State<'_, Arc<Mutex<Option<KiraManager>>>>) -> Vec<String> {
+pub fn get_available_audio_backends(rodio_audio_manager: State<'_, Arc<Mutex<RodioManager>>>, kira_audio_manager: State<'_, Arc<Mutex<Option<KiraManager>>>>) -> Vec<String> {
     let mut backends = vec![];
     match rodio_audio_manager.lock(){
         Ok(_) => {
